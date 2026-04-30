@@ -525,6 +525,148 @@ header {
 .bonus-row input[type=checkbox] { accent-color: var(--ok); width: 14px; height: 14px; cursor: pointer; }
 .bonus-lbl { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-muted); cursor: pointer; }
 
+/* ── RÚBRICA MODO 3 ── */
+.rubrica-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.criterio-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.criterio-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.criterio-code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--accent);
+  min-width: 20px;
+}
+.criterio-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  flex: 1;
+  line-height: 1.3;
+}
+.criterio-peso {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  background: var(--border);
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+.criterio-help-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.12s;
+  padding: 0;
+  line-height: 1;
+}
+.criterio-help-btn:hover { border-color: var(--accent-mid); color: var(--accent); }
+.criterio-desc {
+  display: none;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-light);
+}
+.criterio-desc.visible { display: block; }
+.criterio-desc-item {
+  font-size: 11px;
+  color: var(--text-mid);
+  line-height: 1.45;
+  padding: 3px 0;
+  display: flex;
+  gap: 6px;
+}
+.criterio-desc-item strong {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  flex-shrink: 0;
+  min-width: 12px;
+}
+.nivel-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 8px;
+}
+.nivel-btn {
+  padding: 6px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.nivel-btn:hover { border-color: var(--border-dark); background: var(--bg2); }
+.nivel-btn.sel-1 { background: #ffe0e0; border-color: #c1121f; }
+.nivel-btn.sel-2 { background: #fff3e0; border-color: #e76f00; }
+.nivel-btn.sel-3 { background: #eaf4ee; border-color: #2d6a4f; }
+.nivel-btn.sel-4 { background: #eaf0f7; border-color: #2c5f8a; }
+.nb-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+}
+.nb-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.nivel-btn.sel-1 .nb-num { color: #c1121f; }
+.nivel-btn.sel-1 .nb-label { color: #c1121f; }
+.nivel-btn.sel-2 .nb-num { color: #e76f00; }
+.nivel-btn.sel-2 .nb-label { color: #e76f00; }
+.nivel-btn.sel-3 .nb-num { color: #2d6a4f; }
+.nivel-btn.sel-3 .nb-label { color: #2d6a4f; }
+.nivel-btn.sel-4 .nb-num { color: #2c5f8a; }
+.nivel-btn.sel-4 .nb-label { color: #2c5f8a; }
+
+/* Nota resultado */
+.nota-box {
+  background: #1a1814;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nota-box .aj-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #5a5450; }
+.nota-box .aj-calc  { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4a4540; margin-top: 3px; }
+.nota-box .nota-val { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; color: var(--accent-mid); line-height: 1; }
+
 /* Ajuste display */
 .ajuste-box {
   background: #1a1814;
@@ -683,10 +825,23 @@ header {
       <div class="instr-chips" id="instr-chips-right"></div>
     </div>
 
-    <!-- Nivel -->
+    <!-- Nivel (Modos 1 y 2) -->
     <div class="r-section" id="r-nivel">
       <div class="r-title">Desempeño oral</div>
       <div id="nivel-opts"></div>
+    </div>
+
+    <!-- Rúbrica TF (Modo 3) -->
+    <div class="r-section" id="r-rubrica" style="display:none">
+      <div class="r-title">Rúbrica · Sustentación TF</div>
+      <div class="rubrica-panel" id="rubrica-criterios"></div>
+      <div class="nota-box" style="margin-top:10px">
+        <div>
+          <div class="aj-label">Nota individual (0–20)</div>
+          <div class="aj-calc" id="nota-rubrica-calc">Completa los 3 criterios</div>
+        </div>
+        <div class="nota-val" id="nota-rubrica-val">—</div>
+      </div>
     </div>
 
     <!-- Bonus -->
@@ -835,6 +990,7 @@ let S = {
   // Mode 3
   roles: {},                   // code → 'presenter'|'responder'
   sectionAssign: {},           // section index → student name
+  rubrica: { C1: null, C2: null, C3: null }, // puntajes 1-4 por criterio
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -871,12 +1027,16 @@ function setMode(m) {
   if (m === 1) {
     S.selectedInstrumento = 'RP1';
     renderInstrumentosRight(INSTRUMENTOS_RP);
+    document.getElementById('r-rubrica').style.display = 'none';
   } else if (m === 2) {
     S.selectedInstrumento = 'CL1';
     renderInstrumentosRight(INSTRUMENTOS_PART);
+    document.getElementById('r-rubrica').style.display = 'none';
   } else {
     S.selectedInstrumento = 'TF';
     renderInstrumentosRight(INSTRUMENTOS_TF);
+    document.getElementById('r-rubrica').style.display = '';
+    S.rubrica = { C1: null, C2: null, C3: null };
   }
 
   // show/hide right instrumento section
@@ -925,7 +1085,7 @@ function renderStudents() {
         <div class="s-indicator">${indicatorTxt}</div>
         <div class="s-name">${fn}<small>${ln}</small></div>
         <div class="s-codigo">${st.code}</div>
-        ${graded ? `<div class="s-badge">${graded.ajuste >= 0 ? '+' : ''}${graded.ajuste}</div>` : ''}
+      ${graded ? `<div class="s-badge">${isNaN(parseFloat(graded.ajuste)) ? graded.ajuste : (parseFloat(graded.ajuste) % 1 === 0 ? parseFloat(graded.ajuste) : graded.ajuste)}</div>` : ''}
       `;
       btn.addEventListener('click', () => selectStudent(st));
       block.appendChild(btn);
@@ -938,6 +1098,7 @@ function selectStudent(st) {
   S.activeStudent = st;
   S.selectedNivel = null;
   S.bonusActive = false;
+  S.rubrica = { C1: null, C2: null, C3: null };
   document.getElementById('chk-bonus').checked = false;
   document.getElementById('inp-obs').value = '';
 
@@ -1039,7 +1200,9 @@ function renderMode2Center(cc) {
 }
 
 function renderMode3Center(cc) {
-  document.getElementById('r-nivel').style.display = '';
+  // In mode 3 we hide the old nivel panel and show rubrica instead
+  document.getElementById('r-nivel').style.display = 'none';
+  document.getElementById('r-rubrica').style.display = '';
 
   // Role selector for active student
   if (S.activeStudent) {
@@ -1075,11 +1238,130 @@ function renderMode3Center(cc) {
 
   // Questions
   renderQuestionsForInstrumento(cc, 'TF');
+
+  // Render rubrica in right panel
+  renderRubrica();
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// INSTRUMENTOS
+// RÚBRICA MODO 3
 // ═══════════════════════════════════════════════════════════════════
+
+const RUBRICA = {
+  C1: {
+    name: 'Dominio y precisión del contenido',
+    peso: '50%',
+    niveles: {
+      4: 'Explica los conceptos con precisión, usa datos o referencias pertinentes sin errores, responde preguntas con seguridad y sustenta sus argumentos.',
+      3: 'Explica los conceptos correctamente en la mayor parte de la exposición; comete errores menores o imprecisiones que no comprometen el argumento central; responde preguntas de forma aceptable.',
+      2: 'Demuestra comprensión parcial: hay errores o lagunas notorios en los conceptos centrales, o dificultad para responder preguntas sobre el propio trabajo.',
+      1: 'No demuestra comprensión del contenido: errores conceptuales graves, incapacidad para responder preguntas básicas o dependencia total en la lectura de diapositivas.'
+    }
+  },
+  C2: {
+    name: 'Claridad y coherencia del argumento',
+    peso: '30%',
+    niveles: {
+      4: 'Las ideas fluyen de forma lógica y articulada; el mensaje es claro desde el inicio hasta el cierre; no hay contradicciones; el lenguaje es preciso y apropiado para el contexto académico.',
+      3: 'La estructura es comprensible aunque con algunas transiciones débiles o momentos de imprecisión; el hilo argumental se mantiene.',
+      2: 'La organización es parcialmente coherente; el oyente debe hacer esfuerzo para seguir el argumento; hay imprecisiones o contradicciones puntuales.',
+      1: 'El mensaje es confuso o incoherente; no hay hilo conductor claro; las ideas aparecen desconectadas o contradictorias.'
+    }
+  },
+  C3: {
+    name: 'Comunicación oral',
+    peso: '20%',
+    niveles: {
+      4: 'Mantiene contacto visual, tono y ritmo apropiados; escucha activamente las preguntas, las reformula si es necesario y verifica comprensión antes de responder.',
+      3: 'Comunicación generalmente efectiva; el contacto visual o el tono son irregulares; escucha las preguntas aunque sin verificar comprensión de manera consistente.',
+      2: 'Comunicación básica; lee diapositivas o notas frecuentemente; tono monótono o volumen inadecuado; responde preguntas sin haber escuchado completamente.',
+      1: 'Comunicación muy limitada: evita el contacto visual de forma consistente, no modula el tono, o interrumpe/ignora la pregunta antes de responder.'
+    }
+  }
+};
+
+const RUBRICA_LABELS = { 1: 'Muy débil', 2: 'En desarrollo', 3: 'Competente', 4: 'Excelente' };
+const RUBRICA_PESOS  = { C1: 0.50, C2: 0.30, C3: 0.20 };
+
+function calcNotaRubrica() {
+  const { C1, C2, C3 } = S.rubrica;
+  if (C1 === null || C2 === null || C3 === null) return null;
+  return ((C1 * 0.50) + (C2 * 0.30) + (C3 * 0.20)) * 5;
+}
+
+function renderRubrica() {
+  const container = document.getElementById('rubrica-criterios');
+  container.innerHTML = '';
+
+  Object.entries(RUBRICA).forEach(([cid, crit]) => {
+    const selVal = S.rubrica[cid];
+    const block = document.createElement('div');
+    block.className = 'criterio-block';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'criterio-header';
+    hdr.innerHTML = `
+      <span class="criterio-code">${cid}</span>
+      <span class="criterio-name">${crit.name}</span>
+      <span class="criterio-peso">${crit.peso}</span>
+      <button class="criterio-help-btn" onclick="toggleCriterioDesc('${cid}')" title="Ver descripción">?</button>
+    `;
+    block.appendChild(hdr);
+
+    // Collapsible description
+    const desc = document.createElement('div');
+    desc.className = 'criterio-desc';
+    desc.id = `desc-${cid}`;
+    desc.innerHTML = [4,3,2,1].map(n => `
+      <div class="criterio-desc-item">
+        <strong>${n}</strong>
+        <span>${crit.niveles[n]}</span>
+      </div>
+    `).join('');
+    block.appendChild(desc);
+
+    // Level buttons
+    const btns = document.createElement('div');
+    btns.className = 'nivel-btns';
+    [1,2,3,4].forEach(n => {
+      const btn = document.createElement('button');
+      btn.className = `nivel-btn${selVal === n ? ` sel-${n}` : ''}`;
+      btn.innerHTML = `<span class="nb-num">${n}</span><span class="nb-label">${RUBRICA_LABELS[n]}</span>`;
+      btn.addEventListener('click', () => {
+        S.rubrica[cid] = n;
+        renderRubrica();
+        updateNotaDisplay();
+      });
+      btns.appendChild(btn);
+    });
+    block.appendChild(btns);
+    container.appendChild(block);
+  });
+
+  updateNotaDisplay();
+}
+
+function toggleCriterioDesc(cid) {
+  document.getElementById(`desc-${cid}`)?.classList.toggle('visible');
+}
+
+function updateNotaDisplay() {
+  const nota = calcNotaRubrica();
+  const el = document.getElementById('nota-rubrica-val');
+  const calc = document.getElementById('nota-rubrica-calc');
+  if (!el) return;
+  if (nota === null) {
+    el.textContent = '—';
+    calc.textContent = 'Completa los 3 criterios';
+  } else {
+    el.textContent = nota.toFixed(1);
+    const { C1, C2, C3 } = S.rubrica;
+    calc.textContent = `C1:${C1}×50% + C2:${C2}×30% + C3:${C3}×20%`;
+  }
+}
+
+
 
 function renderInstrumentosRight(list) {
   const container = document.getElementById('instr-chips-right');
@@ -1102,7 +1384,7 @@ function renderInstrumentosRight(list) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderNiveles() {
-  if (S.mode === 2) { document.getElementById('r-nivel').style.display = 'none'; return; }
+  if (S.mode === 2 || S.mode === 3) { document.getElementById('r-nivel').style.display = 'none'; return; }
   document.getElementById('r-nivel').style.display = '';
   const container = document.getElementById('nivel-opts');
   container.innerHTML = '';
@@ -1168,6 +1450,61 @@ function updateAjuste() {
 async function registrar() {
   if (!S.activeStudent) { toast('Selecciona un alumno primero', true); return; }
   if (!S.selectedInstrumento) { toast('Selecciona el instrumento', true); return; }
+
+  // Modo 3: validar rúbrica completa
+  if (S.mode === 3) {
+    const { C1, C2, C3 } = S.rubrica;
+    if (C1 === null || C2 === null || C3 === null) {
+      toast('Completa los 3 criterios de la rúbrica', true); return;
+    }
+    const nota = calcNotaRubrica();
+    const rol = S.roles[S.activeStudent.code] || 'no asignado';
+
+    const payload = {
+      action: 'registrar_sesion',
+      fecha: document.getElementById('inp-fecha').value,
+      sesion: document.getElementById('inp-sesion').value,
+      modo: 'Modo 3 · TF',
+      instrumento: S.selectedInstrumento,
+      codigo: S.activeStudent.code,
+      alumno: S.activeStudent.name,
+      grupo: S.activeStudent.group,
+      rol: rol,
+      ajuste: nota.toFixed(1),
+      nivel: `C1:${C1} C2:${C2} C3:${C3}`,
+      observacion: document.getElementById('inp-obs').value
+    };
+
+    setSyncStatus('syncing');
+    document.getElementById('btn-reg').disabled = true;
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      S.graded[S.activeStudent.code] = { ajuste: nota.toFixed(1), instrumento: S.selectedInstrumento };
+      S.sessionHistory.push({ ...payload, displayAj: nota.toFixed(1) });
+
+      setSyncStatus('ok');
+      toast(`✓ ${S.activeStudent.name.split(' ')[0]} · Nota TF: ${nota.toFixed(1)}`);
+
+      renderStudents();
+      renderHistory();
+      resetRight();
+    } catch(err) {
+      setSyncStatus('error');
+      toast('Error al conectar con Google Sheets', true);
+    } finally {
+      document.getElementById('btn-reg').disabled = false;
+    }
+    return;
+  }
+
+  // Modos 1 y 2
   if (S.mode !== 2 && !S.selectedNivel && !S.bonusActive) { toast('Selecciona el nivel de desempeño', true); return; }
   if (S.mode === 2 && !S.bonusActive) { toast('Activa el bonus para registrar participación', true); return; }
 
@@ -1175,8 +1512,7 @@ async function registrar() {
   const ajStr = typeof aj === 'string' ? aj : String(aj);
 
   const nivel = NIVELES.find(n => n.id === S.selectedNivel);
-  const rol = S.mode === 3 ? (S.roles[S.activeStudent.code] || 'no asignado') :
-              S.mode === 2 ? 'participacion' : 'dinamica';
+  const rol = S.mode === 2 ? 'participacion' : 'dinamica';
 
   const payload = {
     action: 'registrar_sesion',
@@ -1204,7 +1540,6 @@ async function registrar() {
       body: JSON.stringify(payload)
     });
 
-    // Update local state
     S.graded[S.activeStudent.code] = {
       ajuste: typeof aj === 'string' ? aj : aj,
       instrumento: S.selectedInstrumento
@@ -1229,10 +1564,12 @@ async function registrar() {
 function resetRight() {
   S.selectedNivel = null;
   S.bonusActive = false;
+  S.rubrica = { C1: null, C2: null, C3: null };
   document.getElementById('chk-bonus').checked = false;
   document.getElementById('inp-obs').value = '';
   renderNiveles();
   updateAjuste();
+  if (S.mode === 3) renderRubrica();
 }
 
 // ═══════════════════════════════════════════════════════════════════
