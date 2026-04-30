@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorteo GEP201 · Dinámica de Preguntas [AZUL PIZARRA]</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:opsz,wght@8..60,300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #16202e;
+    --surface: #1c2637;
+    --border: #2a3650;
+    --accent: #c9a84c;
+    --accent-dim: #7a6330;
+    --text: #eef2f7;
+    --text-muted: #7a90b0;
+    --text-dim: #2a3548;
+    --g1: #5a85c5;
+    --g2: #5aaa7a;
+    --g3: #a06898;
+    --g1-dim: #1e2e42;
+    --g2-dim: #1e2e28;
+    --g3-dim: #2e1e32;
+    --danger: #c05050;
+    --radius: 4px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Header */
+  header {
+    width: 100%;
+    max-width: 860px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header-label {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Main layout */
+  .main {
+    width: 100%;
+    max-width: 860px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Global controls */
+  .global-controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .control-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .qty-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, background 0.15s;
+    line-height: 1;
+    padding-bottom: 2px;
+  }
+  .qty-btn:hover { border-color: var(--accent); background: #1a1800; }
+
+  .qty-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 32px;
+    text-align: center;
+  }
+
+  .control-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .btn-sortear-all {
+    margin-left: auto;
+    background: var(--accent);
+    color: #0a0c10;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 22px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-sortear-all:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn-sortear-all:active { transform: translateY(0); }
+  .btn-sortear-all:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* Group cards */
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 700px) {
+    .groups-grid { grid-template-columns: 1fr; }
+  }
+
+  .group-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .group-card.g1 { border-top: 3px solid var(--g1); }
+  .group-card.g2 { border-top: 3px solid var(--g2); }
+  .group-card.g3 { border-top: 3px solid var(--g3); }
+
+  .group-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .group-tag {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .g1 .group-tag { color: var(--g1); }
+  .g2 .group-tag { color: var(--g2); }
+  .g3 .group-tag { color: var(--g3); }
+
+  .group-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .group-count {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Member list */
+  .member-list {
+    padding: 12px 0;
+  }
+
+  .member-item {
+    padding: 7px 18px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    transition: background 0.2s, color 0.2s;
+    border-left: 2px solid transparent;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .member-item .member-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .member-item.selected {
+    color: var(--text);
+    background: rgba(201,168,76,0.06);
+    border-left-color: var(--accent);
+  }
+  .member-item.selected .member-dot {
+    background: var(--accent);
+  }
+
+  /* Slot machine area */
+  .slot-area {
+    padding: 14px 18px 18px;
+    border-top: 1px solid var(--border);
+    min-height: 90px;
+    position: relative;
+  }
+
+  .slot-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .slots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .slot {
+    height: 32px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: var(--bg);
+    position: relative;
+  }
+
+  .slot-inner {
+    position: absolute;
+    left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    height: 100%;
+    transform: translateY(0);
+  }
+
+  .slot.spinning .slot-inner {
+    animation: spinSlot 0.08s linear infinite;
+  }
+
+  .slot.revealing {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(201,168,76,0.2);
+  }
+
+  .slot.revealing .slot-inner {
+    color: var(--accent);
+    animation: none;
+  }
+
+  @keyframes spinSlot {
+    0%   { transform: translateY(-8px); opacity: 0.3; }
+    50%  { transform: translateY(0);    opacity: 0.9; }
+    100% { transform: translateY(8px);  opacity: 0.3; }
+  }
+
+  .slot-placeholder {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-style: italic;
+    padding: 6px 0;
+  }
+
+  /* Sortear button per group */
+  .btn-sortear {
+    width: 100%;
+    margin-top: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 9px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .btn-sortear:hover {
+    border-color: var(--accent-dim);
+    color: var(--accent);
+    background: rgba(201,168,76,0.04);
+  }
+  .btn-sortear:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Footer */
+  footer {
+    margin-top: 56px;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Flash overlay on reveal */
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(201,168,76,0.04);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+    transition: opacity 0.1s;
+  }
+  .flash.active { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<header>
+  <div class="header-label">GEP201 · Gestión Financiera del Estado · 2026-1</div>
+  <h1>Dinámica de <span>Preguntas</span></h1>
+  <div class="header-sub">Selección aleatoria de integrantes por grupo · <span id="fecha-hoy"></span></div>
+</header>
+
+<div class="main">
+
+  <div class="global-controls">
+    <div>
+      <div class="control-label">Integrantes a seleccionar</div>
+      <div class="qty-control" style="margin-top:8px">
+        <button class="qty-btn" id="btn-menos">−</button>
+        <div class="qty-display" id="qty-display">2</div>
+        <button class="qty-btn" id="btn-mas">+</button>
+      </div>
+    </div>
+    <div class="control-desc">
+      Ajusta cuántos integrantes de cada grupo serán sorteados para responder.
+    </div>
+    <button class="btn-sortear-all" id="btn-all">↯ Sortear todos los grupos</button>
+  </div>
+
+  <div class="groups-grid" id="groups-grid"></div>
+
+</div>
+
+<footer>GEP201 · FGAD · PUCP · Sorteo aleatorio sin reemplazo</footer>
+
+<script>
+// ── FECHA ──────────────────────────────────────────────────────────
+// Para forzar una fecha manual, escribe aquí la fecha entre comillas,
+// en formato 'DD de mes de YYYY'  →  ejemplo: '15 de mayo de 2026'
+// Para que sea automática, deja el valor en null.
+const FECHA_MANUAL = null;
+
+(function setFecha() {
+  const el = document.getElementById('fecha-hoy');
+  if (!el) return;
+  if (FECHA_MANUAL) { el.textContent = FECHA_MANUAL; return; }
+  const meses = ['enero','febrero','marzo','abril','mayo','junio',
+                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const hoy = new Date();
+  el.textContent = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+})();
+
+// ── DATOS ───────────────────────────────────────────────────────────
+const STUDENTS = {
+  "GRUPO 1": [
+    "Karla Abanto Garibay",
+    "Andrea Flores Quispe",
+    "Claudio Loyola Tello",
+    "Hilary Salazar Solorzano",
+    "Ariedh Veliz Cruz"
+  ],
+  "GRUPO 2": [
+    "Ghino Chilcon Torres",
+    "Celina Chuquitaipe Palomino",
+    "Fabricio Martinez Carrasco",
+    "Dyna Quispe Maquera",
+    "Rubi Ventura Arisaca"
+  ],
+  "GRUPO 3": [
+    "Valeria Bocanegra Sanabria",
+    "Adriana Donayre Garcia",
+    "Andrea Figueroa Garcia",
+    "Angela Olavide Posadas",
+    "Kate Santiago Apari"
+  ]
+};
+
+const GROUP_CLASSES = { "GRUPO 1": "g1", "GRUPO 2": "g2", "GRUPO 3": "g3" };
+const GROUP_NUMS    = { "GRUPO 1": "01", "GRUPO 2": "02", "GRUPO 3": "03" };
+
+let qty = 2;
+let animating = false;
+const groupStates = {}; // tracks selected per group
+
+// Init
+Object.keys(STUDENTS).forEach(g => { groupStates[g] = []; });
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// --- Render groups ---
+function renderGroups() {
+  const grid = document.getElementById('groups-grid');
+  grid.innerHTML = '';
+  Object.entries(STUDENTS).forEach(([group, members]) => {
+    const cls = GROUP_CLASSES[group];
+    const num = GROUP_NUMS[group];
+    const selected = groupStates[group];
+    const maxQ = Math.min(qty, members.length);
+
+    const card = document.createElement('div');
+    card.className = `group-card ${cls}`;
+    card.id = `card-${cls}`;
+
+    // Member list HTML
+    const memberRows = members.map(m => {
+      const isSel = selected.includes(m);
+      return `<div class="member-item${isSel ? ' selected' : ''}" data-name="${m}">
+        <span class="member-dot"></span>
+        <span>${formatName(m)}</span>
+      </div>`;
+    }).join('');
+
+    // Slots HTML
+    const slotsHtml = selected.length > 0
+      ? selected.map(m => `<div class="slot revealing"><div class="slot-inner">${formatName(m)}</div></div>`).join('')
+      : `<div class="slot-placeholder">— sin sorteo aún —</div>`;
+
+    card.innerHTML = `
+      <div class="group-header">
+        <div class="group-tag">Grupo ${num}</div>
+        <div class="group-name">${group}</div>
+        <div class="group-count">${members.length} integrantes · sortear ${maxQ}</div>
+      </div>
+      <div class="member-list">${memberRows}</div>
+      <div class="slot-area">
+        <div class="slot-label">Seleccionados</div>
+        <div class="slots-container" id="slots-${cls}">${slotsHtml}</div>
+        <button class="btn-sortear" id="btn-${cls}" onclick="sortearGrupo('${group}')">
+          ↯ Sortear ${group}
+        </button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function formatName(full) {
+  // Show "Nombre Apellido1" — truncate if too long
+  const parts = full.split(' ');
+  if (parts.length >= 2) {
+    return parts[0] + ' ' + parts[1];
+  }
+  return full;
+}
+
+// --- Quantity control ---
+document.getElementById('btn-menos').addEventListener('click', () => {
+  if (animating) return;
+  if (qty > 1) { qty--; updateQtyDisplay(); renderGroups(); }
+});
+document.getElementById('btn-mas').addEventListener('click', () => {
+  if (animating) return;
+  const maxPossible = Math.min(...Object.values(STUDENTS).map(m => m.length));
+  if (qty < maxPossible) { qty++; updateQtyDisplay(); renderGroups(); }
+});
+
+function updateQtyDisplay() {
+  document.getElementById('qty-display').textContent = qty;
+}
+
+// --- Sortear grupo ---
+async function sortearGrupo(group) {
+  if (animating) return;
+  animating = true;
+  setAllBtnsDisabled(true);
+
+  const cls = GROUP_CLASSES[group];
+  const members = STUDENTS[group];
+  const maxQ = Math.min(qty, members.length);
+  const picked = shuffle(members).slice(0, maxQ);
+
+  const slotsContainer = document.getElementById(`slots-${cls}`);
+
+  // Build spinning slots
+  slotsContainer.innerHTML = '';
+  const slots = [];
+  for (let i = 0; i < maxQ; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot spinning';
+    const inner = document.createElement('div');
+    inner.className = 'slot-inner';
+    inner.textContent = members[Math.floor(Math.random() * members.length)].split(' ')[0];
+    slot.appendChild(inner);
+    slotsContainer.appendChild(slot);
+    slots.push({ el: slot, inner, final: picked[i] });
+  }
+
+  // Spin phase: show random names cycling
+  const spinDuration = 1800;
+  const spinInterval = setInterval(() => {
+    slots.forEach(s => {
+      if (s.el.classList.contains('spinning')) {
+        s.inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
+      }
+    });
+  }, 80);
+
+  // Reveal one by one
+  await sleep(spinDuration);
+  clearInterval(spinInterval);
+
+  for (let i = 0; i < slots.length; i++) {
+    await sleep(300);
+    const s = slots[i];
+    s.el.classList.remove('spinning');
+    s.el.classList.add('revealing');
+    s.inner.textContent = formatName(s.final);
+    flashScreen();
+    await sleep(180);
+  }
+
+  // Update state & member highlights
+  groupStates[group] = picked;
+  await sleep(200);
+  updateMemberHighlights(group, picked, cls);
+
+  animating = false;
+  setAllBtnsDisabled(false);
+}
+
+function updateMemberHighlights(group, picked, cls) {
+  const card = document.getElementById(`card-${cls}`);
+  card.querySelectorAll('.member-item').forEach(el => {
+    const name = el.dataset.name;
+    if (picked.includes(name)) {
+      el.classList.add('selected');
+    } else {
+      el.classList.remove('selected');
+    }
+  });
+}
+
+// --- Sortear todos ---
+document.getElementById('btn-all').addEventListener('click', async () => {
+  if (animating) return;
+  animating = true;
+  setAllBtnsDisabled(true);
+
+  const groups = Object.keys(STUDENTS);
+  for (let i = 0; i < groups.length; i++) {
+    if (i > 0) await sleep(400);
+    await sortearGrupoInternal(groups[i]);
+  }
+
+  animating = false;
+  setAllBtnsDisabled(false);
+});
+
+async function sortearGrupoInternal(group) {
+  // Same as sortearGrupo but without locking/unlocking
+  const cls = GROUP_CLASSES[group];
+  const members = STUDENTS[group];
+  const maxQ = Math.min(qty, members.length);
+  const picked = shuffle(members).slice(0, maxQ);
+
+  const slotsContainer = document.getElementById(`slots-${cls}`);
+  slotsContainer.innerHTML = '';
+  const slots = [];
+  for (let i = 0; i < maxQ; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot spinning';
+    const inner = document.createElement('div');
+    inner.className = 'slot-inner';
+    inner.textContent = members[Math.floor(Math.random() * members.length)].split(' ')[0];
+    slot.appendChild(inner);
+    slotsContainer.appendChild(slot);
+    slots.push({ el: slot, inner, final: picked[i] });
+  }
+
+  const spinDuration = 1200;
+  const spinInterval = setInterval(() => {
+    slots.forEach(s => {
+      if (s.el.classList.contains('spinning')) {
+        s.inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
+      }
+    });
+  }, 80);
+
+  await sleep(spinDuration);
+  clearInterval(spinInterval);
+
+  for (let i = 0; i < slots.length; i++) {
+    await sleep(220);
+    const s = slots[i];
+    s.el.classList.remove('spinning');
+    s.el.classList.add('revealing');
+    s.inner.textContent = formatName(s.final);
+    flashScreen();
+    await sleep(150);
+  }
+
+  groupStates[group] = picked;
+  updateMemberHighlights(group, picked, cls);
+}
+
+function flashScreen() {
+  const el = document.getElementById('flash');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 120);
+}
+
+function setAllBtnsDisabled(val) {
+  document.querySelectorAll('.btn-sortear, .btn-sortear-all').forEach(b => b.disabled = val);
+  document.getElementById('btn-menos').disabled = val;
+  document.getElementById('btn-mas').disabled = val;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Boot
+renderGroups();
+</script>
+</body>
+</html>
