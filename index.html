@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GEP201 · Gestión de Evaluación</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:opsz,wght@8..60,300;400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f2ec;--bg2:#edeae2;--surface:#fff;
+  --border:#d8d2c4;--border-dark:#b8b0a0;
+  --text:#1a1814;--text-mid:#4a4540;--text-muted:#8a8278;--text-dim:#b8b0a0;
+  --accent:#8b4513;--accent-light:#f0e8dc;--accent-mid:#c47840;
+  --g1:#2c5f8a;--g1-bg:#eaf0f7;--g2:#2d7a4f;--g2-bg:#eaf4ee;--g3:#7a3d6e;--g3-bg:#f4eaf2;
+  --ok:#2d6a4f;--ok-bg:#d8f3dc;--warn:#e76f00;--warn-bg:#fff0dc;--danger:#c1121f;--danger-bg:#ffe0e0;
+  --radius:4px;
+  --fs-title:16px;--fs-body:13px;--fs-label:11px;--fs-mono:10px;--fs-micro:9px;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',serif;font-size:var(--fs-body);display:flex;flex-direction:column}
+
+/* HEADER */
+header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;align-items:center;gap:12px;border-bottom:2px solid var(--accent);flex-shrink:0;z-index:100}
+.hdr-title{font-family:'Playfair Display',serif;font-size:var(--fs-title);font-weight:700;white-space:nowrap}
+.hdr-title span{color:var(--accent-mid)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-fields{display:flex;gap:6px;align-items:center}
+.hdr-field{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:#6a6460}
+.hdr-field input{background:#2a2620;border:1px solid #3a3630;color:#f5f2ec;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);padding:3px 6px;border-radius:var(--radius);outline:none}
+.hdr-field input[type=text]{width:110px}.hdr-field input[type=date]{width:105px}
+.sync-dot{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);padding:3px 8px;border-radius:20px;background:#2a2620;color:#5a5450;transition:all .3s;white-space:nowrap}
+.sync-dot.ok{color:#4a9a6a;background:#0a2a18}.sync-dot.syncing{color:#c47840;background:#2a2008}.sync-dot.error{color:#e05050;background:#2a0808}
+.hdr-mob-info{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:#6a6460;display:none}
+@media(max-width:639px){.hdr-fields{display:none}.hdr-mob-info{display:block}.hdr-title{font-size:14px}}
+
+/* MODE BAR */
+.mode-bar{background:#13110e;border-bottom:1px solid #2a2620;display:flex;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mode-bar::-webkit-scrollbar{display:none}
+.mode-tab{padding:10px 16px;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);letter-spacing:.1em;text-transform:uppercase;color:#5a5450;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.mode-tab:hover{color:#a89880}.mode-tab.active{color:var(--accent-mid);border-bottom-color:var(--accent-mid)}
+
+/* APP MAIN */
+.app-main{flex:1;overflow:hidden;position:relative;background:var(--surface)}
+
+/* DESKTOP LAYOUTS */
+.layout-3col{display:grid;grid-template-columns:230px 1fr 290px;height:100%;max-width:1200px;margin:0 auto;width:100%}
+.layout-2col{display:grid;grid-template-columns:230px 1fr;height:100%;max-width:900px;margin:0 auto;width:100%}
+.layout-3col-tf{display:grid;grid-template-columns:200px 1fr 340px;height:100%;max-width:1200px;margin:0 auto;width:100%}
+@media(min-width:640px) and (max-width:1023px){
+  .layout-3col,.layout-3col-tf{grid-template-columns:200px 1fr}
+  .hide-tablet{display:none}
+}
+
+/* PANELS */
+.panel-left,.panel-right{background:var(--surface);overflow-y:auto;height:100%}
+.panel-left{border-right:1px solid var(--border)}
+.panel-right{border-left:1px solid var(--border);background:var(--surface)}
+.panel-center{background:var(--bg);overflow-y:auto;height:100%;padding:16px}
+.panel-title{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.25em;text-transform:uppercase;color:var(--text-muted);padding:10px 14px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+
+/* MOBILE NAV */
+.mob-nav{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:10}
+.mob-back{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--accent-mid);cursor:pointer;white-space:nowrap}
+.mob-step-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mob-step-sub{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);white-space:nowrap;margin-left:auto}
+
+/* MOBILE INSTRUMENT SELECTOR */
+.mob-instr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mob-instr-btn{padding:14px 8px;border:2px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;text-align:center;transition:all .15s}
+.mob-instr-btn.active{border-color:var(--accent);background:var(--accent-light)}
+.mob-instr-code{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--text);display:block}
+.mob-instr-btn.active .mob-instr-code{color:var(--accent)}
+.mob-next-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:opacity .15s}
+.mob-next-btn:hover{opacity:.9}
+.mob-group-btn{display:block;width:100%;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;color:var(--text);cursor:pointer;text-align:left;margin-bottom:10px;transition:all .12s}
+.mob-group-btn:hover{border-color:var(--accent-mid);background:var(--accent-light)}
+
+/* STUDENT ROWS */
+.group-block{border-bottom:1px solid var(--border)}
+.group-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;padding:8px 14px 4px;display:flex;align-items:center;gap:5px}
+.g1 .group-label{color:var(--g1)}.g2 .group-label{color:var(--g2)}.g3 .group-label{color:var(--g3)}
+.group-label::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.g1 .group-label::before{background:var(--g1)}.g2 .group-label::before{background:var(--g2)}.g3 .group-label::before{background:var(--g3)}
+.student-row{display:flex;align-items:center;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;gap:8px;transition:background .1s}
+.student-row:hover{background:var(--bg)}.student-row.active{background:var(--accent-light)!important}.student-row.graded{opacity:.75}
+.s-indicator{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-dark);display:flex;align-items:center;justify-content:center;font-size:var(--fs-micro);flex-shrink:0;font-family:'IBM Plex Mono',monospace;transition:all .15s}
+.student-row.active .s-indicator{background:var(--accent);border-color:var(--accent);color:#fff}
+.student-row.graded .s-indicator{background:var(--ok);border-color:var(--ok);color:#fff}
+.s-name{flex:1;line-height:1.3}
+.s-name .s-firstname{font-family:"Playfair Display",serif;font-size:14px;font-weight:700;color:#1a1814;display:block}
+.s-name small{font-size:var(--fs-micro);color:#8a8278;display:block;margin-top:1px}
+.student-row.active .s-firstname{color:var(--accent)}
+.s-codigo{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-dim)}
+
+/* ACTIVE BANNER */
+.active-banner{background:var(--accent-light);border:1px solid #d4a870;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.active-banner.empty{background:var(--bg2);border-color:var(--border)}
+.banner-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--accent)}
+.banner-name.ph{color:var(--text-muted);font-style:italic;font-weight:400;font-size:var(--fs-body)}
+.banner-sub{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted);margin-top:2px}
+
+/* QUESTION BLOCKS */
+.dim-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.dim-head{padding:9px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg2);border-bottom:1px solid var(--border);user-select:none}
+.dim-head:hover{background:var(--bg)}
+.dim-num{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);font-weight:500;flex-shrink:0}
+.dd .dim-num{background:#dceeff;color:#1a5080}.dj .dim-num{background:#dcf0e4;color:#1a5030}
+.dm .dim-num{background:#f0e4dc;color:#80300a}.dt .dim-num{background:#e4dcf0;color:#30086a}
+.dim-title{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;flex:1}
+.dim-used{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);background:var(--bg);padding:2px 6px;border-radius:10px}
+.dim-arrow{font-size:var(--fs-micro);color:var(--text-dim);transition:transform .2s}
+.dim-block.collapsed .dim-arrow{transform:rotate(-90deg)}.dim-block.collapsed .dim-body{display:none}
+.level-group{padding:4px 10px 6px}
+.level-hdr{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.15em;text-transform:uppercase;padding:6px 4px 4px;border-bottom:1px dashed var(--border);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.lh1{color:#2d6a4f}.lh2{color:#e76f00}.lh3{color:#4a4540}
+.lh-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.lh1 .lh-dot{background:#2d6a4f}.lh2 .lh-dot{background:#e76f00}.lh3 .lh-dot{background:#4a4540}
+.q-item{display:flex;align-items:flex-start;gap:7px;padding:7px 4px;border-radius:var(--radius);cursor:pointer;transition:background .1s}
+.q-item:hover{background:var(--bg)}.q-item.used{opacity:.35}.q-item.used .q-txt{text-decoration:line-through}
+.q-chk{width:15px;height:15px;border:1.5px solid var(--border-dark);border-radius:2px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-micro)}
+.q-item.used .q-chk{background:var(--text-muted);border-color:var(--text-muted);color:#fff}
+.q-txt{font-size:var(--fs-body);color:var(--text);line-height:1.5;flex:1}
+
+/* RIGHT PANEL */
+.r-section{padding:12px 14px;border-bottom:1px solid var(--border)}
+.r-title{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+.instr-chips{display:flex;flex-wrap:wrap;gap:5px}
+.instr-chip{padding:5px 11px;border:1px solid var(--border);border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted);cursor:pointer;transition:all .12s;background:var(--bg)}
+.instr-chip:hover{border-color:var(--accent-mid);color:var(--accent)}.instr-chip.selected{background:var(--accent-light);border-color:var(--accent);color:var(--accent);font-weight:500}
+
+/* NIVEL */
+.nivel-opt{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:4px;transition:all .12s}
+.nivel-opt:hover{border-color:var(--border-dark);background:var(--bg2)}
+.nivel-opt.sel.nv-full{background:var(--ok-bg);border-color:var(--ok)}.nivel-opt.sel.nv-partial{background:#fff3e0;border-color:#f0a030}
+.nivel-opt.sel.nv-poor{background:var(--warn-bg);border-color:var(--warn)}
+.nv-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0}
+.nv-info{flex:1}.nv-name{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500}
+.nv-desc{font-size:var(--fs-micro);color:var(--text-muted);line-height:1.3;margin-top:1px}
+.nv-effect{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;flex-shrink:0}
+.nv-full .nv-effect{color:var(--ok)}.nv-partial .nv-effect{color:#8a6000}.nv-poor .nv-effect{color:var(--warn)}
+
+/* MODE 2 ADJ */
+.adj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.adj-opt{padding:12px 6px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;text-align:center;transition:all .12s}
+.adj-opt:hover{border-color:var(--border-dark)}
+.adj-opt.sel-bonus{background:var(--ok-bg);border-color:var(--ok)}.adj-opt.sel-neutral{background:var(--bg2);border-color:var(--border-dark)}.adj-opt.sel-penalty{background:var(--warn-bg);border-color:var(--warn)}
+.adj-icon{font-size:17px;display:block;margin-bottom:4px}
+.adj-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;display:block}
+.adj-value{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);color:var(--text-muted);display:block;margin-top:2px}
+.adj-opt.sel-bonus .adj-value{color:var(--ok)}.adj-opt.sel-penalty .adj-value{color:var(--warn)}
+
+/* BONUS */
+.bonus-row{display:flex;align-items:center;gap:7px;cursor:pointer}
+.bonus-row input[type=checkbox]{accent-color:var(--ok);width:13px;height:13px}
+.bonus-lbl{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted);cursor:pointer}
+
+/* AJUSTE BOX */
+.ajuste-box{background:#1a1814;border-radius:var(--radius);padding:11px 13px;display:flex;align-items:center;justify-content:space-between}
+.aj-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:#5a5450}
+.aj-calc{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:#4a4540;margin-top:2px}
+.aj-value{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--accent-mid);line-height:1}
+
+/* OBS + REG */
+.obs-area{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;font-family:'Source Serif 4',serif;font-size:var(--fs-body);color:var(--text);background:var(--bg);resize:vertical;min-height:52px;outline:none;line-height:1.5}
+.obs-area:focus{border-color:var(--accent-mid)}
+.btn-reg{width:100%;padding:12px;background:#1a1814;color:var(--accent-mid);border:none;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all .15s;margin-top:6px}
+.btn-reg:hover{background:#2a2420}.btn-reg:disabled{opacity:.35;cursor:not-allowed}
+
+/* HISTORY */
+.hist-item{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
+.hi-adj{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;min-width:34px;text-align:center;flex-shrink:0;line-height:1;padding-top:2px}
+.hi-adj.pos{color:var(--ok)}.hi-adj.neg{color:var(--danger)}.hi-adj.neu{color:var(--text-muted)}
+.hi-info{flex:1}.hi-name{font-size:var(--fs-body);font-weight:600;color:var(--text)}
+.hi-meta{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);margin-top:2px}
+.hi-obs{font-size:var(--fs-mono);color:var(--text-muted);font-style:italic;margin-top:2px}
+
+/* MODE 3 — GROUP SELECT DESKTOP */
+.group-select-btn{display:block;width:calc(100% - 28px);margin:8px 14px;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all .12s}
+.group-select-btn:hover{border-color:var(--accent-mid);background:var(--accent-light)}
+.group-select-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+
+/* MODE 3 — ASSIGN SCREEN */
+.m3-section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.m3-section-title span:first-child{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--text)}
+.m3-progress{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted)}
+.m3-sub{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);margin-bottom:12px;line-height:1.5}
+.m3-assign-list{margin-bottom:14px}
+.m3-assign-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all .12s}
+.m3-assign-row:hover{border-color:var(--border-dark);background:var(--bg)}
+.m3-assign-row.assigned{border-color:var(--accent-mid);background:var(--accent-light)}
+.m3-stu-name{font-size:var(--fs-body);color:var(--text);flex:1}
+.m3-badge{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;padding:3px 8px;border-radius:12px;flex-shrink:0}
+.m3-badge.presenter{background:var(--g1-bg);color:var(--g1);border:1px solid var(--g1)}
+.m3-badge.responder{background:var(--g3-bg);color:var(--g3);border:1px solid var(--g3)}
+.m3-badge.empty{background:var(--bg2);color:var(--text-dim);border:1px solid var(--border)}
+.m3-confirm-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;margin-top:4px}
+.m3-confirm-btn:hover{opacity:.9}
+.m3-back-btn{padding:10px 16px;background:var(--bg2);color:var(--text-mid);border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);border-radius:var(--radius);cursor:pointer;transition:all .12s}
+.m3-back-btn:hover{border-color:var(--border-dark)}
+.m3-btn-row{display:flex;gap:8px;margin-top:12px}
+.m3-btn-row .m3-confirm-btn{flex:1;margin-top:0}
+
+/* MODE 3 — CONFIRM SCREEN */
+.m3-confirm-list{margin-bottom:14px}
+.m3-confirm-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);margin-bottom:4px}
+.m3-confirm-row.presenter{background:var(--g1-bg);border:1px solid rgba(44,95,138,.2)}
+.m3-confirm-row.responder{background:var(--g3-bg);border:1px solid rgba(122,61,110,.2)}
+.m3-section-assign{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);margin-left:auto;text-align:right;line-height:1.3}
+.m3-section-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--accent-mid);background:var(--accent-light);border:1px solid #d4a870;border-radius:var(--radius);padding:6px 10px;margin-bottom:12px}
+
+/* MODE 3 — EVAL SCREEN */
+.m3-eval-header{display:flex;align-items:center;gap:10px;padding:10px 0;margin-bottom:10px;border-bottom:1px solid var(--border)}
+.m3-eval-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--text);flex:1}
+.m3-eval-counter{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted)}
+
+/* PROGRESS BAR */
+.m3-progress-bar{display:flex;gap:5px;padding:10px 0 14px;align-items:center}
+.m3-progress-bar-mob{display:flex;gap:5px;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--border)}
+.m3-prog-dot{width:28px;height:6px;border-radius:3px;background:var(--border);transition:all .2s;flex:1}
+.m3-prog-dot.done{background:var(--ok)}.m3-prog-dot.active{background:var(--accent-mid)}
+
+/* RUBRIC */
+.rubric-section{background:var(--surface);padding:12px 14px;border-bottom:1px solid var(--border)}
+.rubric-criterion{margin-bottom:12px}
+.rubric-crit-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.rubric-crit-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:600;color:#1a1814}
+.rubric-crit-peso{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted)}
+.rubric-scale{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.scale-btn{padding:9px 3px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;text-align:center;transition:all .12s}
+.scale-btn:hover{border-color:var(--border-dark);background:var(--bg2)}
+.scale-btn.sel{background:var(--accent-light);border-color:var(--accent)}
+.scale-num{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text-muted);display:block}
+.scale-btn.sel .scale-num{color:var(--accent)}
+.scale-lbl{font-size:var(--fs-micro);color:var(--text-muted);display:block;margin-top:2px;line-height:1.2}
+.nota-tf-box{background:#1a1814;border-radius:var(--radius);padding:11px 13px;display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.nota-tf-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:#5a5450}
+.nota-tf-calc{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:#4a4540;margin-top:2px}
+.nota-tf-value{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--accent-mid);line-height:1}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1814;color:#f5f2ec;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);padding:9px 18px;border-radius:20px;border-left:3px solid var(--accent-mid);transition:transform .25s ease;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}.toast.err{border-left-color:var(--danger)}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--border-dark);border-radius:2px}
+
+/* MODE 3 REVIEW */
+.m3-review-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all .12s}
+.m3-review-row:hover{border-color:var(--accent-mid);background:var(--accent-light)}
+.m3-review-nota{font-family:"Playfair Display",serif;font-size:20px;font-weight:700;color:var(--accent);margin-left:auto}
+.m3-review-nota small{font-family:"IBM Plex Mono",monospace;font-size:var(--fs-micro);color:var(--text-muted);font-weight:400;margin-left:2px}
+.m3-review-edit{font-size:14px;color:var(--text-muted);flex-shrink:0}
+
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="hdr-title">GEP201 <span>· Evaluación</span></div>
+    <div class="hdr-mob-info" id="hdr-mob">Clase 3</div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-fields">
+      <div class="hdr-field"><label>Sesión</label><input type="text" id="inp-sesion" value="Clase 3"></div>
+      <div class="hdr-field"><label>Fecha</label><input type="date" id="inp-fecha"></div>
+    </div>
+    <div class="sync-dot ok" id="sync-dot">● Listo</div>
+  </div>
+</header>
+<div class="mode-bar">
+  <div class="mode-tab active" data-mode="1" onclick="setMode(1)">Modo 1 · Dinámica RP</div>
+  <div class="mode-tab" data-mode="2" onclick="setMode(2)">Modo 2 · Participación</div>
+  <div class="mode-tab" data-mode="3" onclick="setMode(3)">Modo 3 · Sustentación TF</div>
+</div>
+<div class="app-main" id="app-main"></div>
+<div class="toast" id="toast"></div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
+
+const STUDENTS=[
+  {name:'Karla Abanto Garibay',code:'20161472',group:'GRUPO 1'},
+  {name:'Andrea Flores Quispe',code:'20200826',group:'GRUPO 1'},
+  {name:'Claudio Loyola Tello',code:'20223341',group:'GRUPO 1'},
+  {name:'Hilary Salazar Solorzano',code:'20265788',group:'GRUPO 1'},
+  {name:'Ariedh Veliz Cruz',code:'20212389',group:'GRUPO 1'},
+  {name:'Ghino Chilcon Torres',code:'20203555',group:'GRUPO 2'},
+  {name:'Celina Chuquitaipe Palomino',code:'20264965',group:'GRUPO 2'},
+  {name:'Fabricio Martinez Carrasco',code:'20231383',group:'GRUPO 2'},
+  {name:'Dyna Quispe Maquera',code:'20193772',group:'GRUPO 2'},
+  {name:'Rubi Ventura Arisaca',code:'20264889',group:'GRUPO 2'},
+  {name:'Valeria Bocanegra Sanabria',code:'20170121',group:'GRUPO 3'},
+  {name:'Adriana Donayre Garcia',code:'20182997',group:'GRUPO 3'},
+  {name:'Andrea Figueroa Garcia',code:'20211110',group:'GRUPO 3'},
+  {name:'Angela Olavide Posadas',code:'20216741',group:'GRUPO 3'},
+  {name:'Kate Santiago Apari',code:'20211096',group:'GRUPO 3'},
+];
+
+const QUESTIONS={
+  RP1:{
+    definicion:{title:'Definición de la CI',cls:'dd',num:'1',levels:{
+      1:['Fuente y criterio de selección de la definición'],
+      2:['Definiciones alternativas descartadas y por qué'],
+      3:['Defensa ante el MEF / versión alternativa posible']}},
+    justificacion:{title:'Justificación de la CI',cls:'dj',num:'2',levels:{
+      1:['Relevancia y efectos según evidencia'],
+      2:['Contradicciones entre fuentes y cómo las manejaron'],
+      3:['CI alternativa descartada / fuente más difícil']}},
+    magnitud:{title:'Magnitud de la CI',cls:'dm',num:'3',levels:{
+      1:['Indicador, fuente y cálculo'],
+      2:['Limitaciones del indicador'],
+      3:['Comparabilidad territorial / datos descartados']}}
+  },
+  RP2:{
+    arquitectura:{title:'Arquitectura causal',cls:'dd',num:'1',levels:{
+      1:['Diferencia MC vs ME en su trabajo concreto','Lógica de niveles causales: por qué ese factor en ese nivel'],
+      2:['Factores descartados y criterio de exclusión'],
+      3:['Priorización de cadenas causales']}},
+    especificidad:{title:'Especificidad y población',cls:'dj',num:'2',levels:{
+      1:['Presencia en el Perú: evidencia concreta'],
+      2:['Quién tiene el problema, precisión de la población'],
+      3:['Consistencia entre grosor de flechas y evidencia']}},
+    evidencia:{title:'Rigor de evidencia',cls:'dm',num:'3',levels:{
+      1:['Tipo de estudio detrás de cada relación causal'],
+      2:['Contradicciones en la evidencia y resolución'],
+      3:['Poder explicativo relativo de los factores']}}
+  },
+  RP3:{
+    indicadores:{title:'Indicadores y TdC',cls:'dd',num:'1',levels:{
+      1:['Qué parte de la cadena causal mide cada indicador','Indicador de resultado vs. producto: distinción deliberada'],
+      2:['Quién mide, con qué fuente, con qué frecuencia'],
+      3:['Indicador mejora pero CI no cambia: cómo lo detectarían']}},
+    implementacion:{title:'Implementación',cls:'dj',num:'2',levels:{
+      1:['Cómo llega el producto al ciudadano: punto de atención concreto'],
+      2:['Brechas de implementación y cómo las abordan'],
+      3:['Actores clave, intereses y puntos de resistencia']}},
+    viabilidad:{title:'Viabilidad',cls:'dm',num:'3',levels:{
+      1:['Limitaciones de sus indicadores'],
+      2:['Diferencias territoriales en la propuesta'],
+      3:['Análisis de actores reflejado en modelo operativo']}}
+  },
+  TF:{
+    diagnostico:{title:'Diagnóstico',cls:'dd',num:'1',levels:{
+      1:['CI como argumento no como lista','Brechas por región o grupo poblacional'],
+      2:['Datos actualizados y fuentes oficiales'],
+      3:['Magnitud y tendencia justifican la intervención']}},
+    modelos:{title:'Modelos MC / ME',cls:'dj',num:'2',levels:{
+      1:['Cambios desde RP2 y justificación'],
+      2:['Desconexión ME hacia TdC si la hay'],
+      3:['Factores priorizados coherentes con la TdC']}},
+    tdc:{title:'Teoría de Cambio',cls:'dm',num:'3',levels:{
+      1:['Narrativa producto hacia resultado hacia impacto sin leer'],
+      2:['Productos no seleccionados y por qué','Supuestos de la cadena en contexto peruano'],
+      3:['Coherencia indicadores resultado vs. producto']}},
+    transversal:{title:'Competencias transversales',cls:'dt',num:'4',levels:{
+      1:['Resumen en dos oraciones: qué proponen y por qué el Estado debe financiarlo'],
+      2:['Inconsistencia identificada en el propio trabajo'],
+      3:['Limitación más importante reconocida explícitamente']}}
+  }
+};
+
+const TF_SECTIONS=[
+  'Sección 1 · Diagnóstico',
+  'Sección 2 · Modelo Conceptual y Explicativo',
+  'Sección 3 · Teoría de Cambio',
+  'Sección 4 · Indicadores e Implementación',
+];
+
+const RUBRIC_CRITERIA=[
+  {id:'c1',label:'C1 · Dominio y precisión',peso:0.50,levels:['Muy débil','En desarrollo','Competente','Excelente']},
+  {id:'c2',label:'C2 · Claridad y coherencia',peso:0.30,levels:['Muy débil','En desarrollo','Competente','Excelente']},
+  {id:'c3',label:'C3 · Comunicación oral',peso:0.20,levels:['Muy débil','En desarrollo','Competente','Excelente']},
+];
+
+const INSTRUMENTOS_RP=['RP1','RP2','RP3'];
+const INSTRUMENTOS_PART=['CL1','CL2','CL3','RP1','RP2','RP3'];
+
+const NIVELES=[
+  {id:'full',icon:'✓✓',name:'Dominio completo',desc:'Preciso, cita fuentes, explica el proceso.',effect:'0 pts',delta:0,cls:'nv-full'},
+  {id:'partial',icon:'✓',name:'Dominio parcial',desc:'Entiende pero con imprecisiones.',effect:'−1 pt',delta:-1,cls:'nv-partial'},
+  {id:'poor',icon:'✗',name:'Dominio insuficiente',desc:'Escasa participación real.',effect:'−3 pts',delta:-3,cls:'nv-poor'},
+];
+
+const ADJ_OPTS=[
+  {id:'bonus',icon:'⭐',label:'Destacada',value:'+1',delta:1},
+  {id:'neutral',icon:'○',label:'Normal',value:'0',delta:0},
+  {id:'penalty',icon:'▽',label:'Débil',value:'−1',delta:-1},
+];
+
+let S={
+  mode:1,activeStudent:null,selectedInstrumento:'RP1',
+  selectedNivel:null,selectedAdj:null,bonusActive:false,
+  usedQuestions:new Set(),sessionHistory:[],graded:{},
+  // Mode 1/2 mobile
+  mobStep:0,
+  // Mode 3
+  m3step:0,            // 0=assign, 1=confirm, 2=evaluate
+  m3group:null,        // selected group name
+  m3order:[],          // ordered list of student codes (presenters first, then responders)
+  m3evals:{},          // code -> {rubric:{c1,c2,c3}, nivel, obs} accumulated
+  m3current:0,         // index into m3order currently evaluating
+  m3rubric:{c1:null,c2:null,c3:null},
+  m3nivel:null,
+};
+
+const isMob=()=>window.innerWidth<640;
+const mkEl=(tag,cls)=>{const el=document.createElement(tag||'div');if(cls)el.className=cls;return el;};
+const fn=(st)=>st.name.split(' ')[0];
+const ln=(st)=>st.name.split(' ').slice(1).join(' ');
+const shortName=(st)=>fn(st)+' '+st.name.split(' ')[1];
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('inp-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('inp-sesion').addEventListener('input',e=>{
+    document.getElementById('hdr-mob').textContent=e.target.value;
+  });
+  setMode(1);
+});
+
+// ── MODE SWITCH ──────────────────────────────────────────────────
+function setMode(m){
+  S.mode=m; S.activeStudent=null; S.selectedNivel=null; S.selectedAdj=null;
+  S.bonusActive=false; S.mobStep=0;
+  S.m3step=0; S.m3group=null; S.m3order=[]; S.m3evals={}; S.m3current=0;
+  S.m3rubric={c1:null,c2:null,c3:null}; S.m3nivel=null;
+  if(m===1) S.selectedInstrumento='RP1';
+  else if(m===2) S.selectedInstrumento='CL1';
+  else S.selectedInstrumento='TF';
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.mode)===m));
+  render();
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function render(){
+  const main=document.getElementById('app-main');
+  main.innerHTML=''; main.style.overflowY='auto'; main.style.height='100%';
+  if(isMob()) renderMobile(main);
+  else renderDesktop(main);
+}
+
+// ════════════════════════════════════════════════════════════════
+// DESKTOP
+// ════════════════════════════════════════════════════════════════
+function renderDesktop(main){
+  let wrap;
+  if(S.mode===1){
+    wrap=mkEl('div','layout-3col'); wrap.style.height='100%';
+    wrap.appendChild(mkLeftPanel());
+    const center=mkEl('div','panel-center');
+    buildBanner(center); renderQuestions(center,S.selectedInstrumento);
+    wrap.appendChild(center);
+    wrap.appendChild(mkRightPanel());
+  } else if(S.mode===2){
+    wrap=mkEl('div','layout-2col'); wrap.style.height='100%';
+    wrap.appendChild(mkLeftPanel());
+    wrap.appendChild(mkRightPanel());
+  } else {
+    wrap=mkEl('div','layout-3col-tf'); wrap.style.height='100%';
+    wrap.appendChild(mkLeftPanelM3());
+    const center=mkEl('div','panel-center');
+    renderDesktopM3Center(center);
+    wrap.appendChild(center);
+    wrap.appendChild(mkRightPanelTF());
+    main.appendChild(wrap);
+    updateNotaTF(); return;
+  }
+  main.appendChild(wrap);
+}
+
+function mkLeftPanel(){
+  const p=mkEl('div','panel-left');
+  p.innerHTML='<div class="panel-title">Alumnos</div>';
+  p.appendChild(mkStudentList('desk'));
+  return p;
+}
+
+function mkRightPanel(){
+  const p=mkEl('div','panel-right');
+  const wrap=mkEl('div'); wrap.style.cssText='height:100%;overflow-y:auto';
+  const rI=mkEl('div','r-section'); rI.innerHTML='<div class="r-title">Instrumento</div>';
+  const chips=mkEl('div','instr-chips'); chips.id='instr-chips';
+  const list=S.mode===2?INSTRUMENTOS_PART:INSTRUMENTOS_RP;
+  list.forEach(id=>{
+    const c=mkEl('div','instr-chip'+(S.selectedInstrumento===id?' selected':''));
+    c.textContent=id;
+    c.addEventListener('click',()=>{
+      S.selectedInstrumento=id;
+      chips.querySelectorAll('.instr-chip').forEach((ch,i)=>ch.classList.toggle('selected',list[i]===id));
+      if(S.mode===1){const cs=document.querySelector('.panel-center');if(cs){cs.innerHTML='';buildBanner(cs);renderQuestions(cs,id);}}
+    });
+    chips.appendChild(c);
+  });
+  rI.appendChild(chips); wrap.appendChild(rI);
+  if(S.mode===2){
+    const rA=mkEl('div','r-section'); rA.innerHTML='<div class="r-title">Tipo de intervención</div>';
+    const grid=mkEl('div','adj-grid'); grid.id='adj-grid'; buildAdjButtons(grid);
+    rA.appendChild(grid); wrap.appendChild(rA);
+  }
+  if(S.mode===1){
+    const rN=mkEl('div','r-section'); rN.innerHTML='<div class="r-title">Desempeño oral</div>';
+    const nopts=mkEl('div'); nopts.id='nivel-opts'; buildNivelButtons(nopts);
+    rN.appendChild(nopts); wrap.appendChild(rN);
+    const rB=mkEl('div','r-section');
+    rB.innerHTML='<div class="r-title">Bonus</div><label class="bonus-row"><input type="checkbox" id="chk-bonus"><span class="bonus-lbl">Intervención destacada (+1)</span></label>';
+    rB.querySelector('#chk-bonus').addEventListener('change',e=>{S.bonusActive=e.target.checked;updateAjuste();});
+    wrap.appendChild(rB);
+  }
+  buildAjusteBox(wrap); buildObsReg(wrap,'registrar'); buildHistPanel(wrap);
+  p.appendChild(wrap); return p;
+}
+
+// ── Desktop Mode 3 ───────────────────────────────────────────────
+function mkLeftPanelM3(){
+  const p=mkEl('div','panel-left');
+  p.innerHTML='<div class="panel-title">Grupos</div>';
+  const groups=[...new Set(STUDENTS.map(s=>s.group))];
+  groups.forEach(group=>{
+    const btn=mkEl('button','group-select-btn'+(S.m3group===group?' active':''));
+    btn.textContent=group;
+    btn.addEventListener('click',()=>{
+      if(S.m3group!==group){S.m3group=group;S.m3order=[];S.m3evals={};S.m3current=0;S.m3step=0;}
+      render();
+    });
+    p.appendChild(btn);
+  });
+  return p;
+}
+
+function renderDesktopM3Center(container){
+  if(!S.m3group){
+    const msg=mkEl('div');
+    msg.style.cssText='color:var(--text-muted);font-family:"IBM Plex Mono",monospace;font-size:11px;padding:20px';
+    msg.textContent='Selecciona un grupo en el panel izquierdo';
+    container.appendChild(msg); return;
+  }
+  if(S.m3step===0) renderM3Assign(container);
+  else if(S.m3step===1) renderM3Confirm(container);
+  else if(S.m3step===2) renderM3EvalDesk(container);
+  else renderM3Review(container);
+}
+
+function mkRightPanelTF(){
+  const p=mkEl('div','panel-right');
+  const wrap=mkEl('div'); wrap.style.cssText='height:100%;overflow-y:auto';
+  const rI=mkEl('div','r-section');
+  rI.innerHTML='<div class="r-title">Instrumento</div><div class="instr-chips"><div class="instr-chip selected">TF</div></div>';
+  wrap.appendChild(rI);
+  // Questions reference
+  const rQ=mkEl('div','r-section'); rQ.innerHTML='<div class="r-title">Pautas de preguntas</div>';
+  renderQuestions(rQ,'TF'); wrap.appendChild(rQ);
+  buildHistPanel(wrap);
+  p.appendChild(wrap); return p;
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODE 3 SHARED SCREENS
+// ════════════════════════════════════════════════════════════════
+
+// Screen A: assign order by tap — all 5 in order (P1,P2,P3,R1,R2)
+function renderM3Assign(container){
+  const members=STUDENTS.filter(s=>s.group===S.m3group);
+  const total=S.m3order.length;
+  const h=mkEl('div','m3-section-title');
+  h.innerHTML='<span>Asignar orden</span><span class="m3-progress">'+total+'/5 asignados</span>';
+  container.appendChild(h);
+  const sub=mkEl('div','m3-sub');
+  sub.textContent='Toca en el orden en que participarán: primero los 3 presentadores, luego los 2 respondedores.';
+  container.appendChild(sub);
+  const list=mkEl('div','m3-assign-list');
+  members.forEach(st=>{
+    const idx=S.m3order.indexOf(st.code);
+    const assigned=idx!==-1;
+    const row=mkEl('div','m3-assign-row'+(assigned?' assigned':''));
+    let badge='';
+    if(idx!==-1){
+      const label=idx<3?'P'+(idx+1):'R'+(idx-2);
+      const cls=idx<3?'presenter':'responder';
+      badge='<span class="m3-badge '+cls+'">'+label+'</span>';
+    } else {
+      badge='<span class="m3-badge empty">—</span>';
+    }
+    row.innerHTML=badge+'<span class="m3-stu-name">'+shortName(st)+'</span>';
+    row.addEventListener('click',()=>{
+      const i=S.m3order.indexOf(st.code);
+      if(i!==-1) S.m3order.splice(i,1);
+      else if(S.m3order.length<5) S.m3order.push(st.code);
+      render();
+    });
+    list.appendChild(row);
+  });
+  container.appendChild(list);
+  if(S.m3order.length===5){
+    const btn=mkEl('button','m3-confirm-btn');
+    btn.textContent='Ver resumen y confirmar →';
+    btn.addEventListener('click',()=>{S.m3step=1;render();});
+    container.appendChild(btn);
+  }
+}
+
+// Screen B: confirm — all 5 in order
+function renderM3Confirm(container){
+  const h=mkEl('div','m3-section-title');
+  h.innerHTML='<span>Confirmación</span>';
+  container.appendChild(h);
+  const sub=mkEl('div','m3-sub');
+  sub.textContent='Verifica el orden antes de comenzar las evaluaciones.';
+  container.appendChild(sub);
+  const list=mkEl('div','m3-confirm-list');
+  S.m3order.forEach((code,i)=>{
+    const st=STUDENTS.find(s=>s.code===code);
+    const isP=i<3;
+    const label=isP?'P'+(i+1):'R'+(i-2);
+    const cls=isP?'presenter':'responder';
+    const sectionText=isP?TF_SECTIONS[i]:'Preguntas del profesor';
+    const row=mkEl('div','m3-confirm-row '+cls);
+    row.innerHTML='<span class="m3-badge '+cls+'">'+label+'</span><span class="m3-stu-name">'+shortName(st)+'</span><span class="m3-section-assign">'+sectionText+'</span>';
+    list.appendChild(row);
+  });
+  container.appendChild(list);
+  const btns=mkEl('div','m3-btn-row');
+  const back=mkEl('button','m3-back-btn'); back.textContent='← Corregir';
+  back.addEventListener('click',()=>{S.m3step=0;render();});
+  const go=mkEl('button','m3-confirm-btn'); go.textContent='Comenzar evaluaciones →';
+  go.addEventListener('click',()=>{S.m3current=0;S.m3evals={};S.m3step=2;render();});
+  btns.appendChild(back); btns.appendChild(go); container.appendChild(btns);
+}
+
+// Screen C: evaluate one by one, accumulate — all 5 use rubric
+function renderM3EvalDesk(container){
+  const allCodes=S.m3order;
+  const currentCode=allCodes[S.m3current];
+  const currentSt=STUDENTS.find(s=>s.code===currentCode);
+  const idx=S.m3current;
+  const isP=idx<3;
+  const label=isP?'P'+(idx+1):'R'+(idx-2);
+  const badgeCls=isP?'presenter':'responder';
+
+  // Progress bar
+  const prog=mkEl('div','m3-progress-bar');
+  allCodes.forEach((_,i)=>{
+    const dot=mkEl('div','m3-prog-dot'+(i<S.m3current?' done':i===S.m3current?' active':''));
+    prog.appendChild(dot);
+  });
+  container.appendChild(prog);
+
+  // Header
+  const h=mkEl('div','m3-eval-header');
+  h.innerHTML='<span class="m3-badge '+badgeCls+'">'+label+'</span><span class="m3-eval-name">'+shortName(currentSt)+'</span><span class="m3-eval-counter">'+(idx+1)+' / '+allCodes.length+'</span>';
+  container.appendChild(h);
+
+  if(isP){
+    const secLabel=mkEl('div','m3-section-label');
+    secLabel.textContent=TF_SECTIONS[idx]||'';
+    container.appendChild(secLabel);
+  }
+
+  // Load saved rubric
+  const saved=S.m3evals[currentCode]||{};
+  S.m3rubric=saved.rubric||{c1:null,c2:null,c3:null};
+
+  // Always rubric for all 5
+  buildRubricInto(container);
+  if(saved.rubric){
+    RUBRIC_CRITERIA.forEach(cr=>{
+      const block=document.getElementById('rubric-'+cr.id);
+      if(!block||!saved.rubric[cr.id]) return;
+      block.querySelectorAll('.scale-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===saved.rubric[cr.id]));
+    });
+    updateNotaTF();
+  }
+
+  // Obs
+  const rO=mkEl('div','r-section');
+  rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas...">'+(saved.obs||'')+'</textarea>';
+  container.appendChild(rO);
+
+  // Nav buttons
+  const btns=mkEl('div','m3-btn-row');
+  if(S.m3current>0){
+    const prev=mkEl('button','m3-back-btn'); prev.textContent='← Anterior';
+    prev.addEventListener('click',()=>{saveCurrentM3Eval();S.m3current--;render();});
+    btns.appendChild(prev);
+  }
+  const isLast=S.m3current===allCodes.length-1;
+  const next=mkEl('button','m3-confirm-btn');
+  next.textContent=isLast?'Revisar y enviar →':'Siguiente →';
+  next.addEventListener('click',()=>{
+    if(!validateM3Eval()) return;
+    saveCurrentM3Eval();
+    if(isLast){S.m3step=3;render();}
+    else{S.m3current++;render();}
+  });
+  btns.appendChild(next);
+  container.appendChild(btns);
+}
+
+// Screen D: review before submit
+function renderM3Review(container){
+  const h=mkEl('div','m3-section-title');
+  h.innerHTML='<span>Revisar antes de enviar</span>';
+  container.appendChild(h);
+  const sub=mkEl('div','m3-sub');
+  sub.textContent='Toca cualquier alumno para editar su evaluación.';
+  container.appendChild(sub);
+  const list=mkEl('div','m3-assign-list');
+  S.m3order.forEach((code,i)=>{
+    const st=STUDENTS.find(s=>s.code===code);
+    const isP=i<3;
+    const label=isP?'P'+(i+1):'R'+(i-2);
+    const badgeCls=isP?'presenter':'responder';
+    const ev=S.m3evals[code]||{};
+    const r=ev.rubric||{};
+    let notaStr='—';
+    if(r.c1&&r.c2&&r.c3){
+      const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5;
+      notaStr=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw));
+    }
+    const row=mkEl('div','m3-review-row');
+    row.innerHTML='<span class="m3-badge '+badgeCls+'">'+label+'</span><span class="m3-stu-name">'+shortName(st)+'</span><span class="m3-review-nota">'+notaStr+'<small>/ 20</small></span><span class="m3-review-edit">✎</span>';
+    row.addEventListener('click',()=>{S.m3current=i;S.m3step=2;render();});
+    list.appendChild(row);
+  });
+  container.appendChild(list);
+  const btns=mkEl('div','m3-btn-row');
+  const back=mkEl('button','m3-back-btn'); back.textContent='← Editar último';
+  back.addEventListener('click',()=>{S.m3current=S.m3order.length-1;S.m3step=2;render();});
+  const send=mkEl('button','m3-confirm-btn'); send.textContent='Enviar todo al Sheet ↗';
+  send.addEventListener('click',()=>submitAllM3());
+  btns.appendChild(back); btns.appendChild(send);
+  container.appendChild(btns);
+}
+
+function saveCurrentM3Eval(){
+  const code=S.m3order[S.m3current];
+  const obsEl=document.getElementById('inp-obs');
+  S.m3evals[code]={rubric:{...S.m3rubric},obs:obsEl?obsEl.value:''};
+  S.m3rubric={c1:null,c2:null,c3:null};
+}
+
+function validateM3Eval(){
+  if(!S.m3rubric.c1||!S.m3rubric.c2||!S.m3rubric.c3){
+    toast('Completa los 3 criterios de la rúbrica',true); return false;
+  }
+  return true;
+}
+
+async function submitAllM3(){
+  const fecha=document.getElementById('inp-fecha').value;
+  const sesion=document.getElementById('inp-sesion').value;
+  setSyncStatus('syncing');
+  let ok=true;
+  for(let i=0;i<S.m3order.length;i++){
+    const code=S.m3order[i];
+    const st=STUDENTS.find(s=>s.code===code);
+    const isP=i<3;
+    const ev=S.m3evals[code]||{};
+    const r=ev.rubric||{c1:1,c2:1,c3:1};
+    const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5;
+    const ajuste=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw));
+    const nivelStr='C1:'+r.c1+' C2:'+r.c2+' C3:'+r.c3;
+    const label=isP?'P'+(i+1):'R'+(i-2);
+    const payload={
+      action:'registrar_sesion',fecha,sesion,modo:'Modo 3',instrumento:'TF',
+      codigo:code,alumno:st.name,grupo:st.group,
+      rol:label,ajuste,nivel:nivelStr,observacion:ev.obs||''
+    };
+    try{
+      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      S.sessionHistory.push({...payload,displayAj:ajuste});
+    } catch(e){ok=false;}
+  }
+  setSyncStatus(ok?'ok':'error');
+  toast(ok?'✓ '+S.m3order.length+' calificaciones enviadas':'Error al enviar',!ok);
+  S.m3step=0; S.m3order=[]; S.m3evals={}; S.m3current=0; S.m3group=null;
+  render();
+}
+
+function getRole(code){
+  if(!S.m3order.length) return null;
+  const i=S.m3order.indexOf(code);
+  if(i===-1) return null;
+  return i<3?'presenter':'responder';
+}
+
+// ════════════════════════════════════════════════════════════════
+// MOBILE
+// ════════════════════════════════════════════════════════════════
+function renderMobile(main){
+  if(S.mode===3){renderMobile3(main);return;}
+
+  if(S.mobStep===0){
+    const wrap=mkEl('div'); wrap.style.cssText='padding:16px;padding-bottom:40px';
+    const h=mkEl('div'); h.style.cssText='font-family:"Playfair Display",serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px';
+    h.textContent='¿Qué estás evaluando?';
+    const sub=mkEl('div'); sub.style.cssText='font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--text-muted);margin-bottom:18px';
+    sub.textContent=S.mode===1?'Selecciona el reporte':'Selecciona el instrumento';
+    wrap.appendChild(h); wrap.appendChild(sub);
+    const instrList=S.mode===1?INSTRUMENTOS_RP:INSTRUMENTOS_PART;
+    const grid=mkEl('div','mob-instr-grid');
+    instrList.forEach(id=>{
+      const btn=mkEl('div','mob-instr-btn'+(S.selectedInstrumento===id?' active':''));
+      const code=mkEl('span','mob-instr-code'); code.textContent=id;
+      btn.appendChild(code);
+      btn.addEventListener('click',()=>{
+        S.selectedInstrumento=id;
+        grid.querySelectorAll('.mob-instr-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+      grid.appendChild(btn);
+    });
+    wrap.appendChild(grid);
+    const next=mkEl('button','mob-next-btn');
+    next.textContent='Continuar →';
+    next.addEventListener('click',()=>{S.mobStep=1;render();});
+    wrap.appendChild(next);
+    main.appendChild(wrap);
+
+  } else if(S.mobStep===1){
+    const nav=buildMobNav('← '+S.selectedInstrumento,()=>{S.mobStep=0;render();},'Selecciona alumno');
+    main.appendChild(nav);
+    main.appendChild(mkStudentList('mob'));
+
+  } else {
+    const nav=buildMobNav('← Alumnos',()=>{S.activeStudent=null;S.mobStep=1;render();},
+      S.activeStudent?shortName(S.activeStudent):'—',
+      S.selectedInstrumento+(S.activeStudent?' · '+S.activeStudent.group:''));
+    main.appendChild(nav);
+    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
+    renderQuestions(content,S.selectedInstrumento);
+    if(S.mode===1){
+      const rN=mkEl('div'); rN.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
+      rN.innerHTML='<div class="r-title">Desempeño oral</div>';
+      const nopts=mkEl('div'); nopts.id='nivel-opts'; buildNivelButtons(nopts);
+      rN.appendChild(nopts); content.appendChild(rN);
+      const rB=mkEl('div'); rB.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
+      rB.innerHTML='<div class="r-title">Bonus</div><label class="bonus-row"><input type="checkbox" id="chk-bonus"'+(S.bonusActive?' checked':'')+'><span class="bonus-lbl">Intervención destacada (+1)</span></label>';
+      rB.querySelector('#chk-bonus').addEventListener('change',e=>{S.bonusActive=e.target.checked;updateAjuste();});
+      content.appendChild(rB);
+    } else {
+      const rA=mkEl('div'); rA.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
+      rA.innerHTML='<div class="r-title">Tipo de intervención</div>';
+      const grid=mkEl('div','adj-grid'); grid.id='adj-grid'; buildAdjButtons(grid);
+      rA.appendChild(grid); content.appendChild(rA);
+    }
+    const rAj=mkEl('div'); rAj.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
+    rAj.innerHTML='<div class="r-title">Ajuste</div><div class="ajuste-box"><div><div class="aj-label">Puntos</div><div class="aj-calc" id="aj-calc">—</div></div><div class="aj-value" id="aj-value">—</div></div>';
+    content.appendChild(rAj);
+    buildObsRegInline(content,'registrar');
+    buildHistPanelInline(content);
+    main.appendChild(content);
+    updateAjuste(); renderHistory();
+  }
+}
+
+// ── Mobile Mode 3 ────────────────────────────────────────────────
+function renderMobile3(main){
+  // Step 0: pick group
+  if(!S.m3group){
+    const wrap=mkEl('div'); wrap.style.cssText='padding:16px;padding-bottom:40px';
+    const h=mkEl('div'); h.style.cssText='font-family:"Playfair Display",serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px';
+    h.textContent='Sustentación TF';
+    const sub=mkEl('div'); sub.style.cssText='font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--text-muted);margin-bottom:18px';
+    sub.textContent='Selecciona el grupo a evaluar';
+    wrap.appendChild(h); wrap.appendChild(sub);
+    const groups=[...new Set(STUDENTS.map(s=>s.group))];
+    groups.forEach(group=>{
+      const btn=mkEl('button','mob-group-btn'); btn.textContent=group;
+      btn.addEventListener('click',()=>{S.m3group=group;S.m3order=[];S.m3evals={};S.m3current=0;S.m3step=0;render();});
+      wrap.appendChild(btn);
+    });
+    main.appendChild(wrap); return;
+  }
+
+  if(S.m3step===0){
+    const nav=buildMobNav('← Grupos',()=>{S.m3group=null;render();},'Asignar orden',S.m3group);
+    main.appendChild(nav);
+    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
+    renderM3Assign(content);
+    main.appendChild(content);
+  } else if(S.m3step===1){
+    const nav=buildMobNav('← Asignación',()=>{S.m3step=0;render();},'Confirmar',S.m3group);
+    main.appendChild(nav);
+    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
+    renderM3Confirm(content);
+    main.appendChild(content);
+  } else if(S.m3step===3){
+    const nav=buildMobNav('← Editar último',()=>{S.m3current=S.m3order.length-1;S.m3step=2;render();},'Revisar',S.m3group);
+    main.appendChild(nav);
+    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
+    renderM3Review(content);
+    main.appendChild(content);
+  } else {
+    const currentCode=S.m3order[S.m3current];
+    const currentSt=STUDENTS.find(s=>s.code===currentCode);
+    const idx=S.m3current;
+    const isP=idx<3;
+    const label=isP?'P'+(idx+1):'R'+(idx-2);
+    const nav=buildMobNav(
+      '← '+(S.m3current>0?'Anterior':'Inicio'),
+      ()=>{if(S.m3current>0){saveCurrentM3Eval();S.m3current--;render();}else{S.m3step=2;S.m3current=0;render();}},
+      shortName(currentSt),
+      label+' · '+(S.m3current+1)+'/'+S.m3order.length
+    );
+    main.appendChild(nav);
+    // Progress dots
+    const prog=mkEl('div','m3-progress-bar-mob');
+    S.m3order.forEach((_,i)=>{
+      const dot=mkEl('div','m3-prog-dot'+(i<S.m3current?' done':i===S.m3current?' active':''));
+      prog.appendChild(dot);
+    });
+    main.appendChild(prog);
+    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
+    if(isP){
+      const secLabel=mkEl('div','m3-section-label'); secLabel.textContent=TF_SECTIONS[S.m3current]||'';
+      content.appendChild(secLabel);
+    }
+    const saved=S.m3evals[currentCode]||{};
+    if(saved.rubric) S.m3rubric={...saved.rubric};
+    buildRubricInto(content);
+    if(saved.rubric){
+      RUBRIC_CRITERIA.forEach(cr=>{
+        const block=document.getElementById('rubric-'+cr.id);
+        if(!block||!saved.rubric[cr.id]) return;
+        block.querySelectorAll('.scale-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===saved.rubric[cr.id]));
+      });
+      updateNotaTF();
+    }
+    const rO=mkEl('div'); rO.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
+    const savedObs=(S.m3evals[currentCode]||{}).obs||'';
+    rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas...">'+savedObs+'</textarea>';
+    content.appendChild(rO);
+    const isLast=S.m3current===S.m3order.length-1;
+    const nextBtn=mkEl('button','m3-confirm-btn'); nextBtn.style.cssText='width:100%;margin-top:4px';
+    nextBtn.textContent=isLast?'Revisar y enviar →':'Siguiente alumno →';
+    nextBtn.addEventListener('click',()=>{
+      if(!validateM3Eval()) return;
+      saveCurrentM3Eval();
+      if(isLast){S.m3step=3;render();}
+      else{S.m3current++;render();}
+    });
+    content.appendChild(nextBtn);
+    buildHistPanelInline(content);
+    main.appendChild(content);
+    renderHistory();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// SHARED BUILDERS
+// ════════════════════════════════════════════════════════════════
+function mkStudentList(context){
+  const frag=document.createDocumentFragment();
+  const groups=[...new Set(STUDENTS.map(s=>s.group))];
+  groups.forEach(group=>{
+    const members=STUDENTS.filter(s=>s.group===group);
+    const gCls=group==='GRUPO 1'?'g1':group==='GRUPO 2'?'g2':'g3';
+    const block=mkEl('div','group-block '+gCls);
+    block.innerHTML='<div class="group-label">'+group+'</div>';
+    members.forEach(st=>{
+      const isActive=S.activeStudent?.code===st.code;
+      const graded=S.sessionHistory.filter(h=>h.codigo===st.code&&h.modo!=='Modo 3').length>0;
+      let roleCls='',indTxt='';
+      if(isActive){roleCls='active';indTxt='→';}
+      else if(graded){roleCls='graded';indTxt='✓';}
+      const btn=mkEl('button','student-row '+roleCls);
+      btn.dataset.code=st.code;
+      btn.innerHTML='<div class="s-indicator">'+indTxt+'</div><div class="s-name">'+fn(st)+'<small>'+ln(st)+'</small></div><div class="s-codigo">'+st.code+'</div>';
+      btn.addEventListener('click',()=>{
+        S.activeStudent=st;
+        if(context==='mob'){S.mobStep=2;render();}
+        else{
+          updateBanner();
+          const cs=document.querySelector('.panel-center');
+          if(cs){cs.innerHTML='';buildBanner(cs);renderQuestions(cs,S.selectedInstrumento);}
+          document.querySelectorAll('.student-row').forEach(r=>r.classList.toggle('active',r.dataset.code===st.code));
+        }
+      });
+      block.appendChild(btn);
+    });
+    frag.appendChild(block);
+  });
+  return frag;
+}
+
+function buildBanner(container){
+  const b=mkEl('div','active-banner'+(S.activeStudent?'':' empty')); b.id='active-banner';
+  b.innerHTML='<div style="font-size:16px">👤</div><div><div class="banner-name'+(S.activeStudent?'':' ph')+'" id="banner-name">'+(S.activeStudent?S.activeStudent.name:'— Selecciona un alumno —')+'</div><div class="banner-sub" id="banner-sub">'+(S.activeStudent?S.activeStudent.group+' · Código '+S.activeStudent.code:'')+'</div></div>';
+  container.appendChild(b);
+}
+
+function updateBanner(){
+  const bn=document.getElementById('banner-name');
+  const bs=document.getElementById('banner-sub');
+  const ab=document.getElementById('active-banner');
+  if(!bn||!S.activeStudent) return;
+  bn.textContent=S.activeStudent.name; bn.classList.remove('ph');
+  if(bs) bs.textContent=S.activeStudent.group+' · Código '+S.activeStudent.code;
+  if(ab) ab.classList.remove('empty');
+}
+
+function renderQuestions(container,instr){
+  const qBank=QUESTIONS[instr]; if(!qBank) return;
+  Object.entries(qBank).forEach(([key,dim])=>{
+    const allQs=Object.values(dim.levels).flat();
+    const usedCount=allQs.filter(q=>S.usedQuestions.has(q)).length;
+    const block=mkEl('div','dim-block '+dim.cls); block.id='dim-'+key;
+    block.innerHTML='<div class="dim-head" onclick="toggleDim(\''+key+'\')"><div class="dim-num">'+dim.num+'</div><div class="dim-title">'+dim.title+'</div><div class="dim-used" id="du-'+key+'">'+usedCount+'/'+allQs.length+'</div><div class="dim-arrow">▼</div></div><div class="dim-body" id="dimb-'+key+'"></div>';
+    const body=block.querySelector('#dimb-'+key);
+    const lvlL={1:'Nivel 1',2:'Nivel 2',3:'Nivel 3'};
+    const lvlC={1:'lh1',2:'lh2',3:'lh3'};
+    Object.entries(dim.levels).forEach(([lvl,qs])=>{
+      if(!qs.length) return;
+      const lg=mkEl('div','level-group');
+      lg.innerHTML='<div class="level-hdr '+lvlC[lvl]+'"><span class="lh-dot"></span>'+lvlL[lvl]+'</div>';
+      qs.forEach(q=>{
+        const used=S.usedQuestions.has(q);
+        const item=mkEl('div','q-item'+(used?' used':''));
+        item.innerHTML='<div class="q-chk">'+(used?'✓':'')+'</div><div class="q-txt">'+q+'</div>';
+        item.addEventListener('click',()=>{
+          if(S.usedQuestions.has(q)) S.usedQuestions.delete(q); else S.usedQuestions.add(q);
+          item.classList.toggle('used'); item.querySelector('.q-chk').textContent=S.usedQuestions.has(q)?'✓':'';
+          const du=document.getElementById('du-'+key);
+          if(du) du.textContent=allQs.filter(qq=>S.usedQuestions.has(qq)).length+'/'+allQs.length;
+        });
+        lg.appendChild(item);
+      });
+      body.appendChild(lg);
+    });
+    container.appendChild(block);
+  });
+}
+
+function buildRubricInto(container){
+  const rR=mkEl('div','rubric-section'); rR.innerHTML='<div class="r-title">Rúbrica · Sustentación TF</div>';
+  RUBRIC_CRITERIA.forEach(cr=>{
+    const block=mkEl('div','rubric-criterion'); block.id='rubric-'+cr.id;
+    const hdr=mkEl('div','rubric-crit-hdr');
+    hdr.innerHTML='<span class="rubric-crit-label">'+cr.label+'</span><span class="rubric-crit-peso">'+Math.round(cr.peso*100)+'%</span>';
+    const scale=mkEl('div','rubric-scale');
+    cr.levels.forEach((lbl,i)=>{
+      const val=i+1;
+      const btn=mkEl('div','scale-btn'+(S.m3rubric[cr.id]===val?' sel':''));
+      btn.innerHTML='<span class="scale-num">'+val+'</span><span class="scale-lbl">'+lbl+'</span>';
+      btn.addEventListener('click',()=>{
+        S.m3rubric[cr.id]=val;
+        scale.querySelectorAll('.scale-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===val));
+        updateNotaTF();
+      });
+      scale.appendChild(btn);
+    });
+    block.appendChild(hdr); block.appendChild(scale); rR.appendChild(block);
+  });
+  const notaBox=mkEl('div','nota-tf-box'); notaBox.id='nota-tf-box';
+  notaBox.innerHTML='<div><div class="nota-tf-label">Nota (0–20)</div><div class="nota-tf-calc" id="nota-tf-calc">Completa los 3 criterios</div></div><div class="nota-tf-value" id="nota-tf-value">—</div>';
+  rR.appendChild(notaBox); container.appendChild(rR);
+}
+
+function buildNivelButtons(container){
+  NIVELES.forEach(n=>{
+    const btn=mkEl('div','nivel-opt '+n.cls+(S.selectedNivel===n.id?' sel':''));
+    btn.innerHTML='<div class="nv-icon">'+n.icon+'</div><div class="nv-info"><div class="nv-name">'+n.name+'</div><div class="nv-desc">'+n.desc+'</div></div><div class="nv-effect '+n.cls+'">'+n.effect+'</div>';
+    btn.addEventListener('click',()=>{
+      S.selectedNivel=n.id;
+      container.querySelectorAll('.nivel-opt').forEach((b,i)=>{b.className='nivel-opt '+NIVELES[i].cls+(S.selectedNivel===NIVELES[i].id?' sel':'');});
+      updateAjuste();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function buildAdjButtons(container){
+  ADJ_OPTS.forEach(opt=>{
+    const btn=mkEl('div','adj-opt'+(S.selectedAdj===opt.id?' sel-'+opt.id:''));
+    btn.innerHTML='<span class="adj-icon">'+opt.icon+'</span><span class="adj-label">'+opt.label+'</span><span class="adj-value">'+opt.value+'</span>';
+    btn.addEventListener('click',()=>{
+      S.selectedAdj=opt.id;
+      container.querySelectorAll('.adj-opt').forEach((b,i)=>{b.className='adj-opt'+(S.selectedAdj===ADJ_OPTS[i].id?' sel-'+ADJ_OPTS[i].id:'');});
+      updateAjuste();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function buildAjusteBox(container){
+  const rAj=mkEl('div','r-section');
+  rAj.innerHTML='<div class="r-title">Ajuste a registrar</div><div class="ajuste-box"><div><div class="aj-label">Puntos sobre nota grupal</div><div class="aj-calc" id="aj-calc">—</div></div><div class="aj-value" id="aj-value">—</div></div>';
+  container.appendChild(rAj);
+}
+
+function buildObsReg(container,fn){
+  const rO=mkEl('div','r-section');
+  rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas..."></textarea><button class="btn-reg" id="btn-reg" onclick="'+fn+'()">↗ Registrar en Google Sheets</button>';
+  container.appendChild(rO);
+}
+
+function buildObsRegInline(container,fn){
+  const rO=mkEl('div'); rO.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
+  rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas..."></textarea><button class="btn-reg" id="btn-reg" onclick="'+fn+'()" style="margin-top:6px">↗ Registrar en Google Sheets</button>';
+  container.appendChild(rO);
+}
+
+function buildHistPanel(container){
+  const rH=mkEl('div','r-section');
+  rH.innerHTML='<div class="r-title">Registros de esta sesión</div><div id="hist-list"><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div></div>';
+  container.appendChild(rH);
+}
+
+function buildHistPanelInline(container){
+  const rH=mkEl('div'); rH.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:10px';
+  rH.innerHTML='<div class="r-title">Registros de esta sesión</div><div id="hist-list"><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div></div>';
+  container.appendChild(rH);
+}
+
+function buildMobNav(backLabel,backFn,title,sub){
+  const nav=mkEl('div','mob-nav');
+  if(backLabel&&backFn){
+    const back=mkEl('div','mob-back'); back.textContent='← '+backLabel.replace('← ','');
+    back.addEventListener('click',backFn); nav.appendChild(back);
+  }
+  const t=mkEl('div','mob-step-title'); t.textContent=title||''; nav.appendChild(t);
+  if(sub){const s=mkEl('div','mob-step-sub'); s.textContent=sub; nav.appendChild(s);}
+  return nav;
+}
+
+// ── CALC ─────────────────────────────────────────────────────────
+function calcAjuste(){
+  if(S.mode===2){const adj=ADJ_OPTS.find(o=>o.id===S.selectedAdj);return adj?adj.delta:null;}
+  const bonus=S.bonusActive?1:0;
+  const nivel=NIVELES.find(n=>n.id===S.selectedNivel);
+  if(!nivel) return bonus>0?bonus:null;
+  return nivel.delta+bonus;
+}
+
+function updateAjuste(){
+  const aj=calcAjuste();
+  const valEl=document.getElementById('aj-value');
+  const calcEl=document.getElementById('aj-calc');
+  if(!valEl) return;
+  if(aj===null){valEl.textContent='—';if(calcEl)calcEl.textContent='—';return;}
+  valEl.textContent=(aj>=0?'+':'')+aj;
+  if(calcEl){
+    if(S.mode===2){const opt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);calcEl.textContent=opt?opt.label:'—';}
+    else{const parts=[];const n=NIVELES.find(n=>n.id===S.selectedNivel);if(n&&n.delta!==0)parts.push('nivel: '+n.delta);if(S.bonusActive)parts.push('+1 bonus');calcEl.textContent=parts.length?parts.join(', '):'sin cambio';}
+  }
+}
+
+function updateNotaTF(){
+  const valEl=document.getElementById('nota-tf-value');
+  const calcEl=document.getElementById('nota-tf-calc');
+  if(!valEl) return;
+  const c1=S.m3rubric.c1,c2=S.m3rubric.c2,c3=S.m3rubric.c3;
+  if(!c1||!c2||!c3){valEl.textContent='—';if(calcEl)calcEl.textContent='Completa los 3 criterios';return;}
+  const raw=(c1*0.5+c2*0.3+c3*0.2)*5;
+  const nota=raw%1>=0.5?Math.ceil(raw):Math.floor(raw);
+  valEl.textContent=nota;
+  if(calcEl)calcEl.textContent='('+c1+'x50%+'+c2+'x30%+'+c3+'x20%)x5 = '+nota;
+}
+
+// ── REGISTER (Modo 1 & 2) ────────────────────────────────────────
+async function registrar(){
+  if(!S.activeStudent){toast('Selecciona un alumno primero',true);return;}
+  if(!S.selectedInstrumento){toast('Selecciona el instrumento',true);return;}
+  if(S.mode===2&&S.selectedAdj===null){toast('Selecciona el tipo de intervención',true);return;}
+  if(S.mode===1&&!S.selectedNivel&&!S.bonusActive){toast('Selecciona el nivel de desempeño',true);return;}
+  const aj=calcAjuste(); if(aj===null){toast('Selecciona una opción',true);return;}
+  const ajStr=String(aj);
+  const nivel=NIVELES.find(n=>n.id===S.selectedNivel);
+  const adjOpt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);
+  const obsEl=document.getElementById('inp-obs');
+  const payload={action:'registrar_sesion',fecha:document.getElementById('inp-fecha').value,sesion:document.getElementById('inp-sesion').value,modo:'Modo '+S.mode,instrumento:S.selectedInstrumento,codigo:S.activeStudent.code,alumno:S.activeStudent.name,grupo:S.activeStudent.group,rol:S.mode===2?'participacion':'dinamica',ajuste:ajStr,nivel:nivel?nivel.name:(adjOpt?adjOpt.label:'—'),observacion:obsEl?obsEl.value:''};
+  setSyncStatus('syncing');
+  const btnReg=document.getElementById('btn-reg'); if(btnReg) btnReg.disabled=true;
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    S.sessionHistory.push({...payload,displayAj:ajStr});
+    setSyncStatus('ok');
+    toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+ajStr);
+    S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false;
+    if(isMob()){S.activeStudent=null;S.mobStep=1;}
+    render();
+  }catch(err){setSyncStatus('error');toast('Error al conectar',true);}
+  finally{const b=document.getElementById('btn-reg');if(b)b.disabled=false;}
+}
+
+// ── HISTORY ──────────────────────────────────────────────────────
+function renderHistory(){
+  const container=document.getElementById('hist-list'); if(!container) return;
+  const items=S.sessionHistory.filter(r=>r.modo!=='Modo 3');
+  if(!items.length){
+    container.innerHTML='<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div>';
+    return;
+  }
+  container.innerHTML='';
+  [...items].reverse().forEach(r=>{
+    const num=parseFloat(r.displayAj);
+    const cls=num>0?'pos':num<0?'neg':'neu';
+    const item=mkEl('div','hist-item');
+    item.innerHTML='<div class="hi-adj '+cls+'">'+(num>=0?'+':'')+num+'</div><div class="hi-info"><div class="hi-name">'+r.alumno.split(' ')[0]+' '+r.alumno.split(' ')[1]+'</div><div class="hi-meta">'+r.instrumento+' · '+r.nivel+'</div>'+(r.observacion?'<div class="hi-obs">'+r.observacion+'</div>':'')+'</div>';
+    container.appendChild(item);
+  });
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function toggleDim(key){document.getElementById('dim-'+key)?.classList.toggle('collapsed');}
+function setSyncStatus(status){
+  const el=document.getElementById('sync-dot'); if(!el) return;
+  const map={syncing:['syncing','● Sincronizando...'],ok:['ok','● Guardado'],error:['error','● Error']};
+  el.className='sync-dot '+map[status][0]; el.textContent=map[status][1];
+  if(status==='ok') setTimeout(()=>{el.className='sync-dot ok';el.textContent='● Conectado';},2500);
+}
+function toast(msg,isErr=false){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.className='toast'+(isErr?' err':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+</script>
+</body>
+</html>
