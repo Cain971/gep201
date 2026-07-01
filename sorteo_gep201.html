@@ -369,6 +369,135 @@
     z-index: 1;
   }
 
+  /* ── ORDEN DE PRESENTACIÓN ── */
+  .orden-section {
+    width: 100%;
+    max-width: 860px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 48px;
+  }
+
+  .orden-label {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .orden-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+
+  .orden-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .orden-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .orden-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  @media (max-width: 600px) {
+    .orden-slots { grid-template-columns: 1fr; }
+  }
+
+  .orden-slot-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .orden-pos {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .orden-slot {
+    height: 48px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    position: relative;
+  }
+
+  .orden-slot-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .orden-slot.spinning .orden-slot-inner {
+    animation: spinSlot 0.08s linear infinite;
+  }
+
+  .orden-slot.revealing-g1 { border-color: var(--g1); box-shadow: 0 0 12px rgba(90,133,197,0.25); }
+  .orden-slot.revealing-g2 { border-color: var(--g2); box-shadow: 0 0 12px rgba(90,170,122,0.25); }
+  .orden-slot.revealing-g3 { border-color: var(--g3); box-shadow: 0 0 12px rgba(160,104,152,0.25); }
+  .orden-slot.revealing-g1 .orden-slot-inner { color: var(--g1); animation: none; }
+  .orden-slot.revealing-g2 .orden-slot-inner { color: var(--g2); animation: none; }
+  .orden-slot.revealing-g3 .orden-slot-inner { color: var(--g3); animation: none; }
+
+  .orden-slot-placeholder {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .btn-sortear-orden {
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 11px 24px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  }
+  .btn-sortear-orden:hover { background: rgba(201,168,76,0.07); border-color: var(--accent); transform: translateY(-1px); }
+  .btn-sortear-orden:active { transform: translateY(0); }
+  .btn-sortear-orden:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .orden-divider {
+    width: 100%;
+    max-width: 860px;
+    border: none;
+    border-top: 1px solid var(--border);
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 1;
+  }
+
   /* Flash overlay on reveal */
   .flash {
     position: fixed;
@@ -391,6 +520,32 @@
   <h1>Dinámica de <span>Preguntas</span></h1>
   <div class="header-sub">Selección aleatoria de integrantes por grupo · <span id="fecha-hoy"></span></div>
 </header>
+
+<!-- ORDEN DE PRESENTACIÓN -->
+<section class="orden-section">
+  <div class="orden-label">Trabajo Final · Presentaciones</div>
+  <div class="orden-card">
+    <div class="orden-title">Orden de <span style="color:var(--accent)">Presentación</span></div>
+    <div class="orden-desc">Sorteo del orden en que cada grupo sustentará su trabajo final. Presiona el botón para revelar el orden aleatorio.</div>
+    <div class="orden-slots" id="orden-slots">
+      <div class="orden-slot-wrap">
+        <div class="orden-pos">1° en presentar</div>
+        <div class="orden-slot" id="oSlot-0"><div class="orden-slot-inner"><span class="orden-slot-placeholder">— por sortear —</span></div></div>
+      </div>
+      <div class="orden-slot-wrap">
+        <div class="orden-pos">2° en presentar</div>
+        <div class="orden-slot" id="oSlot-1"><div class="orden-slot-inner"><span class="orden-slot-placeholder">— por sortear —</span></div></div>
+      </div>
+      <div class="orden-slot-wrap">
+        <div class="orden-pos">3° en presentar</div>
+        <div class="orden-slot" id="oSlot-2"><div class="orden-slot-inner"><span class="orden-slot-placeholder">— por sortear —</span></div></div>
+      </div>
+    </div>
+    <button class="btn-sortear-orden" id="btn-sortear-orden">↯ Sortear orden de presentación</button>
+  </div>
+</section>
+
+<hr class="orden-divider">
 
 <div class="main">
 
@@ -696,6 +851,56 @@ function setAllBtnsDisabled(val) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+// ── SORTEO ORDEN DE PRESENTACIÓN ────────────────────────────────────
+const GRUPOS_ORDEN = ['GRUPO 1', 'GRUPO 2', 'GRUPO 3'];
+const GRUPO_CLS_MAP = { 'GRUPO 1': 'g1', 'GRUPO 2': 'g2', 'GRUPO 3': 'g3' };
+let ordenAnimating = false;
+
+document.getElementById('btn-sortear-orden').addEventListener('click', async () => {
+  if (ordenAnimating || animating) return;
+  ordenAnimating = true;
+  document.getElementById('btn-sortear-orden').disabled = true;
+
+  const orden = shuffle([...GRUPOS_ORDEN]);
+  const slots = [0, 1, 2].map(i => ({
+    el: document.getElementById(`oSlot-${i}`),
+    inner: document.getElementById(`oSlot-${i}`).querySelector('.orden-slot-inner'),
+    final: orden[i],
+    cls: GRUPO_CLS_MAP[orden[i]]
+  }));
+
+  // Start spinning
+  slots.forEach(s => {
+    s.el.className = 'orden-slot spinning';
+    s.inner.innerHTML = GRUPOS_ORDEN[Math.floor(Math.random() * 3)];
+  });
+
+  const spinInterval = setInterval(() => {
+    slots.forEach(s => {
+      if (s.el.classList.contains('spinning')) {
+        s.inner.textContent = GRUPOS_ORDEN[Math.floor(Math.random() * 3)];
+      }
+    });
+  }, 80);
+
+  await sleep(1800);
+  clearInterval(spinInterval);
+
+  // Reveal one by one
+  for (let i = 0; i < slots.length; i++) {
+    await sleep(350);
+    const s = slots[i];
+    s.el.className = `orden-slot revealing-${s.cls}`;
+    s.inner.textContent = s.final;
+    flashScreen();
+    await sleep(200);
+  }
+
+  ordenAnimating = false;
+  document.getElementById('btn-sortear-orden').disabled = false;
+});
+
+// ── BOOT ─────────────────────────────────────────────────────────────
 // Boot
 renderGroups();
 </script>
