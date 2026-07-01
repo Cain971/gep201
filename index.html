@@ -743,6 +743,22 @@ function validateM3Eval(){
 }
 
 async function submitAllM3(){
+  // Validar que todos los alumnos tengan rúbrica completa antes de enviar
+  const incompletos=[];
+  S.m3order.forEach((code,i)=>{
+    const ev=S.m3evals[code]||{};
+    const r=ev.rubric||{};
+    if(!r.c1||!r.c2||!r.c3){
+      const st=STUDENTS.find(s=>s.code===code);
+      const isP=i<3;
+      const label=isP?'P'+(i+1):'R'+(i-2);
+      incompletos.push(label+' '+shortName(st));
+    }
+  });
+  if(incompletos.length>0){
+    toast('Rúbrica incompleta: '+incompletos.join(', '),true);
+    return;
+  }
   const fecha=document.getElementById('inp-fecha').value;
   const sesion=document.getElementById('inp-sesion').value;
   setSyncStatus('syncing');
@@ -752,7 +768,7 @@ async function submitAllM3(){
     const st=STUDENTS.find(s=>s.code===code);
     const isP=i<3;
     const ev=S.m3evals[code]||{};
-    const r=ev.rubric||{c1:1,c2:1,c3:1};
+    const r=ev.rubric||{};
     const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5;
     const ajuste=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw));
     const nivelStr='C1:'+r.c1+' C2:'+r.c2+' C3:'+r.c3;
@@ -1183,17 +1199,19 @@ async function registrar(){
 // ── HISTORY ──────────────────────────────────────────────────────
 function renderHistory(){
   const container=document.getElementById('hist-list'); if(!container) return;
-  const items=S.sessionHistory.filter(r=>r.modo!=='Modo 3');
+  const items=S.sessionHistory;
   if(!items.length){
     container.innerHTML='<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div>';
     return;
   }
   container.innerHTML='';
   [...items].reverse().forEach(r=>{
+    const isM3=r.modo==='Modo 3';
     const num=parseFloat(r.displayAj);
-    const cls=num>0?'pos':num<0?'neg':'neu';
+    const cls=isM3?'neu':num>0?'pos':num<0?'neg':'neu';
+    const adjTxt=isM3?r.displayAj:((num>=0?'+':'')+num);
     const item=mkEl('div','hist-item');
-    item.innerHTML='<div class="hi-adj '+cls+'">'+(num>=0?'+':'')+num+'</div><div class="hi-info"><div class="hi-name">'+r.alumno.split(' ')[0]+' '+r.alumno.split(' ')[1]+'</div><div class="hi-meta">'+r.instrumento+' · '+r.nivel+'</div>'+(r.observacion?'<div class="hi-obs">'+r.observacion+'</div>':'')+'</div>';
+    item.innerHTML='<div class="hi-adj '+cls+'">'+adjTxt+'</div><div class="hi-info"><div class="hi-name">'+r.alumno.split(' ')[0]+' '+r.alumno.split(' ')[1]+'</div><div class="hi-meta">'+r.instrumento+' · '+(isM3?'Nota TF · '+r.nivel:r.nivel)+'</div>'+(r.observacion?'<div class="hi-obs">'+r.observacion+'</div>':'')+'</div>';
     container.appendChild(item);
   });
 }
