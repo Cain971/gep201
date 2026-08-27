@@ -31,6 +31,13 @@ header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;
 .hdr-field input[type=text]{width:110px}.hdr-field input[type=date]{width:105px}
 .sync-dot{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);padding:3px 8px;border-radius:20px;background:#2a2620;color:#5a5450;transition:all .3s;white-space:nowrap}
 .sync-dot.ok{color:#4a9a6a;background:#0a2a18}.sync-dot.syncing{color:#c47840;background:#2a2008}.sync-dot.error{color:#e05050;background:#2a0808}
+.sorteo-banner{display:flex;flex-direction:column;gap:6px;padding:8px 24px;background:#2a2008;border-bottom:2px solid var(--accent-mid)}
+.sorteo-banner-item{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#f0e0c0}
+.sorteo-banner-item-name{color:var(--accent-mid);font-size:13px;font-weight:600}
+.sorteo-banner-item-modo{color:#c4b8a0}
+.sorteo-banner-item .spacer{flex:1}
+.sorteo-banner-item button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 12px;border-radius:3px;border:1px solid var(--accent-mid);background:var(--accent-mid);color:#1a1814;cursor:pointer}
+.sorteo-banner-x{background:transparent!important;color:#c4b8a0!important;border-color:#5a5450!important;padding:5px 10px!important}
 .hdr-mob-info{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:#6a6460;display:none}
 @media(max-width:639px){.hdr-fields{display:none}.hdr-mob-info{display:block}.hdr-title{font-size:14px}}
 
@@ -92,6 +99,9 @@ header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;
 .s-name small{font-size:var(--fs-micro);color:#8a8278;display:block;margin-top:1px}
 .student-row.active .s-firstname{color:var(--accent)}
 .s-codigo{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-dim)}
+.s-count{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);padding:2px 6px;border-radius:10px;flex-shrink:0;margin-left:4px}
+.s-count.low{background:var(--warn-bg);color:var(--warn)}
+.s-count.ok{background:var(--ok-bg);color:var(--ok)}
 
 /* ACTIVE BANNER */
 .active-banner{background:var(--accent-light);border:1px solid #d4a870;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
@@ -134,11 +144,12 @@ header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;
 .nivel-opt:hover{border-color:var(--border-dark);background:var(--bg2)}
 .nivel-opt.sel.nv-full{background:var(--ok-bg);border-color:var(--ok)}.nivel-opt.sel.nv-partial{background:#fff3e0;border-color:#f0a030}
 .nivel-opt.sel.nv-poor{background:var(--warn-bg);border-color:var(--warn)}
+.nivel-opt.sel.nv-none{background:var(--danger-bg);border-color:var(--danger)}
 .nv-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0}
 .nv-info{flex:1}.nv-name{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500}
 .nv-desc{font-size:var(--fs-micro);color:var(--text-muted);line-height:1.3;margin-top:1px}
 .nv-effect{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;flex-shrink:0}
-.nv-full .nv-effect{color:var(--ok)}.nv-partial .nv-effect{color:#8a6000}.nv-poor .nv-effect{color:var(--warn)}
+.nv-full .nv-effect{color:var(--ok)}.nv-partial .nv-effect{color:#8a6000}.nv-poor .nv-effect{color:var(--warn)}.nv-none .nv-effect{color:var(--danger)}
 
 /* MODE 2 ADJ */
 .adj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -266,9 +277,10 @@ header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;
     <div class="sync-dot ok" id="sync-dot">● Listo</div>
   </div>
 </header>
+<div id="sorteo-banner" class="sorteo-banner" style="display:none"></div>
 <div class="mode-bar">
-  <div class="mode-tab active" data-mode="1" onclick="setMode(1)">Modo 1 · Dinámica RP</div>
-  <div class="mode-tab" data-mode="2" onclick="setMode(2)">Modo 2 · Participación</div>
+  <div class="mode-tab active" data-mode="1" onclick="setMode(1)">Modo 1 · Participación</div>
+  <div class="mode-tab" data-mode="2" onclick="setMode(2)">Modo 2 · RP</div>
   <div class="mode-tab" data-mode="3" onclick="setMode(3)">Modo 3 · Sustentación TF</div>
 </div>
 <div class="app-main" id="app-main"></div>
@@ -276,25 +288,9 @@ header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
 
-const STUDENTS=[
-  {name:'Sebastian Bueno Hurtado',code:'20224841',group:'GRUPO 1'},
-  {name:'Daria Villanueva',code:'20226646',group:'GRUPO 1'},
-  {name:'Ariana Rosario Gonzales Benites',code:'20216217',group:'GRUPO 1'},
-  {name:'Milene Becerra Sulluchuco',code:'20214097',group:'GRUPO 1'},
-  {name:'Luciana Rosales',code:'20211479',group:'GRUPO 1'},
-  {name:'Eduardo Calderon Sipan',code:'20191529',group:'GRUPO 2'},
-  {name:'Alejandra Moreau Tejada',code:'20213311',group:'GRUPO 2'},
-  {name:'Carla Cardenas Torres',code:'20191026',group:'GRUPO 2'},
-  {name:'Carolina Baca Montes',code:'20160993',group:'GRUPO 2'},
-  {name:'Pablo Ocampo Huayllas',code:'20241271',group:'GRUPO 2'},
-  {name:'Joseph Valverde Cipriano',code:'20163080',group:'GRUPO 2'},
-  {name:'Cesar Ordoñez',code:'20221937',group:'GRUPO 3'},
-  {name:'Maricielo Villar',code:'20220858',group:'GRUPO 3'},
-  {name:'Patricia Campos',code:'20213680',group:'GRUPO 3'},
-  {name:'Bárbara Pacheco',code:'20200613',group:'GRUPO 3'},
-  {name:'María Fernanda Huasasquiche',code:'20205930',group:'GRUPO 3'},
-  {name:'Steve Grimaldo',code:'20210437',group:'GRUPO 3'},
-];
+// Se llena al cargar la página desde la pestaña "Nomina" del Sheet — ver cargarNomina().
+// Para actualizar la lista en un semestre futuro: editar solo esa pestaña, no este archivo.
+let STUDENTS=[];
 
 const QUESTIONS={
   RP1:{
@@ -373,22 +369,25 @@ const RUBRIC_CRITERIA=[
 ];
 
 const INSTRUMENTOS_RP=['RP1','RP2','RP3'];
-const INSTRUMENTOS_PART=['CL1','CL2','CL3','RP1','RP2','RP3'];
+// Participación ya no usa instrumento (CL/RP): el ajuste se acumula solo,
+// promediado a fin de semestre y aplicado al TF. Ver Ajuste_Individual_TF.
 
 const NIVELES=[
   {id:'full',icon:'✓✓',name:'Dominio completo',desc:'Preciso, cita fuentes, explica el proceso.',effect:'0 pts',delta:0,cls:'nv-full'},
   {id:'partial',icon:'✓',name:'Dominio parcial',desc:'Entiende pero con imprecisiones.',effect:'−1 pt',delta:-1,cls:'nv-partial'},
   {id:'poor',icon:'✗',name:'Dominio insuficiente',desc:'Escasa participación real.',effect:'−3 pts',delta:-3,cls:'nv-poor'},
+  {id:'none',icon:'⛔',name:'Sin dominio',desc:'No responde o respuesta nula. La nota de este RP para este alumno queda fija en 10, sin importar la nota grupal.',effect:'Nota = 10',delta:0,cls:'nv-none'},
 ];
 
+// Rúbrica de Participación: Destaca/Cumple/No cumple (± sobre el promedio acumulado del semestre)
 const ADJ_OPTS=[
-  {id:'bonus',icon:'⭐',label:'Destacada',value:'+1',delta:1},
-  {id:'neutral',icon:'○',label:'Normal',value:'0',delta:0},
-  {id:'penalty',icon:'▽',label:'Débil',value:'−1',delta:-1},
+  {id:'bonus',icon:'⭐',label:'Destaca',value:'+1',delta:1},
+  {id:'neutral',icon:'○',label:'Cumple',value:'0',delta:0},
+  {id:'penalty',icon:'▽',label:'No cumple',value:'−1',delta:-1},
 ];
 
 let S={
-  mode:1,activeStudent:null,selectedInstrumento:'RP1',
+  mode:1,activeStudent:null,activeStudentOrigen:null,selectedInstrumento:'Participacion',
   selectedNivel:null,selectedAdj:null,bonusActive:false,
   usedQuestions:new Set(),sessionHistory:[],graded:{},
   // Mode 1/2 mobile
@@ -415,16 +414,113 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.getElementById('hdr-mob').textContent=e.target.value;
   });
   setMode(1);
+  setInterval(consultarSorteo,4000);
+  cargarNomina();
 });
+
+// ── NÓMINA (alumnos y grupos, desde la pestaña "Nomina" del Sheet) ────────
+async function cargarNomina(){
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=nomina');
+    const data=await res.json();
+    if(data.status!=='ok') throw new Error(data.msg||'respuesta inválida');
+    STUDENTS=data.alumnos.map(a=>({name:a.nombre,code:String(a.codigo),group:a.grupo}));
+    render();
+    cargarConteosParticipacion();
+  }catch(e){
+    console.error('No se pudo cargar la nómina',e);
+    const main=document.getElementById('app-main');
+    if(main) main.innerHTML='<div style="padding:40px;text-align:center;color:var(--danger);font-family:\'IBM Plex Mono\',monospace">No se pudo cargar la lista de alumnos. Revisa tu conexión e intenta recargar la página.</div>';
+  }
+}
+
+// ── CONTEO DE PARTICIPACIÓN (sorteo + manual + voluntaria, todo cuenta igual) ──
+const META_PARTICIPACION=2; // meta mínima por alumno en el semestre
+let PART_CONTEOS={};
+
+async function cargarConteosParticipacion(){
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=sorteo_conteos');
+    const data=await res.json();
+    if(data.status==='ok'){ PART_CONTEOS=data.conteos; render(); }
+  }catch(e){ /* silencioso: si falla, el marcador simplemente queda en 0 hasta la próxima consulta */ }
+}
+
+// ── SORTEO ENTRANTE (recibido desde sorteo_gep201.html vía el mismo backend) ──
+// Cola de pendientes: se van acumulando (no se reemplazan entre sí) y el
+// profesor decide a quién calificar primero desde la lista.
+let sorteosVistos=new Set(); // timestamps ya procesados, para no duplicar en la cola
+let colaSorteos=[];          // [{timestamp, codigo, alumno, grupo, modoDestino, sesion}, ...]
+let sorteoBaseInicializada=false;
+
+async function consultarSorteo(){
+  try{
+    const res=await fetch(SCRIPT_URL+'?action=sorteo_estado');
+    const data=await res.json();
+    if(data.status!=='ok') return;
+    const sorteos=data.sorteos||[];
+    if(!sorteoBaseInicializada){
+      // Primera consulta al abrir la página: no mostrar como "nuevos" sorteos de antes de abrirla
+      sorteos.forEach(s=>sorteosVistos.add(String(s.timestamp)));
+      sorteoBaseInicializada=true;
+      return;
+    }
+    let huboNuevos=false;
+    sorteos.forEach(s=>{
+      const key=String(s.timestamp);
+      if(!sorteosVistos.has(key)){
+        sorteosVistos.add(key);
+        colaSorteos.push(s);
+        huboNuevos=true;
+      }
+    });
+    if(huboNuevos) renderColaSorteos();
+  }catch(e){ /* silencioso: si falla la consulta, simplemente no aparecen avisos nuevos */ }
+}
+
+function renderColaSorteos(){
+  const banner=document.getElementById('sorteo-banner');
+  if(!banner) return;
+  if(!colaSorteos.length){ banner.style.display='none'; banner.innerHTML=''; return; }
+  banner.style.display='flex';
+  banner.innerHTML=colaSorteos.map(s=>
+    '<div class="sorteo-banner-item">'
+    +'<span>🔔</span>'
+    +'<span class="sorteo-banner-item-name">'+s.alumno+'</span>'
+    +'<span class="sorteo-banner-item-modo">'+(s.grupo||'')+' · '+(s.modoDestino||'')+'</span>'
+    +'<span class="spacer"></span>'
+    +'<button onclick="aceptarSorteo(\''+s.codigo+'\')">Calificar →</button>'
+    +'<button class="sorteo-banner-x" onclick="descartarSorteo(\''+s.codigo+'\')">✕</button>'
+    +'</div>'
+  ).join('');
+}
+
+function aceptarSorteo(codigo){
+  const idx=colaSorteos.findIndex(s=>String(s.codigo)===String(codigo));
+  if(idx===-1) return;
+  const item=colaSorteos[idx];
+  colaSorteos.splice(idx,1);
+  const st=STUDENTS.find(s=>s.code===String(item.codigo));
+  if(item.modoDestino==='Modo 1') setMode(1);
+  if(st){ S.activeStudent=st; S.activeStudentOrigen='sorteo'; }
+  renderColaSorteos();
+  render();
+}
+
+function descartarSorteo(codigo){
+  const idx=colaSorteos.findIndex(s=>String(s.codigo)===String(codigo));
+  if(idx!==-1) colaSorteos.splice(idx,1);
+  renderColaSorteos();
+}
 
 // ── MODE SWITCH ──────────────────────────────────────────────────
 function setMode(m){
-  S.mode=m; S.activeStudent=null; S.selectedNivel=null; S.selectedAdj=null;
+  S.mode=m; S.activeStudent=null; S.activeStudentOrigen=null; S.selectedNivel=null; S.selectedAdj=null;
   S.bonusActive=false; S.mobStep=0;
   S.m3step=0; S.m3group=null; S.m3order=[]; S.m3evals={}; S.m3current=0;
   S.m3rubric={c1:null,c2:null,c3:null}; S.m3nivel=null;
-  if(m===1) S.selectedInstrumento='RP1';
-  else if(m===2) S.selectedInstrumento='CL1';
+  if(m===1) S.selectedInstrumento='Participacion'; // fijo: Participación ya no elige instrumento
+  else if(m===2) S.selectedInstrumento='RP1';
   else S.selectedInstrumento='TF';
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.mode)===m));
   render();
@@ -443,14 +539,14 @@ function render(){
 // ════════════════════════════════════════════════════════════════
 function renderDesktop(main){
   let wrap;
-  if(S.mode===1){
+  if(S.mode===2){ // RP: banco de preguntas por dimensión, layout de 3 columnas
     wrap=mkEl('div','layout-3col'); wrap.style.height='100%';
     wrap.appendChild(mkLeftPanel());
     const center=mkEl('div','panel-center');
     buildBanner(center); renderQuestions(center,S.selectedInstrumento);
     wrap.appendChild(center);
     wrap.appendChild(mkRightPanel());
-  } else if(S.mode===2){
+  } else if(S.mode===1){ // Participación: sin banco de preguntas, layout de 2 columnas
     wrap=mkEl('div','layout-2col'); wrap.style.height='100%';
     wrap.appendChild(mkLeftPanel());
     wrap.appendChild(mkRightPanel());
@@ -477,26 +573,29 @@ function mkLeftPanel(){
 function mkRightPanel(){
   const p=mkEl('div','panel-right');
   const wrap=mkEl('div'); wrap.style.cssText='height:100%;overflow-y:auto';
-  const rI=mkEl('div','r-section'); rI.innerHTML='<div class="r-title">Instrumento</div>';
-  const chips=mkEl('div','instr-chips'); chips.id='instr-chips';
-  const list=S.mode===2?INSTRUMENTOS_PART:INSTRUMENTOS_RP;
-  list.forEach(id=>{
-    const c=mkEl('div','instr-chip'+(S.selectedInstrumento===id?' selected':''));
-    c.textContent=id;
-    c.addEventListener('click',()=>{
-      S.selectedInstrumento=id;
-      chips.querySelectorAll('.instr-chip').forEach((ch,i)=>ch.classList.toggle('selected',list[i]===id));
-      if(S.mode===1){const cs=document.querySelector('.panel-center');if(cs){cs.innerHTML='';buildBanner(cs);renderQuestions(cs,id);}}
+  if(S.mode===1) buildBanner(wrap); // Participación: el nombre va arriba del panel derecho (no hay panel-center)
+  if(S.mode===2){ // RP: elegir a qué reporte (RP1/RP2/RP3) aplica esta dinámica
+    const rI=mkEl('div','r-section'); rI.innerHTML='<div class="r-title">Instrumento</div>';
+    const chips=mkEl('div','instr-chips'); chips.id='instr-chips';
+    const list=INSTRUMENTOS_RP;
+    list.forEach(id=>{
+      const c=mkEl('div','instr-chip'+(S.selectedInstrumento===id?' selected':''));
+      c.textContent=id;
+      c.addEventListener('click',()=>{
+        S.selectedInstrumento=id;
+        chips.querySelectorAll('.instr-chip').forEach((ch,i)=>ch.classList.toggle('selected',list[i]===id));
+        const cs=document.querySelector('.panel-center');if(cs){cs.innerHTML='';buildBanner(cs);renderQuestions(cs,id);}
+      });
+      chips.appendChild(c);
     });
-    chips.appendChild(c);
-  });
-  rI.appendChild(chips); wrap.appendChild(rI);
-  if(S.mode===2){
-    const rA=mkEl('div','r-section'); rA.innerHTML='<div class="r-title">Tipo de intervención</div>';
+    rI.appendChild(chips); wrap.appendChild(rI);
+  }
+  if(S.mode===1){
+    const rA=mkEl('div','r-section'); rA.innerHTML='<div class="r-title">Calificación de intervención</div>';
     const grid=mkEl('div','adj-grid'); grid.id='adj-grid'; buildAdjButtons(grid);
     rA.appendChild(grid); wrap.appendChild(rA);
   }
-  if(S.mode===1){
+  if(S.mode===2){
     const rN=mkEl('div','r-section'); rN.innerHTML='<div class="r-title">Desempeño oral</div>';
     const nopts=mkEl('div'); nopts.id='nivel-opts'; buildNivelButtons(nopts);
     rN.appendChild(nopts); wrap.appendChild(rN);
@@ -806,15 +905,17 @@ function getRole(code){
 // ════════════════════════════════════════════════════════════════
 function renderMobile(main){
   if(S.mode===3){renderMobile3(main);return;}
+  // Participación no elige instrumento: se salta directo a la lista de alumnos
+  if(S.mode===1&&S.mobStep===0) S.mobStep=1;
 
   if(S.mobStep===0){
     const wrap=mkEl('div'); wrap.style.cssText='padding:16px;padding-bottom:40px';
     const h=mkEl('div'); h.style.cssText='font-family:"Playfair Display",serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px';
     h.textContent='¿Qué estás evaluando?';
     const sub=mkEl('div'); sub.style.cssText='font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--text-muted);margin-bottom:18px';
-    sub.textContent=S.mode===1?'Selecciona el reporte':'Selecciona el instrumento';
+    sub.textContent='Selecciona el reporte';
     wrap.appendChild(h); wrap.appendChild(sub);
-    const instrList=S.mode===1?INSTRUMENTOS_RP:INSTRUMENTOS_PART;
+    const instrList=INSTRUMENTOS_RP;
     const grid=mkEl('div','mob-instr-grid');
     instrList.forEach(id=>{
       const btn=mkEl('div','mob-instr-btn'+(S.selectedInstrumento===id?' active':''));
@@ -845,8 +946,8 @@ function renderMobile(main){
       S.selectedInstrumento+(S.activeStudent?' · '+S.activeStudent.group:''));
     main.appendChild(nav);
     const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
-    renderQuestions(content,S.selectedInstrumento);
-    if(S.mode===1){
+    if(S.mode===2) renderQuestions(content,S.selectedInstrumento);
+    if(S.mode===2){
       const rN=mkEl('div'); rN.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
       rN.innerHTML='<div class="r-title">Desempeño oral</div>';
       const nopts=mkEl('div'); nopts.id='nivel-opts'; buildNivelButtons(nopts);
@@ -857,7 +958,7 @@ function renderMobile(main){
       content.appendChild(rB);
     } else {
       const rA=mkEl('div'); rA.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-      rA.innerHTML='<div class="r-title">Tipo de intervención</div>';
+      rA.innerHTML='<div class="r-title">Calificación de intervención</div>';
       const grid=mkEl('div','adj-grid'); grid.id='adj-grid'; buildAdjButtons(grid);
       rA.appendChild(grid); content.appendChild(rA);
     }
@@ -983,16 +1084,14 @@ function mkStudentList(context){
       else if(graded){roleCls='graded';indTxt='✓';}
       const btn=mkEl('button','student-row '+roleCls);
       btn.dataset.code=st.code;
-      btn.innerHTML='<div class="s-indicator">'+indTxt+'</div><div class="s-name">'+fn(st)+'<small>'+ln(st)+'</small></div><div class="s-codigo">'+st.code+'</div>';
+      const veces=PART_CONTEOS[st.code]||0;
+      const countCls=veces>=META_PARTICIPACION?'ok':'low';
+      btn.innerHTML='<div class="s-indicator">'+indTxt+'</div><div class="s-name">'+fn(st)+'<small>'+ln(st)+'</small></div><div class="s-codigo">'+st.code+'</div><div class="s-count '+countCls+'" title="Veces participado en el semestre">'+veces+'×</div>';
       btn.addEventListener('click',()=>{
         S.activeStudent=st;
-        if(context==='mob'){S.mobStep=2;render();}
-        else{
-          updateBanner();
-          const cs=document.querySelector('.panel-center');
-          if(cs){cs.innerHTML='';buildBanner(cs);renderQuestions(cs,S.selectedInstrumento);}
-          document.querySelectorAll('.student-row').forEach(r=>r.classList.toggle('active',r.dataset.code===st.code));
-        }
+        S.activeStudentOrigen='manual';
+        if(context==='mob') S.mobStep=2;
+        render();
       });
       block.appendChild(btn);
     });
@@ -1143,7 +1242,7 @@ function buildMobNav(backLabel,backFn,title,sub){
 
 // ── CALC ─────────────────────────────────────────────────────────
 function calcAjuste(){
-  if(S.mode===2){const adj=ADJ_OPTS.find(o=>o.id===S.selectedAdj);return adj?adj.delta:null;}
+  if(S.mode===1){const adj=ADJ_OPTS.find(o=>o.id===S.selectedAdj);return adj?adj.delta:null;}
   const bonus=S.bonusActive?1:0;
   const nivel=NIVELES.find(n=>n.id===S.selectedNivel);
   if(!nivel) return bonus>0?bonus:null;
@@ -1158,7 +1257,7 @@ function updateAjuste(){
   if(aj===null){valEl.textContent='—';if(calcEl)calcEl.textContent='—';return;}
   valEl.textContent=(aj>=0?'+':'')+aj;
   if(calcEl){
-    if(S.mode===2){const opt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);calcEl.textContent=opt?opt.label:'—';}
+    if(S.mode===1){const opt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);calcEl.textContent=opt?opt.label:'—';}
     else{const parts=[];const n=NIVELES.find(n=>n.id===S.selectedNivel);if(n&&n.delta!==0)parts.push('nivel: '+n.delta);if(S.bonusActive)parts.push('+1 bonus');calcEl.textContent=parts.length?parts.join(', '):'sin cambio';}
   }
 }
@@ -1179,14 +1278,15 @@ function updateNotaTF(){
 async function registrar(){
   if(!S.activeStudent){toast('Selecciona un alumno primero',true);return;}
   if(!S.selectedInstrumento){toast('Selecciona el instrumento',true);return;}
-  if(S.mode===2&&S.selectedAdj===null){toast('Selecciona el tipo de intervención',true);return;}
-  if(S.mode===1&&!S.selectedNivel&&!S.bonusActive){toast('Selecciona el nivel de desempeño',true);return;}
+  if(S.mode===1&&S.selectedAdj===null){toast('Selecciona la calificación de la intervención',true);return;}
+  if(S.mode===2&&!S.selectedNivel&&!S.bonusActive){toast('Selecciona el nivel de desempeño',true);return;}
   const aj=calcAjuste(); if(aj===null){toast('Selecciona una opción',true);return;}
   const ajStr=String(aj);
   const nivel=NIVELES.find(n=>n.id===S.selectedNivel);
   const adjOpt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);
   const obsEl=document.getElementById('inp-obs');
-  const payload={action:'registrar_sesion',fecha:document.getElementById('inp-fecha').value,sesion:document.getElementById('inp-sesion').value,modo:'Modo '+S.mode,instrumento:S.selectedInstrumento,codigo:S.activeStudent.code,alumno:S.activeStudent.name,grupo:S.activeStudent.group,rol:S.mode===2?'participacion':'dinamica',ajuste:ajStr,nivel:nivel?nivel.name:(adjOpt?adjOpt.label:'—'),observacion:obsEl?obsEl.value:''};
+  const rol=S.mode===1?('participacion-'+(S.activeStudentOrigen||'manual')):'dinamica';
+  const payload={action:'registrar_sesion',fecha:document.getElementById('inp-fecha').value,sesion:document.getElementById('inp-sesion').value,modo:'Modo '+S.mode,instrumento:S.selectedInstrumento,codigo:S.activeStudent.code,alumno:S.activeStudent.name,grupo:S.activeStudent.group,rol,ajuste:ajStr,nivel:nivel?nivel.name:(adjOpt?adjOpt.label:'—'),observacion:obsEl?obsEl.value:''};
   setSyncStatus('syncing');
   const btnReg=document.getElementById('btn-reg'); if(btnReg) btnReg.disabled=true;
   try{
@@ -1195,8 +1295,15 @@ async function registrar(){
     setSyncStatus('ok');
     toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+ajStr);
     S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false;
-    if(isMob()){S.activeStudent=null;S.mobStep=1;}
-    render();
+    // Evita recalificar por error: avanza solo al siguiente de la cola del sorteo,
+    // o sale a pantalla neutra si no queda nadie pendiente.
+    if(colaSorteos.length){
+      aceptarSorteo(colaSorteos[0].codigo);
+    } else {
+      S.activeStudent=null;
+      if(isMob()) S.mobStep=1;
+      render();
+    }
   }catch(err){setSyncStatus('error');toast('Error al conectar',true);}
   finally{const b=document.getElementById('btn-reg');if(b)b.disabled=false;}
 }

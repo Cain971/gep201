@@ -125,6 +125,27 @@
     gap: 12px;
   }
 
+  .modo-control {
+    display: flex;
+    gap: 6px;
+  }
+
+  .modo-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .modo-btn:hover { border-color: var(--accent); }
+  .modo-btn.active { border-color: var(--accent); background: #1a1800; color: var(--accent); }
+
   .qty-btn {
     width: 32px;
     height: 32px;
@@ -551,6 +572,14 @@
 
   <div class="global-controls">
     <div>
+      <div class="control-label">¿Para qué es este sorteo?</div>
+      <div class="modo-control" style="margin-top:8px" id="modo-control">
+        <button class="modo-btn active" data-modo="Modo 1" onclick="setModoDestino('Modo 1')">Participación</button>
+        <button class="modo-btn" data-modo="Modo 2" onclick="setModoDestino('Modo 2')">RP</button>
+        <button class="modo-btn" data-modo="Modo 3" onclick="setModoDestino('Modo 3')">Sustentación TF</button>
+      </div>
+    </div>
+    <div>
       <div class="control-label">Integrantes a seleccionar</div>
       <div class="qty-control" style="margin-top:8px">
         <button class="qty-btn" id="btn-menos">−</button>
@@ -588,41 +617,108 @@ const FECHA_MANUAL = null;
 })();
 
 // ── DATOS ───────────────────────────────────────────────────────────
-const STUDENTS = {
-  "GRUPO 1": [
-    "Sebastian Bueno Hurtado",
-    "Daria Villanueva",
-    "Ariana Rosario Gonzales Benites",
-    "Milene Becerra Sulluchuco",
-    "Luciana Rosales"
-  ],
-  "GRUPO 2": [
-    "Eduardo Calderon Sipan",
-    "Alejandra Moreau Tejada",
-    "Carla Cardenas Torres",
-    "Carolina Baca Montes",
-    "Pablo Ocampo Huayllas",
-    "Joseph Valverde Cipriano"
-  ],
-  "GRUPO 3": [
-    "Cesar Ordoñez",
-    "Maricielo Villar",
-    "Patricia Campos",
-    "Bárbara Pacheco",
-    "María Fernanda Huasasquiche",
-    "Steve Grimaldo"
-  ]
-};
+// Se llena al cargar la página desde la pestaña "Nomina" del Sheet — ver cargarNomina().
+// Para actualizar la lista en un semestre futuro: editar solo esa pestaña, no este archivo.
+let STUDENTS = {};
 
 const GROUP_CLASSES = { "GRUPO 1": "g1", "GRUPO 2": "g2", "GRUPO 3": "g3" };
 const GROUP_NUMS    = { "GRUPO 1": "01", "GRUPO 2": "02", "GRUPO 3": "03" };
 
+// ── BACKEND (mismo Apps Script que usa index.html) ────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
+let MODO_DESTINO = 'Modo 1'; // seleccionable con los botones "¿Para qué es este sorteo?"
+
+function setModoDestino(modo) {
+  MODO_DESTINO = modo;
+  document.querySelectorAll('.modo-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.modo === modo);
+  });
+}
+const META_SORTEOS = 2;        // veces que debería tocarle a cada alumno en el semestre
+// Clases que quedan (incluyendo hoy) — actualizar manualmente cada semana
+const CLASES_RESTANTES = 12;
+
+let CONTEOS = {};              // codigo -> veces sorteado en semestres/sesiones previas (desde el backend)
+const salidoHoy = new Set();   // codigos ya sorteados en esta sesión de clase — no se repiten hoy
+
+async function cargarConteos() {
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=sorteo_conteos');
+    const data = await res.json();
+    if (data.status === 'ok') CONTEOS = data.conteos;
+  } catch (e) {
+    console.warn('No se pudo cargar el conteo de sorteos previos; se asume 0 para todos.', e);
+  }
+}
+
+// Carga la nómina desde el Sheet (pestaña "Nomina") y arma STUDENTS agrupado por grupo.
+async function cargarNomina() {
+  const grid = document.getElementById('groups-grid');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=nomina');
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.msg || 'respuesta inválida');
+    STUDENTS = {};
+    data.alumnos.forEach(a => {
+      if (!STUDENTS[a.grupo]) STUDENTS[a.grupo] = [];
+      STUDENTS[a.grupo].push({ name: a.nombre, code: a.codigo });
+    });
+    Object.keys(STUDENTS).forEach(g => { groupStates[g] = []; });
+    renderGroups();
+    cargarConteos();
+  } catch (e) {
+    console.error('No se pudo cargar la nómina', e);
+    if (grid) grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger);font-family:\'IBM Plex Mono\',monospace">No se pudo cargar la lista de alumnos. Revisa tu conexión e intenta recargar la página.</div>';
+  }
+}
+
+// Peso de selección: prioriza a quien no le ha tocado, sin descartar del todo
+// a quien ya llegó a su meta (para que nadie se sienta "a salvo" el resto del semestre).
+function pesoAlumno(code) {
+  if (salidoHoy.has(code)) return 0; // ya le tocó hoy, no se repite en la misma clase
+  const veces = CONTEOS[code] || 0;
+  const faltan = Math.max(0, META_SORTEOS - veces);
+  const holgura = CLASES_RESTANTES - faltan; // margen antes de que sea imposible llegar a la meta
+  if (faltan > 0 && holgura <= 0) return 6;  // urgente: se queda sin clases para llegar a la meta
+  if (veces === 0) return 2;                 // aún no le toca
+  if (veces < META_SORTEOS) return 1;        // le falta una vez más
+  return 0.2;                                // ya llegó a la meta — piso bajo, no cero
+}
+
+// Sorteo ponderado sin reemplazo dentro del mismo grupo/ronda
+function pickWeighted(members, k) {
+  const disponibles = members.filter(m => !salidoHoy.has(m.code));
+  const base = disponibles.length ? disponibles : members; // si todos ya salieron hoy, no bloquear el sorteo
+  const n = Math.min(k, base.length);
+  const remaining = [...base];
+  const chosen = [];
+  for (let i = 0; i < n; i++) {
+    const weights = remaining.map(m => pesoAlumno(m.code) || 0.05);
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    let idx = 0;
+    for (; idx < remaining.length - 1; idx++) {
+      r -= weights[idx];
+      if (r <= 0) break;
+    }
+    chosen.push(remaining[idx]);
+    remaining.splice(idx, 1);
+  }
+  return chosen;
+}
+
+// Marca al alumno como sorteado (localmente y en el backend)
+function registrarSorteo(m, grupo) {
+  salidoHoy.add(m.code);
+  CONTEOS[m.code] = (CONTEOS[m.code] || 0) + 1;
+  const payload = { action: 'sorteo_registrar', codigo: m.code, alumno: m.name, grupo, modoDestino: MODO_DESTINO };
+  fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .catch(e => console.warn('No se pudo registrar el sorteo en el backend', e));
+}
+
 let qty = 2;
 let animating = false;
-const groupStates = {}; // tracks selected per group
-
-// Init
-Object.keys(STUDENTS).forEach(g => { groupStates[g] = []; });
+const groupStates = {}; // tracks selected per group — se inicializa en cargarNomina()
 
 function shuffle(arr) {
   const a = [...arr];
@@ -648,9 +744,10 @@ function renderGroups() {
     card.id = `card-${cls}`;
 
     // Member list HTML
+    const selectedCodes = selected.map(m => m.code);
     const memberRows = members.map(m => {
-      const isSel = selected.includes(m);
-      return `<div class="member-item${isSel ? ' selected' : ''}" data-name="${m}">
+      const isSel = selectedCodes.includes(m.code);
+      return `<div class="member-item${isSel ? ' selected' : ''}" data-code="${m.code}">
         <span class="member-dot"></span>
         <span>${formatName(m)}</span>
       </div>`;
@@ -680,8 +777,9 @@ function renderGroups() {
   });
 }
 
-function formatName(full) {
+function formatName(m) {
   // Show "Nombre Apellido1" — truncate if too long
+  const full = typeof m === 'string' ? m : m.name;
   const parts = full.split(' ');
   if (parts.length >= 2) {
     return parts[0] + ' ' + parts[1];
@@ -713,7 +811,7 @@ async function sortearGrupo(group) {
   const cls = GROUP_CLASSES[group];
   const members = STUDENTS[group];
   const maxQ = Math.min(qty, members.length);
-  const picked = shuffle(members).slice(0, maxQ);
+  const picked = pickWeighted(members, maxQ);
 
   const slotsContainer = document.getElementById(`slots-${cls}`);
 
@@ -725,7 +823,7 @@ async function sortearGrupo(group) {
     slot.className = 'slot spinning';
     const inner = document.createElement('div');
     inner.className = 'slot-inner';
-    inner.textContent = members[Math.floor(Math.random() * members.length)].split(' ')[0];
+    inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
     slot.appendChild(inner);
     slotsContainer.appendChild(slot);
     slots.push({ el: slot, inner, final: picked[i] });
@@ -757,6 +855,7 @@ async function sortearGrupo(group) {
 
   // Update state & member highlights
   groupStates[group] = picked;
+  picked.forEach(m => registrarSorteo(m, group));
   await sleep(200);
   updateMemberHighlights(group, picked, cls);
 
@@ -766,13 +865,9 @@ async function sortearGrupo(group) {
 
 function updateMemberHighlights(group, picked, cls) {
   const card = document.getElementById(`card-${cls}`);
+  const codes = picked.map(m => m.code);
   card.querySelectorAll('.member-item').forEach(el => {
-    const name = el.dataset.name;
-    if (picked.includes(name)) {
-      el.classList.add('selected');
-    } else {
-      el.classList.remove('selected');
-    }
+    el.classList.toggle('selected', codes.includes(el.dataset.code));
   });
 }
 
@@ -797,7 +892,7 @@ async function sortearGrupoInternal(group) {
   const cls = GROUP_CLASSES[group];
   const members = STUDENTS[group];
   const maxQ = Math.min(qty, members.length);
-  const picked = shuffle(members).slice(0, maxQ);
+  const picked = pickWeighted(members, maxQ);
 
   const slotsContainer = document.getElementById(`slots-${cls}`);
   slotsContainer.innerHTML = '';
@@ -807,7 +902,7 @@ async function sortearGrupoInternal(group) {
     slot.className = 'slot spinning';
     const inner = document.createElement('div');
     inner.className = 'slot-inner';
-    inner.textContent = members[Math.floor(Math.random() * members.length)].split(' ')[0];
+    inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
     slot.appendChild(inner);
     slotsContainer.appendChild(slot);
     slots.push({ el: slot, inner, final: picked[i] });
@@ -836,6 +931,7 @@ async function sortearGrupoInternal(group) {
   }
 
   groupStates[group] = picked;
+  picked.forEach(m => registrarSorteo(m, group));
   updateMemberHighlights(group, picked, cls);
 }
 
@@ -904,7 +1000,7 @@ document.getElementById('btn-sortear-orden').addEventListener('click', async () 
 
 // ── BOOT ─────────────────────────────────────────────────────────────
 // Boot
-renderGroups();
+cargarNomina(); // trae la lista de alumnos y grupos, y luego los conteos
 </script>
 </body>
 </html>
