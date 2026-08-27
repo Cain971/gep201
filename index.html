@@ -277,21 +277,23 @@ header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
 
 const STUDENTS=[
-  {name:'Karla Abanto Garibay',code:'20161472',group:'GRUPO 1'},
-  {name:'Andrea Flores Quispe',code:'20200826',group:'GRUPO 1'},
-  {name:'Claudio Loyola Tello',code:'20223341',group:'GRUPO 1'},
-  {name:'Hilary Salazar Solorzano',code:'20265788',group:'GRUPO 1'},
-  {name:'Ariedh Veliz Cruz',code:'20212389',group:'GRUPO 1'},
-  {name:'Ghino Chilcon Torres',code:'20203555',group:'GRUPO 2'},
-  {name:'Celina Chuquitaipe Palomino',code:'20264965',group:'GRUPO 2'},
-  {name:'Fabricio Martinez Carrasco',code:'20231383',group:'GRUPO 2'},
-  {name:'Dyna Quispe Maquera',code:'20193772',group:'GRUPO 2'},
-  {name:'Rubi Ventura Arisaca',code:'20264889',group:'GRUPO 2'},
-  {name:'Valeria Bocanegra Sanabria',code:'20170121',group:'GRUPO 3'},
-  {name:'Adriana Donayre Garcia',code:'20182997',group:'GRUPO 3'},
-  {name:'Andrea Figueroa Garcia',code:'20211110',group:'GRUPO 3'},
-  {name:'Angela Olavide Posadas',code:'20216741',group:'GRUPO 3'},
-  {name:'Kate Santiago Apari',code:'20211096',group:'GRUPO 3'},
+  {name:'Sebastian Bueno Hurtado',code:'20224841',group:'GRUPO 1'},
+  {name:'Daria Villanueva',code:'20226646',group:'GRUPO 1'},
+  {name:'Ariana Rosario Gonzales Benites',code:'20216217',group:'GRUPO 1'},
+  {name:'Milene Becerra Sulluchuco',code:'20214097',group:'GRUPO 1'},
+  {name:'Luciana Rosales',code:'20211479',group:'GRUPO 1'},
+  {name:'Eduardo Calderon Sipan',code:'20191529',group:'GRUPO 2'},
+  {name:'Alejandra Moreau Tejada',code:'20213311',group:'GRUPO 2'},
+  {name:'Carla Cardenas Torres',code:'20191026',group:'GRUPO 2'},
+  {name:'Carolina Baca Montes',code:'20160993',group:'GRUPO 2'},
+  {name:'Pablo Ocampo Huayllas',code:'20241271',group:'GRUPO 2'},
+  {name:'Joseph Valverde Cipriano',code:'20163080',group:'GRUPO 2'},
+  {name:'Cesar Ordoñez',code:'20221937',group:'GRUPO 3'},
+  {name:'Maricielo Villar',code:'20220858',group:'GRUPO 3'},
+  {name:'Patricia Campos',code:'20213680',group:'GRUPO 3'},
+  {name:'Bárbara Pacheco',code:'20200613',group:'GRUPO 3'},
+  {name:'María Fernanda Huasasquiche',code:'20205930',group:'GRUPO 3'},
+  {name:'Steve Grimaldo',code:'20210437',group:'GRUPO 3'},
 ];
 
 const QUESTIONS={
@@ -554,15 +556,18 @@ function mkRightPanelTF(){
 // MODE 3 SHARED SCREENS
 // ════════════════════════════════════════════════════════════════
 
-// Screen A: assign order by tap — all 5 in order (P1,P2,P3,R1,R2)
+// Screen A: assign order by tap — all N in order (P1,P2,P3,R1,R2,...)
+// N = tamaño del grupo. Siempre 3 presentadores fijos; el resto son respondedores
+// (grupos de 5 → 3P+2R, grupos de 6 → 3P+3R).
 function renderM3Assign(container){
   const members=STUDENTS.filter(s=>s.group===S.m3group);
-  const total=S.m3order.length;
+  const needed=members.length;
+  const numResponders=needed-3;
   const h=mkEl('div','m3-section-title');
-  h.innerHTML='<span>Asignar orden</span><span class="m3-progress">'+total+'/5 asignados</span>';
+  h.innerHTML='<span>Asignar orden</span><span class="m3-progress">'+S.m3order.length+'/'+needed+' asignados</span>';
   container.appendChild(h);
   const sub=mkEl('div','m3-sub');
-  sub.textContent='Toca en el orden en que participarán: primero los 3 presentadores, luego los 2 respondedores.';
+  sub.textContent='Toca en el orden en que participarán: primero los 3 presentadores, luego los '+numResponders+' respondedores.';
   container.appendChild(sub);
   const list=mkEl('div','m3-assign-list');
   members.forEach(st=>{
@@ -581,13 +586,13 @@ function renderM3Assign(container){
     row.addEventListener('click',()=>{
       const i=S.m3order.indexOf(st.code);
       if(i!==-1) S.m3order.splice(i,1);
-      else if(S.m3order.length<5) S.m3order.push(st.code);
+      else if(S.m3order.length<needed) S.m3order.push(st.code);
       render();
     });
     list.appendChild(row);
   });
   container.appendChild(list);
-  if(S.m3order.length===5){
+  if(S.m3order.length===needed){
     const btn=mkEl('button','m3-confirm-btn');
     btn.textContent='Ver resumen y confirmar →';
     btn.addEventListener('click',()=>{S.m3step=1;render();});
