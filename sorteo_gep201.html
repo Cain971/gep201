@@ -3,533 +3,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sorteo GEP201 · Dinámica de Preguntas [AZUL PIZARRA]</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:opsz,wght@8..60,300;400&display=swap" rel="stylesheet">
+<title>Sorteo GEP201</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  :root {
-    --bg: #16202e;
-    --surface: #1c2637;
-    --border: #2a3650;
-    --accent: #c9a84c;
-    --accent-dim: #7a6330;
-    --text: #eef2f7;
-    --text-muted: #7a90b0;
-    --text-dim: #2a3548;
-    --g1: #5a85c5;
-    --g2: #5aaa7a;
-    --g3: #a06898;
-    --g1-dim: #1e2e42;
-    --g2-dim: #1e2e28;
-    --g3-dim: #2e1e32;
-    --danger: #c05050;
-    --radius: 4px;
-  }
+:root{
+  --bg:#0c1016; --bg2:#0f141c; --surface:#141b26; --surface2:#1a2331;
+  --border:#25303f; --border-lit:#3a4a60;
+  --accent:#5fd9cd; --accent-ink:#08201e;
+  --amber:#f0b429;
+  --text:#e9f0f7; --text-mid:#9fb0c4; --text-dim:#5b6a7e;
+  --g1:#6b97d6; --g2:#5fb98a; --g3:#b579a8;
+  --g1-soft:rgba(107,151,214,.10); --g2-soft:rgba(95,185,138,.10); --g3-soft:rgba(181,121,168,.10);
+  --danger:#d06a6a;
+  --radius:6px; --maxw:1040px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px 20px 80px;
-    position: relative;
-    overflow-x: hidden;
-  }
+html,body{min-height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:var(--mono); font-size:15px; line-height:1.55;
+  padding:34px 22px 130px;
+  display:flex; flex-direction:column; align-items:center;
+  position:relative; overflow-x:hidden;
+}
+body::before{
+  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:46px 46px;
+}
+.wrap{width:100%; max-width:var(--maxw); position:relative; z-index:1}
 
-  /* Subtle grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
-  }
+/* ---------- HEADER ---------- */
+header{width:100%; max-width:var(--maxw); position:relative; z-index:1;
+  padding:6px 0 20px; border-bottom:1px solid var(--border)}
+.eyebrow{font-size:10.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--accent); margin-bottom:12px}
+h1{font-weight:600; font-size:clamp(28px,4.6vw,46px); letter-spacing:.02em; text-transform:uppercase; line-height:1.05}
+h1 .mark{color:var(--accent)}
+.sub{font-size:12px; color:var(--text-dim); margin-top:11px; letter-spacing:.06em; text-transform:uppercase}
 
-  /* Header */
-  header {
-    width: 100%;
-    max-width: 860px;
-    padding-bottom: 28px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 48px;
-    position: relative;
-    z-index: 1;
-  }
+/* ---------- SELECTOR DE TIPO ---------- */
+.mode-nav{width:100%; max-width:var(--maxw); display:flex; position:relative; z-index:1;
+  border-bottom:1px solid var(--border); margin-bottom:34px; overflow-x:auto; scrollbar-width:none}
+.mode-nav::-webkit-scrollbar{display:none}
+.mode-nav button{
+  font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  padding:16px 22px; background:none; border:none; border-bottom:2px solid transparent;
+  color:var(--text-dim); cursor:pointer; white-space:nowrap; transition:color .18s, border-color .18s;
+}
+.mode-nav button:hover{color:var(--text-mid)}
+.mode-nav button.on{color:var(--accent); border-bottom-color:var(--accent)}
 
-  .header-label {
-    font-size: 10px;
-    letter-spacing: 0.25em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
+/* ---------- BOTONES ---------- */
+.btn{
+  font-family:var(--mono); font-size:12px; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+  padding:14px 28px; border-radius:var(--radius); cursor:pointer;
+  border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink);
+  transition:transform .12s var(--ease), box-shadow .2s, opacity .15s;
+}
+.btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px -8px var(--accent)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.3; cursor:not-allowed; transform:none; box-shadow:none}
+.btn.ghost{background:transparent; color:var(--accent); border-color:var(--border-lit)}
+.btn.ghost:hover{border-color:var(--accent); background:rgba(95,217,205,.05)}
+.btn.sm{font-size:10.5px; padding:10px 16px; letter-spacing:.1em}
 
-  h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(26px, 4vw, 42px);
-    font-weight: 900;
-    color: var(--text);
-    line-height: 1.1;
-  }
+.crumb{font-size:10.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px}
+.screen-title{font-weight:600; font-size:clamp(19px,2.7vw,25px); text-transform:uppercase; letter-spacing:.02em; margin-bottom:22px}
 
-  h1 span {
-    color: var(--accent);
-  }
+/* ---------- CONTROLES ---------- */
+.controls-row{display:flex; align-items:center; gap:26px; flex-wrap:wrap;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:18px 22px; margin-bottom:26px}
+.ctl{display:flex; flex-direction:column; gap:9px}
+.ctl-label{font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--text-mid)}
+.stepper{display:flex; align-items:center; gap:14px}
+.stepper button{width:36px; height:36px; border-radius:var(--radius); border:1px solid var(--border);
+  background:var(--bg2); color:var(--text); font-size:20px; cursor:pointer; line-height:1;
+  display:flex; align-items:center; justify-content:center; transition:border-color .15s}
+.stepper button:hover{border-color:var(--accent)}
+.stepper .val{font-weight:600; font-size:26px; color:var(--accent); min-width:34px; text-align:center}
+.controls-row .btn{margin-left:auto}
 
-  .header-sub {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 8px;
-    letter-spacing: 0.05em;
-  }
+/* ---------- PARTICIPACIÓN: reveal ---------- */
+.stage{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:44px 34px 40px; margin-bottom:24px; position:relative; overflow:hidden}
+.stage-label{font-size:10px; letter-spacing:.26em; text-transform:uppercase; color:var(--text-dim);
+  position:absolute; top:16px; left:20px}
+.slot-col{display:flex; flex-direction:column; gap:14px; max-width:560px; margin:14px auto 0}
+.slot{height:74px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg2);
+  position:relative; overflow:hidden; display:flex; align-items:center; padding:0 24px;
+  transition:border-color .3s, box-shadow .3s}
+.slot .slot-text{font-family:var(--mono); font-size:25px; font-weight:600; letter-spacing:.03em;
+  text-transform:uppercase; color:var(--text-mid); white-space:nowrap}
+.slot.spin .slot-text{animation:cyc .09s linear infinite}
+@keyframes cyc{0%{opacity:.3;transform:translateY(-3px)}50%{opacity:.85;transform:translateY(0)}100%{opacity:.3;transform:translateY(3px)}}
+.slot.locked{border-color:var(--accent); background:var(--surface2);
+  box-shadow:inset 0 0 0 1px var(--accent), 0 0 26px -8px var(--accent)}
+.slot.locked .slot-text{color:var(--accent); animation:none}
+.slot.locked .slot-text::before{content:'[ '; color:var(--accent); opacity:.55}
+.slot.locked .slot-text::after{content:' ]'; color:var(--accent); opacity:.55}
+.term{font-family:var(--mono); font-size:12.5px; color:var(--accent); letter-spacing:.05em;
+  min-height:18px; margin:18px auto 0; max-width:560px; text-align:left}
 
-  /* Main layout */
-  .main {
-    width: 100%;
-    max-width: 860px;
-    position: relative;
-    z-index: 1;
-  }
+/* ---------- PARTICIPACIÓN: lista de la clase ---------- */
+.class-roster{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+@media(max-width:820px){.class-roster{grid-template-columns:1fr}}
+.cr-col{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden}
+.cr-col.g1{border-top:3px solid var(--g1)} .cr-col.g2{border-top:3px solid var(--g2)} .cr-col.g3{border-top:3px solid var(--g3)}
+.cr-head{padding:13px 16px 10px; border-bottom:1px solid var(--border); font-size:11px;
+  letter-spacing:.24em; text-transform:uppercase}
+.cr-col.g1 .cr-head{color:var(--g1)} .cr-col.g2 .cr-head{color:var(--g2)} .cr-col.g3 .cr-head{color:var(--g3)}
+.cr-list{padding:8px 0}
+.cr-row{display:flex; align-items:center; gap:9px; padding:8px 16px; font-size:12px; color:var(--text-mid);
+  border-left:2px solid transparent; transition:background .2s, color .2s, border-color .2s}
+.cr-row .cr-dot{width:5px; height:5px; border-radius:50%; background:var(--border-lit); flex-shrink:0}
+.cr-row .cr-n{margin-left:auto; font-size:10px; color:var(--text-dim)}
+.cr-row.picked{color:var(--text); background:rgba(95,217,205,.07); border-left-color:var(--accent)}
+.cr-row.picked .cr-dot{background:var(--accent)}
+.cr-row.picked .cr-n{color:var(--accent)}
 
-  /* Global controls */
-  .global-controls {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-    margin-bottom: 32px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
+/* ---------- REPORTES PARCIALES ---------- */
+.groups{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+@media(max-width:900px){.groups{grid-template-columns:1fr}}
+.gcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;
+  display:flex; flex-direction:column}
+.gcard.g1{border-top:3px solid var(--g1)} .gcard.g2{border-top:3px solid var(--g2)} .gcard.g3{border-top:3px solid var(--g3)}
+.gcard-head{padding:15px 18px 13px; border-bottom:1px solid var(--border)}
+.gtag{font-size:9px; letter-spacing:.3em; text-transform:uppercase; margin-bottom:5px}
+.g1 .gtag{color:var(--g1)} .g2 .gtag{color:var(--g2)} .g3 .gtag{color:var(--g3)}
+.gname{font-weight:600; font-size:16px; text-transform:uppercase; letter-spacing:.02em}
+.gcount{font-size:10px; color:var(--text-dim); margin-top:3px}
 
-  .control-label {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-  }
+.gresult{padding:14px 18px 16px; border-bottom:1px solid var(--border); background:var(--bg2)}
+.gresult-label{font-size:9px; letter-spacing:.24em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px}
+.gres-slots{display:flex; flex-direction:column; gap:8px}
+.gres-slot{border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+  padding:10px 14px; overflow:hidden; transition:border-color .3s, box-shadow .3s}
+.gres-first{display:block; font-size:22px; font-weight:600; text-transform:uppercase; letter-spacing:.02em;
+  color:var(--text-mid); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gres-last{display:block; font-size:11px; color:var(--text-dim); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gres-slot.spin .gres-first{animation:cyc .09s linear infinite}
+.gcard.g1 .gres-slot.locked{border-color:var(--g1); box-shadow:0 0 18px -9px var(--g1)}
+.gcard.g2 .gres-slot.locked{border-color:var(--g2); box-shadow:0 0 18px -9px var(--g2)}
+.gcard.g3 .gres-slot.locked{border-color:var(--g3); box-shadow:0 0 18px -9px var(--g3)}
+.gcard.g1 .gres-slot.locked .gres-first{color:var(--g1)}
+.gcard.g2 .gres-slot.locked .gres-first{color:var(--g2)}
+.gcard.g3 .gres-slot.locked .gres-first{color:var(--g3)}
+.gres-empty{font-size:10px; color:var(--text-dim); font-style:italic}
 
-  .qty-control {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+.mlist{padding:9px 0; flex:1}
+.mrow{padding:6px 18px; font-size:11px; color:var(--text-dim); display:flex; align-items:center; gap:8px;
+  border-left:2px solid transparent; transition:all .2s}
+.mrow .mdot{width:5px; height:5px; border-radius:50%; background:var(--border-lit); flex-shrink:0}
+.mrow .mn{margin-left:auto; font-size:10px; color:var(--text-dim)}
+.gcard.g1 .mrow.sel{background:var(--g1-soft); border-left-color:var(--g1); color:var(--text)}
+.gcard.g2 .mrow.sel{background:var(--g2-soft); border-left-color:var(--g2); color:var(--text)}
+.gcard.g3 .mrow.sel{background:var(--g3-soft); border-left-color:var(--g3); color:var(--text)}
+.gcard.g1 .mrow.sel .mdot{background:var(--g1)}
+.gcard.g2 .mrow.sel .mdot{background:var(--g2)}
+.gcard.g3 .mrow.sel .mdot{background:var(--g3)}
+.gcard .btn{margin:0 18px 16px; display:block}
 
-  .modo-control {
-    display: flex;
-    gap: 6px;
-  }
+/* ---------- TRABAJO FINAL ---------- */
+.subtabs{display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap}
+.subtab{font-size:11px; letter-spacing:.1em; text-transform:uppercase; padding:11px 18px;
+  border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+  color:var(--text-mid); cursor:pointer; transition:all .18s}
+.subtab:hover{border-color:var(--border-lit)}
+.subtab.on{border-color:var(--accent); color:var(--accent); background:var(--surface2)}
 
-  .modo-btn {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: border-color 0.15s, background 0.15s, color 0.15s;
-    white-space: nowrap;
-  }
-  .modo-btn:hover { border-color: var(--accent); }
-  .modo-btn.active { border-color: var(--accent); background: #1a1800; color: var(--accent); }
+.orden-slots{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px}
+@media(max-width:660px){.orden-slots{grid-template-columns:1fr}}
+.orden-wrap{display:flex; flex-direction:column; gap:8px}
+.orden-pos{font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--text-dim)}
+.orden-slot{height:86px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+  display:flex; align-items:center; padding:0 22px; overflow:hidden}
+.orden-slot .slot-text{font-weight:600; font-size:20px; text-transform:uppercase; letter-spacing:.02em; color:var(--text-mid)}
+.orden-slot.spin .slot-text{animation:cyc .09s linear infinite}
+.orden-slot.locked.g1{border-color:var(--g1); box-shadow:0 0 24px -8px var(--g1)}
+.orden-slot.locked.g2{border-color:var(--g2); box-shadow:0 0 24px -8px var(--g2)}
+.orden-slot.locked.g3{border-color:var(--g3); box-shadow:0 0 24px -8px var(--g3)}
+.orden-slot.locked.g1 .slot-text{color:var(--g1)}
+.orden-slot.locked.g2 .slot-text{color:var(--g2)}
+.orden-slot.locked.g3 .slot-text{color:var(--g3)}
 
-  .qty-btn {
-    width: 32px;
-    height: 32px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    display: flex; align-items: center; justify-content: center;
-    transition: border-color 0.15s, background 0.15s;
-    line-height: 1;
-    padding-bottom: 2px;
-  }
-  .qty-btn:hover { border-color: var(--accent); background: #1a1800; }
+.tf-seq{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:16px}
+.tf-seq span.g1{color:var(--g1)} .tf-seq span.g2{color:var(--g2)} .tf-seq span.g3{color:var(--g3)}
+.tf-seq .arr{color:var(--text-dim)}
+.tf-gbtn b{color:var(--text-dim); font-weight:600; margin-right:2px}
+.tf-gbtn.on b{color:inherit}
+.tf-group-pick{display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap}
+.tf-gbtn{font-size:12px; letter-spacing:.06em; padding:12px 20px; border:1px solid var(--border);
+  border-radius:var(--radius); background:var(--surface); color:var(--text-mid); cursor:pointer;
+  text-transform:uppercase; transition:all .18s}
+.tf-gbtn.g1.on{border-color:var(--g1); color:var(--g1); background:var(--g1-soft)}
+.tf-gbtn.g2.on{border-color:var(--g2); color:var(--g2); background:var(--g2-soft)}
+.tf-gbtn.g3.on{border-color:var(--g3); color:var(--g3); background:var(--g3-soft)}
 
-  .qty-display {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 32px;
-    text-align: center;
-  }
+.roles-out{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:6px}
+@media(max-width:740px){.roles-out{grid-template-columns:1fr}}
+.roles-col h4{font-size:10px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:12px}
+.roles-col.pres h4{color:var(--accent)}
+.roles-col.resp h4{color:var(--amber)}
+.role-row{display:flex; align-items:center; gap:14px; padding:14px 18px; margin-bottom:8px;
+  border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); overflow:hidden;
+  transition:border-color .3s, box-shadow .3s}
+.role-badge{font-size:12px; font-weight:600; width:32px; height:32px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  border:1px solid var(--border-lit); color:var(--text-mid)}
+.role-name{font-family:var(--mono); font-size:20px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.02em; color:var(--text-mid); white-space:nowrap}
+.role-row.spin .role-name{animation:cyc .09s linear infinite}
+.role-sec{margin-left:auto; font-size:10px; color:var(--text-dim); text-align:right; line-height:1.3; max-width:150px}
+.roles-col.pres .role-row.locked{border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent), 0 0 22px -10px var(--accent)}
+.roles-col.pres .role-row.locked .role-badge{border-color:var(--accent); color:var(--accent)}
+.roles-col.pres .role-row.locked .role-name{color:var(--accent)}
+.roles-col.pres .role-row.locked .role-name::before{content:'[ '; opacity:.55}
+.roles-col.pres .role-row.locked .role-name::after{content:' ]'; opacity:.55}
+.roles-col.resp .role-row.locked{border-color:var(--amber); box-shadow:inset 0 0 0 1px var(--amber), 0 0 22px -10px var(--amber)}
+.roles-col.resp .role-row.locked .role-badge{border-color:var(--amber); color:var(--amber)}
+.roles-col.resp .role-row.locked .role-name{color:var(--amber)}
+.roles-col.resp .role-row.locked .role-name::before{content:'[ '; opacity:.55}
+.roles-col.resp .role-row.locked .role-name::after{content:' ]'; opacity:.55}
 
-  .control-desc {
-    font-size: 11px;
-    color: var(--text-muted);
-    flex: 1;
-    min-width: 180px;
-  }
-
-  .btn-sortear-all {
-    margin-left: auto;
-    background: var(--accent);
-    color: #0a0c10;
-    border: none;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 10px 22px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: opacity 0.15s, transform 0.1s;
-  }
-  .btn-sortear-all:hover { opacity: 0.85; transform: translateY(-1px); }
-  .btn-sortear-all:active { transform: translateY(0); }
-  .btn-sortear-all:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-  /* Group cards */
-  .groups-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-  @media (max-width: 700px) {
-    .groups-grid { grid-template-columns: 1fr; }
-  }
-
-  .group-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .group-card.g1 { border-top: 3px solid var(--g1); }
-  .group-card.g2 { border-top: 3px solid var(--g2); }
-  .group-card.g3 { border-top: 3px solid var(--g3); }
-
-  .group-header {
-    padding: 16px 18px 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .group-tag {
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .g1 .group-tag { color: var(--g1); }
-  .g2 .group-tag { color: var(--g2); }
-  .g3 .group-tag { color: var(--g3); }
-
-  .group-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .group-count {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-
-  /* Member list */
-  .member-list {
-    padding: 12px 0;
-  }
-
-  .member-item {
-    padding: 7px 18px;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.03em;
-    transition: background 0.2s, color 0.2s;
-    border-left: 2px solid transparent;
-    cursor: default;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .member-item .member-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    flex-shrink: 0;
-    transition: background 0.2s;
-  }
-
-  .member-item.selected {
-    color: var(--text);
-    background: rgba(201,168,76,0.06);
-    border-left-color: var(--accent);
-  }
-  .member-item.selected .member-dot {
-    background: var(--accent);
-  }
-
-  /* Slot machine area */
-  .slot-area {
-    padding: 14px 18px 18px;
-    border-top: 1px solid var(--border);
-    min-height: 90px;
-    position: relative;
-  }
-
-  .slot-label {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 10px;
-  }
-
-  .slots-container {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .slot {
-    height: 32px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    background: var(--bg);
-    position: relative;
-  }
-
-  .slot-inner {
-    position: absolute;
-    left: 0; right: 0;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    color: var(--text);
-    height: 100%;
-    transform: translateY(0);
-  }
-
-  .slot.spinning .slot-inner {
-    animation: spinSlot 0.08s linear infinite;
-  }
-
-  .slot.revealing {
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(201,168,76,0.2);
-  }
-
-  .slot.revealing .slot-inner {
-    color: var(--accent);
-    animation: none;
-  }
-
-  @keyframes spinSlot {
-    0%   { transform: translateY(-8px); opacity: 0.3; }
-    50%  { transform: translateY(0);    opacity: 0.9; }
-    100% { transform: translateY(8px);  opacity: 0.3; }
-  }
-
-  .slot-placeholder {
-    font-size: 10px;
-    color: var(--text-dim);
-    font-style: italic;
-    padding: 6px 0;
-  }
-
-  /* Sortear button per group */
-  .btn-sortear {
-    width: 100%;
-    margin-top: 12px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 9px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .btn-sortear:hover {
-    border-color: var(--accent-dim);
-    color: var(--accent);
-    background: rgba(201,168,76,0.04);
-  }
-  .btn-sortear:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  /* Footer */
-  footer {
-    margin-top: 56px;
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 0.15em;
-    text-align: center;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ── ORDEN DE PRESENTACIÓN ── */
-  .orden-section {
-    width: 100%;
-    max-width: 860px;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 48px;
-  }
-
-  .orden-label {
-    font-size: 10px;
-    letter-spacing: 0.25em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .orden-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-  }
-
-  .orden-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-
-  .orden-desc {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-
-  .orden-slots {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  @media (max-width: 600px) {
-    .orden-slots { grid-template-columns: 1fr; }
-  }
-
-  .orden-slot-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .orden-pos {
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-  }
-
-  .orden-slot {
-    height: 48px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg);
-    position: relative;
-  }
-
-  .orden-slot-inner {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    font-family: 'Playfair Display', serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--text-muted);
-  }
-
-  .orden-slot.spinning .orden-slot-inner {
-    animation: spinSlot 0.08s linear infinite;
-  }
-
-  .orden-slot.revealing-g1 { border-color: var(--g1); box-shadow: 0 0 12px rgba(90,133,197,0.25); }
-  .orden-slot.revealing-g2 { border-color: var(--g2); box-shadow: 0 0 12px rgba(90,170,122,0.25); }
-  .orden-slot.revealing-g3 { border-color: var(--g3); box-shadow: 0 0 12px rgba(160,104,152,0.25); }
-  .orden-slot.revealing-g1 .orden-slot-inner { color: var(--g1); animation: none; }
-  .orden-slot.revealing-g2 .orden-slot-inner { color: var(--g2); animation: none; }
-  .orden-slot.revealing-g3 .orden-slot-inner { color: var(--g3); animation: none; }
-
-  .orden-slot-placeholder {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-style: italic;
-  }
-
-  .btn-sortear-orden {
-    background: transparent;
-    border: 1px solid var(--accent-dim);
-    color: var(--accent);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    padding: 11px 24px;
-    cursor: pointer;
-    border-radius: var(--radius);
-    transition: background 0.15s, border-color 0.15s, transform 0.1s;
-  }
-  .btn-sortear-orden:hover { background: rgba(201,168,76,0.07); border-color: var(--accent); transform: translateY(-1px); }
-  .btn-sortear-orden:active { transform: translateY(0); }
-  .btn-sortear-orden:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-  .orden-divider {
-    width: 100%;
-    max-width: 860px;
-    border: none;
-    border-top: 1px solid var(--border);
-    margin-bottom: 48px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* Flash overlay on reveal */
-  .flash {
-    position: fixed;
-    inset: 0;
-    background: rgba(201,168,76,0.04);
-    pointer-events: none;
-    opacity: 0;
-    z-index: 100;
-    transition: opacity 0.1s;
-  }
-  .flash.active { opacity: 1; }
+.ph{font-size:11px; color:var(--text-dim); font-style:italic}
+.load-err{padding:40px; text-align:center; color:var(--danger); font-size:13px; line-height:1.6}
+.flash{position:fixed; inset:0; background:var(--accent); opacity:0; pointer-events:none; z-index:80; transition:opacity .09s}
+.flash.on{opacity:.05}
+footer{margin-top:54px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--text-dim); text-align:center; position:relative; z-index:1}
 </style>
 </head>
 <body>
@@ -537,470 +245,426 @@
 <div class="flash" id="flash"></div>
 
 <header>
-  <div class="header-label">GEP201 · Gestión Financiera del Estado · 2026-2</div>
-  <h1>Dinámica de <span>Preguntas</span></h1>
-  <div class="header-sub">Selección aleatoria de integrantes por grupo · <span id="fecha-hoy"></span></div>
+  <div class="eyebrow">GEP201 · Gestión Financiera del Estado · 2026-2</div>
+  <h1>Sorteo <span class="mark">GEP201</span></h1>
+  <div class="sub" id="sub"></div>
 </header>
 
-<!-- ORDEN DE PRESENTACIÓN -->
-<section class="orden-section">
-  <div class="orden-label">Trabajo Final · Presentaciones</div>
-  <div class="orden-card">
-    <div class="orden-title">Orden de <span style="color:var(--accent)">Presentación</span></div>
-    <div class="orden-desc">Sorteo del orden en que cada grupo sustentará su trabajo final. Presiona el botón para revelar el orden aleatorio.</div>
-    <div class="orden-slots" id="orden-slots">
-      <div class="orden-slot-wrap">
-        <div class="orden-pos">1° en presentar</div>
-        <div class="orden-slot" id="oSlot-0"><div class="orden-slot-inner"><span class="orden-slot-placeholder">— por sortear —</span></div></div>
-      </div>
-      <div class="orden-slot-wrap">
-        <div class="orden-pos">2° en presentar</div>
-        <div class="orden-slot" id="oSlot-1"><div class="orden-slot-inner"><span class="orden-slot-placeholder">— por sortear —</span></div></div>
-      </div>
-      <div class="orden-slot-wrap">
-        <div class="orden-pos">3° en presentar</div>
-        <div class="orden-slot" id="oSlot-2"><div class="orden-slot-inner"><span class="orden-slot-placeholder">— por sortear —</span></div></div>
-      </div>
-    </div>
-    <button class="btn-sortear-orden" id="btn-sortear-orden">↯ Sortear orden de presentación</button>
-  </div>
-</section>
+<nav class="mode-nav" id="mode-nav">
+  <button data-m="part" class="on">Participación</button>
+  <button data-m="rp">Reportes Parciales</button>
+  <button data-m="tf">Trabajo Final</button>
+</nav>
 
-<hr class="orden-divider">
+<div class="wrap" id="app"><div class="ph" style="padding:40px;text-align:center">Cargando lista de alumnos…</div></div>
 
-<div class="main">
-
-  <div class="global-controls">
-    <div>
-      <div class="control-label">¿Para qué es este sorteo?</div>
-      <div class="modo-control" style="margin-top:8px" id="modo-control">
-        <button class="modo-btn active" data-modo="Modo 1" onclick="setModoDestino('Modo 1')">Participación</button>
-        <button class="modo-btn" data-modo="Modo 2" onclick="setModoDestino('Modo 2')">RP</button>
-        <button class="modo-btn" data-modo="Modo 3" onclick="setModoDestino('Modo 3')">Sustentación TF</button>
-      </div>
-    </div>
-    <div>
-      <div class="control-label">Integrantes a seleccionar</div>
-      <div class="qty-control" style="margin-top:8px">
-        <button class="qty-btn" id="btn-menos">−</button>
-        <div class="qty-display" id="qty-display">2</div>
-        <button class="qty-btn" id="btn-mas">+</button>
-      </div>
-    </div>
-    <div class="control-desc">
-      Ajusta cuántos integrantes de cada grupo serán sorteados para responder.
-    </div>
-    <button class="btn-sortear-all" id="btn-all">↯ Sortear todos los grupos</button>
-  </div>
-
-  <div class="groups-grid" id="groups-grid"></div>
-
-</div>
-
-<footer>GEP201 · FGAD · PUCP · Sorteo aleatorio sin reemplazo</footer>
+<footer>GEP201 · FGAD · PUCP</footer>
 
 <script>
-// ── FECHA ──────────────────────────────────────────────────────────
-// Para forzar una fecha manual, escribe aquí la fecha entre comillas,
-// en formato 'DD de mes de YYYY'  →  ejemplo: '15 de mayo de 2026'
-// Para que sea automática, deja el valor en null.
+/* ═══════════════════════════════════════════════════════════════════════
+   BACKEND — mismo Apps Script que usa index.html (proyecto GEP201_API)
+   ═══════════════════════════════════════════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
+
+// Clases que quedan en el semestre (incluida hoy). Actualizar cada semana.
+// Solo afecta la urgencia de la ponderación en Participación.
+const CLASES_RESTANTES = 12;
+const META_SORTEOS = 2;   // veces que debería tocarle a cada alumno en el semestre (solo Participación)
+
+// Fecha de la bajada. Deja null para que sea automática; o pon 'DD de mes de YYYY'.
 const FECHA_MANUAL = null;
 
-(function setFecha() {
-  const el = document.getElementById('fecha-hoy');
-  if (!el) return;
+/* ═══════════════════════════════════════════════════════════════════════
+   DATOS — se llenan desde la hoja "Nomina" (action=nomina) al cargar.
+   Para un semestre futuro: editar solo esa hoja, no este archivo.
+   ═══════════════════════════════════════════════════════════════════════ */
+let GRUPOS = {};       // { "GRUPO 1": [ {code,name,nombres,apellidos,group}, ... ] }
+let ALL = [];          // lista plana de todos los alumnos
+let GCLS = {};         // "GRUPO 1" -> "g1"  (asignado por orden de aparición)
+let GNUM = {};         // "GRUPO 1" -> "01"
+let CONTEOS = {};      // code -> veces participado en el semestre (desde el backend)
+const salidoHoy = new Set();  // codes ya sorteados en esta sesión de clase
+
+const SECCIONES_TF = ["Sección 1 · Diagnóstico","Sección 2 · Modelos MC/ME","Sección 3 · Teoría de Cambio"];
+
+/* ---------- helpers ---------- */
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; }
+function flash(){ const f=document.getElementById('flash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),110); }
+
+// Descompone el nombre. Preferir las columnas Nombres/Apellidos de la hoja
+// (corte limpio); si no llegan, partir el nombre completo por el primer espacio.
+function nm(st){
+  let given, family;
+  if (st.nombres && st.apellidos){ given = st.nombres; family = st.apellidos; }
+  else { const p = String(st.name||'').split(' '); given = p[0]||''; family = p.slice(1).join(' '); }
+  const first = given.split(' ')[0];                                           // primer nombre
+  const rest  = (given.split(' ').slice(1).join(' ') + ' ' + family).trim();   // 2do nombre + apellidos
+  const short = (first + ' ' + (family.split(' ')[0] || given.split(' ')[1] || '')).trim();
+  return { given, family, first, rest, short };
+}
+const shortUp = st => nm(st).short.toUpperCase();
+
+(function setFecha(){
+  const el = document.getElementById('sub');
   if (FECHA_MANUAL) { el.textContent = FECHA_MANUAL; return; }
-  const meses = ['enero','febrero','marzo','abril','mayo','junio',
-                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const hoy = new Date();
-  el.textContent = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+  const m=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const d=new Date();
+  el.textContent = `${d.getDate()} de ${m[d.getMonth()]} de ${d.getFullYear()}`;
 })();
 
-// ── DATOS ───────────────────────────────────────────────────────────
-// Se llena al cargar la página desde la pestaña "Nomina" del Sheet — ver cargarNomina().
-// Para actualizar la lista en un semestre futuro: editar solo esa pestaña, no este archivo.
-let STUDENTS = {};
-
-const GROUP_CLASSES = { "GRUPO 1": "g1", "GRUPO 2": "g2", "GRUPO 3": "g3" };
-const GROUP_NUMS    = { "GRUPO 1": "01", "GRUPO 2": "02", "GRUPO 3": "03" };
-
-// ── BACKEND (mismo Apps Script que usa index.html) ────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
-let MODO_DESTINO = 'Modo 1'; // seleccionable con los botones "¿Para qué es este sorteo?"
-
-function setModoDestino(modo) {
-  MODO_DESTINO = modo;
-  document.querySelectorAll('.modo-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.modo === modo);
-  });
-}
-const META_SORTEOS = 2;        // veces que debería tocarle a cada alumno en el semestre
-// Clases que quedan (incluyendo hoy) — actualizar manualmente cada semana
-const CLASES_RESTANTES = 12;
-
-let CONTEOS = {};              // codigo -> veces sorteado en semestres/sesiones previas (desde el backend)
-const salidoHoy = new Set();   // codigos ya sorteados en esta sesión de clase — no se repiten hoy
-
-async function cargarConteos() {
-  try {
-    const res = await fetch(SCRIPT_URL + '?action=sorteo_conteos');
-    const data = await res.json();
-    if (data.status === 'ok') CONTEOS = data.conteos;
-  } catch (e) {
-    console.warn('No se pudo cargar el conteo de sorteos previos; se asume 0 para todos.', e);
-  }
-}
-
-// Carga la nómina desde el Sheet (pestaña "Nomina") y arma STUDENTS agrupado por grupo.
-async function cargarNomina() {
-  const grid = document.getElementById('groups-grid');
-  try {
+/* ═══════════════════════════════════════════════════════════════════════
+   CARGA DE NÓMINA Y CONTEOS
+   ═══════════════════════════════════════════════════════════════════════ */
+async function cargarNomina(){
+  try{
     const res = await fetch(SCRIPT_URL + '?action=nomina');
     const data = await res.json();
     if (data.status !== 'ok') throw new Error(data.msg || 'respuesta inválida');
-    STUDENTS = {};
-    data.alumnos.forEach(a => {
-      if (!STUDENTS[a.grupo]) STUDENTS[a.grupo] = [];
-      STUDENTS[a.grupo].push({ name: a.nombre, code: a.codigo });
+    GRUPOS = {};
+    data.alumnos.forEach(a=>{
+      const g = String(a.grupo).trim();
+      (GRUPOS[g] = GRUPOS[g] || []).push({
+        code: String(a.codigo), name: a.nombre,
+        nombres: a.nombres || '', apellidos: a.apellidos || '', group: g
+      });
     });
-    Object.keys(STUDENTS).forEach(g => { groupStates[g] = []; });
-    renderGroups();
+    ALL = Object.values(GRUPOS).flat();
+    // Color y número por el dígito de "GRUPO N" (GRUPO 1 = azul, 2 = verde, 3 = morado);
+    // si el nombre no trae número, se asigna por orden de aparición.
+    Object.keys(GRUPOS).forEach((g,i)=>{
+      const num = (String(g).match(/\d+/) || [])[0];
+      const n = num ? parseInt(num,10) : i+1;
+      GCLS[g] = 'g' + (((n-1) % 3) + 1);
+      GNUM[g] = String(n).padStart(2,'0');
+    });
+    render();
     cargarConteos();
-  } catch (e) {
+  }catch(e){
     console.error('No se pudo cargar la nómina', e);
-    if (grid) grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger);font-family:\'IBM Plex Mono\',monospace">No se pudo cargar la lista de alumnos. Revisa tu conexión e intenta recargar la página.</div>';
+    document.getElementById('app').innerHTML =
+      '<div class="load-err">No se pudo cargar la lista de alumnos.<br>Revisa tu conexión e intenta recargar la página.</div>';
   }
 }
+async function cargarConteos(){
+  try{
+    const res = await fetch(SCRIPT_URL + '?action=sorteo_conteos');
+    const data = await res.json();
+    if (data.status === 'ok'){ CONTEOS = data.conteos || {}; render(); }
+  }catch(e){ /* silencioso: si falla, los contadores quedan en 0 hasta la próxima consulta */ }
+}
 
-// Peso de selección: prioriza a quien no le ha tocado, sin descartar del todo
-// a quien ya llegó a su meta (para que nadie se sienta "a salvo" el resto del semestre).
-function pesoAlumno(code) {
-  if (salidoHoy.has(code)) return 0; // ya le tocó hoy, no se repite en la misma clase
+/* ═══════════════════════════════════════════════════════════════════════
+   PONDERACIÓN
+   Participación: sesgo hacia quien menos ha salido, con urgencia si se
+   acaban las clases para llegar a la meta, y piso bajo (no cero) para
+   quien ya cumplió — así nadie se siente "a salvo".
+   RP: casi uniforme — el sorteo asigna quién sustenta, no reparte cobertura.
+   ═══════════════════════════════════════════════════════════════════════ */
+function pesoParticipacion(code){
+  if (salidoHoy.has(code)) return 0.001;
   const veces = CONTEOS[code] || 0;
   const faltan = Math.max(0, META_SORTEOS - veces);
-  const holgura = CLASES_RESTANTES - faltan; // margen antes de que sea imposible llegar a la meta
-  if (faltan > 0 && holgura <= 0) return 6;  // urgente: se queda sin clases para llegar a la meta
-  if (veces === 0) return 2;                 // aún no le toca
-  if (veces < META_SORTEOS) return 1;        // le falta una vez más
-  return 0.2;                                // ya llegó a la meta — piso bajo, no cero
+  const holgura = CLASES_RESTANTES - faltan;
+  if (faltan > 0 && holgura <= 0) return 6;   // urgente
+  if (veces === 0) return 2;
+  if (veces < META_SORTEOS) return 1;
+  return 0.2;
 }
+function pesoRP(code){ return salidoHoy.has(code) ? 0.05 : 1; }
 
-// Sorteo ponderado sin reemplazo dentro del mismo grupo/ronda
-function pickWeighted(members, k) {
-  const disponibles = members.filter(m => !salidoHoy.has(m.code));
-  const base = disponibles.length ? disponibles : members; // si todos ya salieron hoy, no bloquear el sorteo
-  const n = Math.min(k, base.length);
-  const remaining = [...base];
-  const chosen = [];
-  for (let i = 0; i < n; i++) {
-    const weights = remaining.map(m => pesoAlumno(m.code) || 0.05);
-    const total = weights.reduce((a, b) => a + b, 0);
-    let r = Math.random() * total;
-    let idx = 0;
-    for (; idx < remaining.length - 1; idx++) {
-      r -= weights[idx];
-      if (r <= 0) break;
-    }
-    chosen.push(remaining[idx]);
-    remaining.splice(idx, 1);
+function pickWeighted(pool, k, pesoFn){
+  const rem = [...pool], out = [];
+  for (let i=0; i<Math.min(k, rem.length); i++){
+    const w = rem.map(x => Math.max(0.02, pesoFn ? pesoFn(x.code) : 1));
+    const tot = w.reduce((a,b)=>a+b,0);
+    let r = Math.random()*tot, idx = 0;
+    for (; idx < rem.length-1; idx++){ r -= w[idx]; if (r <= 0) break; }
+    out.push(rem[idx]); rem.splice(idx,1);
   }
-  return chosen;
+  return out;
 }
 
-// Marca al alumno como sorteado (localmente y en el backend)
-function registrarSorteo(m, grupo) {
-  salidoHoy.add(m.code);
-  CONTEOS[m.code] = (CONTEOS[m.code] || 0) + 1;
-  const payload = { action: 'sorteo_registrar', codigo: m.code, alumno: m.name, grupo, modoDestino: MODO_DESTINO };
-  fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+/* ═══════════════════════════════════════════════════════════════════════
+   REGISTRO DEL SORTEO → hoja "Sorteo_Estado" (para el traspaso a index.html)
+   El conteo real de participación NO se toca aquí — lo actualiza el backend
+   cuando la participación queda calificada en index.html. El +1 local es solo
+   para que la ponderación no vuelva a subir a quien ya salió en esta clase.
+   Trabajo Final NO registra nada: es solo visual/proyectado.
+   ═══════════════════════════════════════════════════════════════════════ */
+function registrarSorteo(st, grupo, modoDestino){
+  salidoHoy.add(st.code);
+  CONTEOS[st.code] = (CONTEOS[st.code] || 0) + 1;
+  const payload = { action:'sorteo_registrar', codigo:st.code, alumno:st.name, grupo, modoDestino };
+  fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
     .catch(e => console.warn('No se pudo registrar el sorteo en el backend', e));
 }
 
-let qty = 2;
-let animating = false;
-const groupStates = {}; // tracks selected per group — se inicializa en cargarNomina()
+/* ═══════════════════════════════════════════════════════════════════════
+   ESTADO Y RENDER
+   ═══════════════════════════════════════════════════════════════════════ */
+let S = { mode:'part', nPart:2, nRP:2, rpPicks:{}, tfTab:'orden', tfGroup:null, tfOrden:null, busy:false };
+const app = document.getElementById('app');
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+document.getElementById('mode-nav').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if (!b || S.busy) return;
+  S.mode = b.dataset.m;
+  document.querySelectorAll('#mode-nav button').forEach(x=>x.classList.toggle('on', x===b));
+  render();
+});
+
+function render(){
+  if (!ALL.length){ return; }
+  ({ part:renderPart, rp:renderRP, tf:renderTF })[S.mode]();
+}
+function lock(v){
+  S.busy = v;
+  document.querySelectorAll('#mode-nav button,.btn,.subtab,.tf-gbtn').forEach(b=>b.disabled=v);
 }
 
-// --- Render groups ---
-function renderGroups() {
-  const grid = document.getElementById('groups-grid');
-  grid.innerHTML = '';
-  Object.entries(STUDENTS).forEach(([group, members]) => {
-    const cls = GROUP_CLASSES[group];
-    const num = GROUP_NUMS[group];
-    const selected = groupStates[group];
-    const maxQ = Math.min(qty, members.length);
-
-    const card = document.createElement('div');
-    card.className = `group-card ${cls}`;
-    card.id = `card-${cls}`;
-
-    // Member list HTML
-    const selectedCodes = selected.map(m => m.code);
-    const memberRows = members.map(m => {
-      const isSel = selectedCodes.includes(m.code);
-      return `<div class="member-item${isSel ? ' selected' : ''}" data-code="${m.code}">
-        <span class="member-dot"></span>
-        <span>${formatName(m)}</span>
-      </div>`;
-    }).join('');
-
-    // Slots HTML
-    const slotsHtml = selected.length > 0
-      ? selected.map(m => `<div class="slot revealing"><div class="slot-inner">${formatName(m)}</div></div>`).join('')
-      : `<div class="slot-placeholder">— sin sorteo aún —</div>`;
-
-    card.innerHTML = `
-      <div class="group-header">
-        <div class="group-tag">Grupo ${num}</div>
-        <div class="group-name">${group}</div>
-        <div class="group-count">${members.length} integrantes · sortear ${maxQ}</div>
+/* ───────────────────────── PARTICIPACIÓN ───────────────────────── */
+function renderPart(){
+  const maxN = Math.min(4, ALL.length);
+  if (S.nPart > maxN) S.nPart = maxN;
+  app.innerHTML = `
+    <div class="crumb">Participación · toda la clase</div>
+    <div class="screen-title">¿Quién responde?</div>
+    <div class="controls-row">
+      <div class="ctl"><span class="ctl-label">¿Cuántos?</span>
+        <div class="stepper"><button onclick="bumpPart(-1)">−</button><span class="val" id="v-np">${S.nPart}</span><button onclick="bumpPart(1)">+</button></div>
       </div>
-      <div class="member-list">${memberRows}</div>
-      <div class="slot-area">
-        <div class="slot-label">Seleccionados</div>
-        <div class="slots-container" id="slots-${cls}">${slotsHtml}</div>
-        <button class="btn-sortear" id="btn-${cls}" onclick="sortearGrupo('${group}')">
-          ↯ Sortear ${group}
-        </button>
+      <button class="btn" id="go" onclick="sortearPart()">↯ Sortear</button>
+    </div>
+    <div class="stage"><span class="stage-label">Seleccionados</span>
+      <div class="slot-col" id="slots"></div>
+      <div class="term" id="term"></div>
+    </div>
+    <div class="class-roster" id="roster"></div>`;
+  drawSlots(S.nPart, null); drawRoster([]);
+}
+window.bumpPart = (d)=>{
+  const maxN = Math.min(4, ALL.length);
+  S.nPart = Math.max(1, Math.min(maxN, S.nPart + d));
+  document.getElementById('v-np').textContent = S.nPart;
+  drawSlots(S.nPart, null);
+};
+function drawSlots(n, picked){
+  const c = document.getElementById('slots'); if (!c) return; c.innerHTML = '';
+  for (let i=0;i<n;i++){
+    const s = document.createElement('div'); s.className = 'slot';
+    s.innerHTML = `<span class="slot-text">${picked && picked[i] ? shortUp(picked[i]) : '—'}</span>`;
+    c.appendChild(s);
+  }
+}
+function drawRoster(pickedCodes){
+  const c = document.getElementById('roster'); if (!c) return;
+  c.innerHTML = Object.entries(GRUPOS).map(([g,ns])=>`
+    <div class="cr-col ${GCLS[g]}">
+      <div class="cr-head">${g}</div>
+      <div class="cr-list">${ns.map(st=>`
+        <div class="cr-row ${pickedCodes.includes(st.code)?'picked':''}">
+          <span class="cr-dot"></span>${nm(st).short}
+          <span class="cr-n">${CONTEOS[st.code]||0}</span>
+        </div>`).join('')}</div>
+    </div>`).join('');
+}
+async function sortearPart(){
+  if (S.busy) return; lock(true);
+  const term = document.getElementById('term');
+  const picked = pickWeighted(ALL, S.nPart, pesoParticipacion);
+  drawSlots(S.nPart, null);
+  const slots = [...document.querySelectorAll('#slots .slot')];
+  slots.forEach(s=>s.classList.add('spin'));
+  term.textContent = '» sorteando…';
+  const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.slot-text').textContent = shortUp(rnd(ALL)); }), 70);
+  await sleep(1500); clearInterval(sp);
+  for (let i=0;i<slots.length;i++){
+    await sleep(360);
+    slots[i].classList.remove('spin'); slots[i].classList.add('locked');
+    slots[i].querySelector('.slot-text').textContent = shortUp(picked[i]);
+    registrarSorteo(picked[i], picked[i].group, 'Modo 1');
+    const n = nm(picked[i]);
+    term.textContent = '» seleccionado · ' + n.given + ' ' + n.family;
+    flash(); await sleep(160);
+  }
+  drawRoster(picked.map(p=>p.code));
+  lock(false);
+}
+
+/* ───────────────────────── REPORTES PARCIALES ───────────────────────── */
+function renderRP(){
+  const minGrp = Math.min(...Object.values(GRUPOS).map(g=>g.length));
+  if (S.nRP > minGrp) S.nRP = minGrp;
+  app.innerHTML = `
+    <div class="crumb">Reportes Parciales · por grupo</div>
+    <div class="screen-title">Integrantes que sustentan</div>
+    <div class="controls-row">
+      <div class="ctl"><span class="ctl-label">¿Cuántos por grupo?</span>
+        <div class="stepper"><button onclick="bumpRP(-1)">−</button><span class="val" id="v-nr">${S.nRP}</span><button onclick="bumpRP(1)">+</button></div>
       </div>
-    `;
-    grid.appendChild(card);
+      <button class="btn" id="go-all" onclick="sortearRPTodos()">↯ Sortear los ${Object.keys(GRUPOS).length} grupos</button>
+    </div>
+    <div class="groups" id="groups"></div>`;
+  drawGroups();
+}
+window.bumpRP = (d)=>{
+  const minGrp = Math.min(...Object.values(GRUPOS).map(g=>g.length));
+  S.nRP = Math.max(1, Math.min(minGrp, S.nRP + d));
+  S.rpPicks = {};
+  document.getElementById('v-nr').textContent = S.nRP;
+  drawGroups();
+};
+function drawGroups(){
+  const c = document.getElementById('groups'); if (!c) return;
+  c.innerHTML = Object.entries(GRUPOS).map(([g,ns])=>{
+    const cls = GCLS[g], maxq = Math.min(S.nRP, ns.length);
+    const pk = S.rpPicks[g], selCodes = (pk||[]).map(x=>x.code);
+    const resSlots = pk
+      ? pk.map(p=>`<div class="gres-slot locked"><span class="gres-first">${nm(p).first}</span><span class="gres-last">${nm(p).rest}</span></div>`).join('')
+      : `<div class="gres-empty">— sin sorteo aún —</div>`;
+    const rows = ns.map(st=>`<div class="mrow ${selCodes.includes(st.code)?'sel':''}"><span class="mdot"></span>${nm(st).short}<span class="mn">${CONTEOS[st.code]||0}</span></div>`).join('');
+    return `<div class="gcard ${cls}" id="gc-${cls}">
+      <div class="gcard-head">
+        <div class="gtag">Grupo ${GNUM[g]}</div><div class="gname">${g}</div>
+        <div class="gcount">${ns.length} integrantes · sortear ${maxq}</div>
+      </div>
+      <div class="gresult">
+        <div class="gresult-label">Resultado</div>
+        <div class="gres-slots" id="gres-${cls}">${resSlots}</div>
+      </div>
+      <div class="mlist">${rows}</div>
+      <button class="btn ghost sm" onclick="sortearRP(['${g.replace(/'/g,"\\'")}'])">↯ Sortear ${g}</button>
+    </div>`;
+  }).join('');
+}
+window.sortearRPTodos = ()=>window.sortearRP(Object.keys(GRUPOS));
+window.sortearRP = async (groups)=>{
+  if (S.busy) return; lock(true);
+  for (let i=0;i<groups.length;i++){ if (i) await sleep(340); await animRP(groups[i], groups.length>1 ? 1100 : 1500); }
+  lock(false);
+};
+async function animRP(g, dur){
+  const cls = GCLS[g], ns = GRUPOS[g], maxq = Math.min(S.nRP, ns.length);
+  const picked = pickWeighted(ns, maxq, pesoRP);
+  const box = document.getElementById('gres-'+cls); box.innerHTML = '';
+  const slots = [];
+  for (let i=0;i<maxq;i++){
+    const s = document.createElement('div'); s.className = 'gres-slot spin';
+    s.innerHTML = `<span class="gres-first">${nm(rnd(ns)).first}</span><span class="gres-last"></span>`;
+    box.appendChild(s); slots.push(s);
+  }
+  const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.gres-first').textContent = nm(rnd(ns)).first; }), 70);
+  await sleep(dur); clearInterval(sp);
+  for (let i=0;i<slots.length;i++){
+    await sleep(260);
+    slots[i].classList.remove('spin'); slots[i].classList.add('locked');
+    slots[i].querySelector('.gres-first').textContent = nm(picked[i]).first;
+    slots[i].querySelector('.gres-last').textContent = nm(picked[i]).rest;
+    flash(); await sleep(150);
+  }
+  S.rpPicks[g] = picked;
+  picked.forEach(p=>registrarSorteo(p, g, 'Modo 2'));
+  const card = document.getElementById('gc-'+cls);
+  const shorts = picked.map(p=>nm(p).short);
+  card.querySelectorAll('.mrow').forEach(r=>{
+    r.classList.toggle('sel', shorts.some(s=>r.textContent.trim().startsWith(s)));
   });
 }
 
-function formatName(m) {
-  // Show "Nombre Apellido1" — truncate if too long
-  const full = typeof m === 'string' ? m : m.name;
-  const parts = full.split(' ');
-  if (parts.length >= 2) {
-    return parts[0] + ' ' + parts[1];
+/* ───────────────────────── TRABAJO FINAL ───────────────────────── */
+function renderTF(){
+  app.innerHTML = `
+    <div class="crumb">Trabajo Final</div>
+    <div class="screen-title">Sustentación</div>
+    <div class="subtabs">
+      <div class="subtab ${S.tfTab==='orden'?'on':''}" onclick="tfTab('orden')">A · Orden de los grupos</div>
+      <div class="subtab ${S.tfTab==='roles'?'on':''}" onclick="tfTab('roles')">B · Roles por grupo</div>
+    </div>
+    <div id="tf-body"></div>`;
+  S.tfTab==='orden' ? renderTFOrden() : renderTFRoles();
+}
+window.tfTab = (t)=>{ if (S.busy) return; S.tfTab = t; render(); };
+
+function renderTFOrden(){
+  const gs = Object.keys(GRUPOS);
+  document.getElementById('tf-body').innerHTML = `
+    <div class="orden-slots">
+      ${gs.map((_,i)=>`<div class="orden-wrap"><div class="orden-pos">${i+1}° en presentar</div>
+        <div class="orden-slot" id="os-${i}"><span class="slot-text">${S.tfOrden ? S.tfOrden[i] : '—'}</span></div></div>`).join('')}
+    </div>
+    <button class="btn" id="go-orden" onclick="sortearOrden()">↯ Sortear orden</button>`;
+  if (S.tfOrden) [0,1,2].forEach(i=>{
+    const el = document.getElementById('os-'+i); if (el) el.className = 'orden-slot locked ' + GCLS[S.tfOrden[i]];
+  });
+}
+async function sortearOrden(){
+  if (S.busy) return; lock(true);
+  const gs = Object.keys(GRUPOS), orden = shuffle(gs);
+  const slots = gs.map((_,i)=>document.getElementById('os-'+i));
+  slots.forEach(s=>s.className='orden-slot spin');
+  const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.slot-text').textContent = rnd(gs); }), 70);
+  await sleep(1600); clearInterval(sp);
+  for (let i=0;i<slots.length;i++){
+    await sleep(380);
+    slots[i].className = 'orden-slot locked ' + GCLS[orden[i]];
+    slots[i].querySelector('.slot-text').textContent = orden[i];
+    flash(); await sleep(180);
   }
-  return full;
+  S.tfOrden = orden;
+  lock(false);
 }
 
-// --- Quantity control ---
-document.getElementById('btn-menos').addEventListener('click', () => {
-  if (animating) return;
-  if (qty > 1) { qty--; updateQtyDisplay(); renderGroups(); }
-});
-document.getElementById('btn-mas').addEventListener('click', () => {
-  if (animating) return;
-  const maxPossible = Math.min(...Object.values(STUDENTS).map(m => m.length));
-  if (qty < maxPossible) { qty++; updateQtyDisplay(); renderGroups(); }
-});
-
-function updateQtyDisplay() {
-  document.getElementById('qty-display').textContent = qty;
+function renderTFRoles(){
+  const order = S.tfOrden || Object.keys(GRUPOS);
+  const seqLine = S.tfOrden
+    ? `<div class="tf-seq">Orden de presentación &nbsp;·&nbsp; ${S.tfOrden.map((g,i)=>`<span class="${GCLS[g]}">${i+1}° ${g}</span>`).join(' <span class="arr">→</span> ')}</div>`
+    : `<div class="tf-seq ph">Sortea el orden en la pestaña A para fijar la secuencia (opcional).</div>`;
+  document.getElementById('tf-body').innerHTML = `
+    ${seqLine}
+    <div class="tf-group-pick">
+      ${order.map((g,i)=>`<button class="tf-gbtn ${GCLS[g]} ${S.tfGroup===g?'on':''}" onclick="tfPick('${g.replace(/'/g,"\\'")}')">${S.tfOrden?`<b>${i+1}°</b> `:''}${g}</button>`).join('')}
+    </div>
+    <div id="roles-area">${S.tfGroup ? rolesShell(S.tfGroup) : '<div class="ph">— selecciona un grupo —</div>'}</div>`;
 }
+window.tfPick = (g)=>{ if (S.busy) return; S.tfGroup = g; renderTFRoles(); };
 
-// --- Sortear grupo ---
-async function sortearGrupo(group) {
-  if (animating) return;
-  animating = true;
-  setAllBtnsDisabled(true);
-
-  const cls = GROUP_CLASSES[group];
-  const members = STUDENTS[group];
-  const maxQ = Math.min(qty, members.length);
-  const picked = pickWeighted(members, maxQ);
-
-  const slotsContainer = document.getElementById(`slots-${cls}`);
-
-  // Build spinning slots
-  slotsContainer.innerHTML = '';
-  const slots = [];
-  for (let i = 0; i < maxQ; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'slot spinning';
-    const inner = document.createElement('div');
-    inner.className = 'slot-inner';
-    inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
-    slot.appendChild(inner);
-    slotsContainer.appendChild(slot);
-    slots.push({ el: slot, inner, final: picked[i] });
-  }
-
-  // Spin phase: show random names cycling
-  const spinDuration = 1800;
-  const spinInterval = setInterval(() => {
-    slots.forEach(s => {
-      if (s.el.classList.contains('spinning')) {
-        s.inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
-      }
-    });
-  }, 80);
-
-  // Reveal one by one
-  await sleep(spinDuration);
-  clearInterval(spinInterval);
-
-  for (let i = 0; i < slots.length; i++) {
+function rolesShell(g){
+  const nResp = Math.max(0, GRUPOS[g].length - 3);
+  const pres = [0,1,2].map(i=>`<div class="role-row" id="pr-${i}"><span class="role-badge">P${i+1}</span>
+    <span class="role-name">—</span><span class="role-sec">${SECCIONES_TF[i]||''}</span></div>`).join('');
+  const resp = Array.from({length:nResp},(_,i)=>`<div class="role-row" id="rr-${i}"><span class="role-badge">R${i+1}</span>
+    <span class="role-name">—</span><span class="role-sec">Preguntas del profesor</span></div>`).join('');
+  return `<div class="roles-out">
+      <div class="roles-col pres"><h4>Presentadores</h4>${pres}</div>
+      <div class="roles-col resp"><h4>Respondedores</h4>${resp}</div>
+    </div>
+    <button class="btn" style="margin-top:20px" id="go-roles" onclick="sortearRoles('${g.replace(/'/g,"\\'")}')">↯ Sortear roles de ${g}</button>`;
+}
+async function sortearRoles(g){
+  if (S.busy) return; lock(true);
+  const ns = GRUPOS[g], nResp = Math.max(0, ns.length - 3);
+  const ord = shuffle(ns), pres = ord.slice(0,3), resp = ord.slice(3);
+  const rows = [
+    ...[0,1,2].map(i=>({ el:document.getElementById('pr-'+i), st:pres[i] })),
+    ...Array.from({length:nResp},(_,i)=>({ el:document.getElementById('rr-'+i), st:resp[i] })),
+  ].filter(r=>r.el && r.st);
+  rows.forEach(r=>r.el.classList.add('spin'));
+  const sp = setInterval(()=>rows.forEach(r=>{ if (r.el.classList.contains('spin')) r.el.querySelector('.role-name').textContent = shortUp(rnd(ns)); }), 70);
+  await sleep(1500); clearInterval(sp);
+  for (let i=0;i<rows.length;i++){
     await sleep(300);
-    const s = slots[i];
-    s.el.classList.remove('spinning');
-    s.el.classList.add('revealing');
-    s.inner.textContent = formatName(s.final);
-    flashScreen();
-    await sleep(180);
+    rows[i].el.classList.remove('spin'); rows[i].el.classList.add('locked');
+    rows[i].el.querySelector('.role-name').textContent = shortUp(rows[i].st);
+    flash(); await sleep(150);
   }
-
-  // Update state & member highlights
-  groupStates[group] = picked;
-  picked.forEach(m => registrarSorteo(m, group));
-  await sleep(200);
-  updateMemberHighlights(group, picked, cls);
-
-  animating = false;
-  setAllBtnsDisabled(false);
+  lock(false);
 }
 
-function updateMemberHighlights(group, picked, cls) {
-  const card = document.getElementById(`card-${cls}`);
-  const codes = picked.map(m => m.code);
-  card.querySelectorAll('.member-item').forEach(el => {
-    el.classList.toggle('selected', codes.includes(el.dataset.code));
-  });
-}
-
-// --- Sortear todos ---
-document.getElementById('btn-all').addEventListener('click', async () => {
-  if (animating) return;
-  animating = true;
-  setAllBtnsDisabled(true);
-
-  const groups = Object.keys(STUDENTS);
-  for (let i = 0; i < groups.length; i++) {
-    if (i > 0) await sleep(400);
-    await sortearGrupoInternal(groups[i]);
-  }
-
-  animating = false;
-  setAllBtnsDisabled(false);
-});
-
-async function sortearGrupoInternal(group) {
-  // Same as sortearGrupo but without locking/unlocking
-  const cls = GROUP_CLASSES[group];
-  const members = STUDENTS[group];
-  const maxQ = Math.min(qty, members.length);
-  const picked = pickWeighted(members, maxQ);
-
-  const slotsContainer = document.getElementById(`slots-${cls}`);
-  slotsContainer.innerHTML = '';
-  const slots = [];
-  for (let i = 0; i < maxQ; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'slot spinning';
-    const inner = document.createElement('div');
-    inner.className = 'slot-inner';
-    inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
-    slot.appendChild(inner);
-    slotsContainer.appendChild(slot);
-    slots.push({ el: slot, inner, final: picked[i] });
-  }
-
-  const spinDuration = 1200;
-  const spinInterval = setInterval(() => {
-    slots.forEach(s => {
-      if (s.el.classList.contains('spinning')) {
-        s.inner.textContent = formatName(members[Math.floor(Math.random() * members.length)]);
-      }
-    });
-  }, 80);
-
-  await sleep(spinDuration);
-  clearInterval(spinInterval);
-
-  for (let i = 0; i < slots.length; i++) {
-    await sleep(220);
-    const s = slots[i];
-    s.el.classList.remove('spinning');
-    s.el.classList.add('revealing');
-    s.inner.textContent = formatName(s.final);
-    flashScreen();
-    await sleep(150);
-  }
-
-  groupStates[group] = picked;
-  picked.forEach(m => registrarSorteo(m, group));
-  updateMemberHighlights(group, picked, cls);
-}
-
-function flashScreen() {
-  const el = document.getElementById('flash');
-  el.classList.add('active');
-  setTimeout(() => el.classList.remove('active'), 120);
-}
-
-function setAllBtnsDisabled(val) {
-  document.querySelectorAll('.btn-sortear, .btn-sortear-all').forEach(b => b.disabled = val);
-  document.getElementById('btn-menos').disabled = val;
-  document.getElementById('btn-mas').disabled = val;
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-// ── SORTEO ORDEN DE PRESENTACIÓN ────────────────────────────────────
-const GRUPOS_ORDEN = ['GRUPO 1', 'GRUPO 2', 'GRUPO 3'];
-const GRUPO_CLS_MAP = { 'GRUPO 1': 'g1', 'GRUPO 2': 'g2', 'GRUPO 3': 'g3' };
-let ordenAnimating = false;
-
-document.getElementById('btn-sortear-orden').addEventListener('click', async () => {
-  if (ordenAnimating || animating) return;
-  ordenAnimating = true;
-  document.getElementById('btn-sortear-orden').disabled = true;
-
-  const orden = shuffle([...GRUPOS_ORDEN]);
-  const slots = [0, 1, 2].map(i => ({
-    el: document.getElementById(`oSlot-${i}`),
-    inner: document.getElementById(`oSlot-${i}`).querySelector('.orden-slot-inner'),
-    final: orden[i],
-    cls: GRUPO_CLS_MAP[orden[i]]
-  }));
-
-  // Start spinning
-  slots.forEach(s => {
-    s.el.className = 'orden-slot spinning';
-    s.inner.innerHTML = GRUPOS_ORDEN[Math.floor(Math.random() * 3)];
-  });
-
-  const spinInterval = setInterval(() => {
-    slots.forEach(s => {
-      if (s.el.classList.contains('spinning')) {
-        s.inner.textContent = GRUPOS_ORDEN[Math.floor(Math.random() * 3)];
-      }
-    });
-  }, 80);
-
-  await sleep(1800);
-  clearInterval(spinInterval);
-
-  // Reveal one by one
-  for (let i = 0; i < slots.length; i++) {
-    await sleep(350);
-    const s = slots[i];
-    s.el.className = `orden-slot revealing-${s.cls}`;
-    s.inner.textContent = s.final;
-    flashScreen();
-    await sleep(200);
-  }
-
-  ordenAnimating = false;
-  document.getElementById('btn-sortear-orden').disabled = false;
-});
-
-// ── BOOT ─────────────────────────────────────────────────────────────
-// Boot
-cargarNomina(); // trae la lista de alumnos y grupos, y luego los conteos
+/* ═══════════════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════════════ */
+cargarNomina();
 </script>
 </body>
 </html>

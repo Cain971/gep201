@@ -94,6 +94,8 @@ function doGet(e) {
         alumnos.push({
           codigo: String(codigo),
           nombre: properCase(values[i][0]) + ' ' + properCase(values[i][1]),
+          nombres: properCase(values[i][0]),   // solo nombres (para el corte nombre/apellidos del sorteo)
+          apellidos: properCase(values[i][1]), // solo apellidos
           grupo: String(values[i][4]).trim()
         });
       }
