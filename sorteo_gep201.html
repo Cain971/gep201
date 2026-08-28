@@ -299,10 +299,10 @@ function nm(st){
   let given, family;
   if (st.nombres && st.apellidos){ given = st.nombres; family = st.apellidos; }
   else { const p = String(st.name||'').split(' '); given = p[0]||''; family = p.slice(1).join(' '); }
-  const first = given.split(' ')[0];                                           // primer nombre
-  const rest  = (given.split(' ').slice(1).join(' ') + ' ' + family).trim();   // 2do nombre + apellidos
-  const short = (first + ' ' + (family.split(' ')[0] || given.split(' ')[1] || '')).trim();
-  return { given, family, first, rest, short };
+  const first = given.split(' ')[0];                          // primer nombre
+  const fam1  = family.split(' ')[0] || given.split(' ')[1] || '';  // primer apellido
+  const short = (first + ' ' + fam1).trim();                  // "Primer nombre Primer apellido"
+  return { given, family, first, fam1, short };
 }
 const shortUp = st => nm(st).short.toUpperCase();
 
@@ -521,7 +521,7 @@ function drawGroups(){
     const cls = GCLS[g], maxq = Math.min(S.nRP, ns.length);
     const pk = S.rpPicks[g], selCodes = (pk||[]).map(x=>x.code);
     const resSlots = pk
-      ? pk.map(p=>`<div class="gres-slot locked"><span class="gres-first">${nm(p).first}</span><span class="gres-last">${nm(p).rest}</span></div>`).join('')
+      ? pk.map(p=>`<div class="gres-slot locked"><span class="gres-first">${nm(p).first}</span><span class="gres-last">${nm(p).fam1}</span></div>`).join('')
       : `<div class="gres-empty">— sin sorteo aún —</div>`;
     const rows = ns.map(st=>`<div class="mrow ${selCodes.includes(st.code)?'sel':''}"><span class="mdot"></span>${nm(st).short}<span class="mn">${CONTEOS[st.code]||0}</span></div>`).join('');
     return `<div class="gcard ${cls}" id="gc-${cls}">
@@ -560,7 +560,7 @@ async function animRP(g, dur){
     await sleep(260);
     slots[i].classList.remove('spin'); slots[i].classList.add('locked');
     slots[i].querySelector('.gres-first').textContent = nm(picked[i]).first;
-    slots[i].querySelector('.gres-last').textContent = nm(picked[i]).rest;
+    slots[i].querySelector('.gres-last').textContent = nm(picked[i]).fam1;
     flash(); await sleep(150);
   }
   S.rpPicks[g] = picked;
