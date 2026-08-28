@@ -144,62 +144,88 @@ function doGet(e) {
   }
 }
 
-// ── COEVALUACIÓN → COEVALUACION (sin cambios) ──────────────────────────────
-const INSTRUMENTO_FORM_MAP = {
-  'Coevaluación de contribución grupal — RP1': 'RP1',
-  'Coevaluación de contribución grupal — RP2': 'RP2',
-  'Coevaluación de contribución grupal — RP3': 'RP3',
-  'Coevaluación de contribución grupal — TF':  'TF_grupal',
-};
+// ── COEVALUACIÓN → hoja "Coevaluacion" ────────────────────────────────────
+// Los 4 Forms (RP1/RP2/RP3/TF) se generan con construir_forms_coevaluacion.gs.
+// Estructura de cada Form:
+//   Q1  "¿Cuál es tu nombre?"  — opción "GRUPO N: Apellidos, Nombres", ramifica
+//        a una sección por evaluador.
+//   Sección del evaluador — una casilla numérica 0-100 por cada compañero de su
+//        grupo; el TÍTULO de esa casilla ES el nombre del evaluado
+//        ("Apellidos, Nombres"). El evaluado se identifica por título, no por
+//        posición (así funciona con grupos de 5 o de 6, sin tope fijo).
+//
+// Fila escrita en Coevaluacion: [Timestamp, Instrumento, Evaluador, Grupo,
+// Evaluado, Puntaje]. "Evaluado" y "Grupo" salen exactamente en el formato que
+// Ajustes_Coeval busca con AVERAGEIFS ("Apellidos, Nombres" / "GRUPO N").
+// Instrumento ∈ {RP1, RP2, RP3, TF_grupal}.
 
-// PENDIENTE: reconstruir con los 17 alumnos de 2026-2 cuando crees los nuevos
-// Forms de coevaluación (cada alumno evalúa a sus compañeros de grupo). Se
-// deja vacío por ahora para que el script sea válido y desplegable; onFormSubmit
-// simplemente no encontrará match y no hará nada hasta que se complete esto.
-const EVALUATOR_MAP = {};
+const COEVAL_Q1_TITULO = '¿Cuál es tu nombre?';
+
+// código → nombre "Apellidos, Nombres" + grupo, leído de la pestaña Nomina.
+function coevalRoster_(ss) {
+  const values = ss.getSheetByName('Nomina').getDataRange().getValues();
+  const porNombre = {};
+  for (let i = 1; i < values.length; i++) {
+    if (!values[i][2]) continue;
+    const nombre = properCase(values[i][1]) + ', ' + properCase(values[i][0]);
+    porNombre[nombre] = { nombre: nombre, grupo: String(values[i][4]).trim() };
+  }
+  return porNombre;
+}
+
+// Deriva el instrumento del título del Form.
+function coevalInstrumento_(titulo) {
+  const t = String(titulo);
+  if (/\bTF\b/.test(t) || /trabajo\s+final/i.test(t)) return 'TF_grupal';
+  const m = t.match(/\bRP\s?([123])\b/);
+  return m ? 'RP' + m[1] : null;
+}
 
 function onFormSubmit(e) {
   try {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const shCoev = ss.getSheetByName('Coevaluacion');
+    const roster = coevalRoster_(ss);
 
-    const response = e.response;
-    const itemResponses = response.getItemResponses();
-
-    const evaluatorKey = itemResponses[0].getResponse().toString().trim();
-    const evalInfo = EVALUATOR_MAP[evaluatorKey];
-    if (!evalInfo) {
-      Logger.log('NO MATCH — key not found in EVALUATOR_MAP');
+    const instrumento = coevalInstrumento_(e.source.getTitle());
+    if (!instrumento) {
+      Logger.log('Coeval: instrumento no derivable de "' + e.source.getTitle() + '"');
       return;
     }
 
-    const timestamp = response.getTimestamp();
-    const formTitle = e.source.getTitle().trim();
-    let instrumento = 'RP1';
-    Object.entries(INSTRUMENTO_FORM_MAP).forEach(([title, instr]) => {
-      if (formTitle.includes(title.trim()) || title.trim().includes(formTitle)) {
-        instrumento = instr;
-      }
-    });
+    const respuestas = e.response.getItemResponses();
+    const timestamp = e.response.getTimestamp();
 
-    const scores = [];
-    const evaluatees = [];
-    let scoreIdx = 0;
-    for (let i = 1; i < itemResponses.length; i++) {
-      const val = itemResponses[i].getResponse().toString().trim();
-      const num = parseFloat(val);
-      if (!isNaN(num) && scoreIdx < 4) {
-        scores.push(num);
-        evaluatees.push(evalInfo.evaluatees[scoreIdx]);
-        scoreIdx++;
+    // Q1 → evaluador y grupo. Se busca por título (no por índice) por si la
+    // recolección de correo u otro item se cuela primero.
+    let q1 = '';
+    for (let i = 0; i < respuestas.length; i++) {
+      if (String(respuestas[i].getItem().getTitle()).trim() === COEVAL_Q1_TITULO) {
+        q1 = String(respuestas[i].getResponse()).trim();
+        break;
       }
     }
+    const sep = q1.indexOf(': ');
+    const evaluador = sep >= 0 ? q1.slice(sep + 2).trim() : q1;
+    const grupo = (roster[evaluador] && roster[evaluador].grupo) ||
+                  (sep >= 0 ? q1.slice(0, sep).trim() : '');
+    if (!evaluador) { Logger.log('Coeval: Q1 vacía o no encontrada'); return; }
 
-    scores.forEach((score, j) => {
-      shCoev.appendRow([timestamp, instrumento, evalInfo.name, evalInfo.group, evaluatees[j], score]);
-    });
+    const filas = [];
+    for (let i = 0; i < respuestas.length; i++) {
+      const titulo = String(respuestas[i].getItem().getTitle()).trim();
+      if (!roster[titulo]) continue;                 // no es casilla de puntaje
+      const puntaje = parseFloat(String(respuestas[i].getResponse()).trim());
+      if (isNaN(puntaje)) continue;
+      filas.push([timestamp, instrumento, evaluador, grupo, titulo, puntaje]);
+    }
 
-  } catch(err) {
-    Logger.log('ERROR: ' + err.toString());
+    if (filas.length) {
+      shCoev.getRange(shCoev.getLastRow() + 1, 1, filas.length, 6).setValues(filas);
+    } else {
+      Logger.log('Coeval: 0 puntajes reconocidos — evaluador "' + evaluador + '" (' + instrumento + ')');
+    }
+  } catch (err) {
+    Logger.log('ERROR onFormSubmit: ' + err.toString());
   }
 }
