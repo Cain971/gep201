@@ -83,13 +83,12 @@ header{
   z-index:15;
 }
 .mode-tab{
-  flex:1; min-height:46px; background:none; border:none; cursor:pointer;
-  font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-dim);
-  border-bottom:2.5px solid transparent; padding:6px 4px; transition:color .15s,border-color .15s;
+  flex:1; min-height:48px; background:none; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:12.5px; font-weight:600; letter-spacing:.005em; line-height:1.2; color:var(--ink-dim);
+  border-bottom:2.5px solid transparent; padding:8px 6px; transition:color .15s,border-color .15s;
 }
-.mode-tab .mt-n{font-family:var(--font-name); font-size:15px; display:block; color:var(--ink-dim)}
 .mode-tab.active{color:var(--accent); border-bottom-color:var(--accent)}
-.mode-tab.active .mt-n{color:var(--accent)}
 
 /* ══════════ PROTO BAR (solo prototipo — selector de fuente) ══════════ */
 #proto-bar{
@@ -393,9 +392,9 @@ header{
 </header>
 
 <nav class="modebar" id="modebar">
-  <button class="mode-tab active" data-mode="1" onclick="setMode(1)"><span class="mt-n">1</span>Participación</button>
-  <button class="mode-tab" data-mode="2" onclick="setMode(2)"><span class="mt-n">2</span>RP</button>
-  <button class="mode-tab" data-mode="3" onclick="setMode(3)"><span class="mt-n">3</span>Sustentación TF</button>
+  <button class="mode-tab active" data-mode="1" onclick="setMode(1)">Participación</button>
+  <button class="mode-tab" data-mode="2" onclick="setMode(2)">Reporte parcial</button>
+  <button class="mode-tab" data-mode="3" onclick="setMode(3)">Trabajo final</button>
 </nav>
 
 <div id="proto-bar">
@@ -812,8 +811,10 @@ function render(){
   refreshActionBar();
 }
 
-/* ── crumb helper ── */
+/* ── crumb helper — solo se dibuja si hay botón de volver o etiqueta de contexto.
+   En las pantallas de nivel superior la pestaña ya dice dónde estás. ── */
 function crumb(w, backFn, backLabel, label){
+  if(!backFn && !label) return;
   const row=mkEl('div','crumb-row');
   if(backFn){
     const b=mkEl('button','crumb-back'); b.innerHTML='← '+backLabel;
@@ -825,7 +826,6 @@ function crumb(w, backFn, backLabel, label){
 
 /* ── MODO 2: elegir instrumento ── */
 function renderInstr(w){
-  crumb(w,null,null,'Reporte parcial');
   const t=mkEl('div','screen-title'); t.textContent='¿Qué reporte evalúas?'; w.appendChild(t);
   const s=mkEl('div','screen-sub'); s.textContent='La dinámica de preguntas aplica a este RP.'; w.appendChild(s);
   const seg=mkEl('div','seg');
@@ -840,8 +840,7 @@ function renderInstr(w){
 
 /* ── lista de alumnos ── */
 function renderStudentList(w){
-  if(S.mode===2) crumb(w, ()=>{S.mobStep=0;render();}, S.selectedInstrumento, 'Reporte parcial');
-  else crumb(w,null,null,'Participación');
+  if(S.mode===2) crumb(w, ()=>{S.mobStep=0;render();}, S.selectedInstrumento, null);
   const t=mkEl('div','screen-title');
   t.textContent = S.mode===1 ? '¿A quién calificas?' : 'Elige quién sustenta';
   w.appendChild(t);
@@ -871,7 +870,7 @@ function renderStudentList(w){
 function renderGrade(w){
   const st=S.activeStudent;
   crumb(w, ()=>{ S.activeStudent=null; S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false; S.mobStep=1; render(); },
-        'Alumnos', S.mode===1?'Participación':(S.selectedInstrumento+' · dinámica'));
+        'Alumnos', S.mode===1?null:(S.selectedInstrumento+' · dinámica'));
 
   const card=mkEl('div','active-card');
   card.innerHTML='<div class="ac-name">'+shortName(st)+'</div>'+
@@ -996,7 +995,6 @@ function renderM3(w){
   else renderM3Review(w);
 }
 function renderM3Group(w){
-  crumb(w,null,null,'Sustentación TF');
   const t=mkEl('div','screen-title'); t.textContent='¿Qué grupo sustenta?'; w.appendChild(t);
   const s=mkEl('div','screen-sub'); s.textContent='Luego asignas el orden de presentación.'; w.appendChild(s);
   grpNames().forEach(g=>{
