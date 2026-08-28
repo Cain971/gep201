@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <title>GEP201 · Evaluación (prototipo)</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -18,10 +18,13 @@
   --g1:#2f5d86; --g1-soft:#e7eef6; --g2:#2f7048; --g2-soft:#e6f1e9; --g3:#7a3d6e; --g3-soft:#f3e9f1;
   --r-sm:8px; --r-md:12px; --r-lg:18px;
   --tap:48px;
-  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+  --font-mono:'IBM Plex Sans','IBM Plex Mono',system-ui,sans-serif;  /* fuente de UI — cambia con el selector */
   --font-name:'Playfair Display',Georgia,serif;
   --shadow:0 1px 2px rgba(40,32,16,.05), 0 8px 24px -14px rgba(40,32,16,.22);
 }
+body[data-font="serif"]{ --font-mono:'Source Serif 4',Georgia,serif; }
+body[data-font="mono"]{ --font-mono:'IBM Plex Mono',ui-monospace,monospace; }
+body[data-font="sans"]{ --font-mono:'IBM Plex Sans',system-ui,sans-serif; }
 
 html{height:100%}
 body{
@@ -41,7 +44,7 @@ header{
   display:flex; align-items:center; gap:10px; flex-wrap:wrap;
   border-bottom:2px solid var(--accent); z-index:20;
 }
-.hdr-brand{font-family:var(--font-name); font-weight:700; font-size:17px; white-space:nowrap}
+.hdr-brand{font-family:var(--font-name); font-weight:700; font-size:15px; white-space:nowrap}
 .hdr-brand span{color:#e0a06f}
 .hdr-ctx{display:flex; gap:7px; margin-left:auto; align-items:center; flex-wrap:wrap}
 .ctx-chip{
@@ -87,6 +90,20 @@ header{
 .mode-tab .mt-n{font-family:var(--font-name); font-size:15px; display:block; color:var(--ink-dim)}
 .mode-tab.active{color:var(--accent); border-bottom-color:var(--accent)}
 .mode-tab.active .mt-n{color:var(--accent)}
+
+/* ══════════ PROTO BAR (solo prototipo — selector de fuente) ══════════ */
+#proto-bar{
+  flex-shrink:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  background:var(--bg2); border-bottom:1px solid var(--border);
+  padding:7px 14px; font-size:11px; color:var(--ink-dim); letter-spacing:.04em;
+}
+#proto-bar .pb-tag{text-transform:uppercase; letter-spacing:.12em}
+#proto-bar .pb-opts{display:flex; gap:5px; margin-left:auto}
+#proto-bar button{
+  min-height:30px; padding:0 12px; border:1px solid var(--border-strong); border-radius:15px;
+  background:var(--surface); color:var(--ink-mid); font-size:12px; cursor:pointer;
+}
+#proto-bar button.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent); font-weight:600}
 
 /* ══════════ SORTEO QUEUE ══════════ */
 #sorteo-queue{flex-shrink:0; background:var(--accent-soft); border-bottom:1px solid var(--border-strong); display:none}
@@ -381,6 +398,15 @@ header{
   <button class="mode-tab" data-mode="3" onclick="setMode(3)"><span class="mt-n">3</span>Sustentación TF</button>
 </nav>
 
+<div id="proto-bar">
+  <span class="pb-tag">Prototipo · fuente</span>
+  <span class="pb-opts">
+    <button data-font="sans" onclick="setFont('sans')">Sans</button>
+    <button data-font="serif" onclick="setFont('serif')">Serif</button>
+    <button data-font="mono" onclick="setFont('mono')">Mono</button>
+  </span>
+</div>
+
 <div id="sorteo-queue"><div class="q-inner" id="q-inner"></div></div>
 
 <main id="app"><div class="wrap" id="wrap"><div class="empty">Cargando lista de alumnos…</div></div></main>
@@ -507,11 +533,22 @@ function nmParts(st){
   if(!g||!f){ const p=(st.name||'').split(' '); g=g||p[0]||''; f=f||p.slice(1).join(' '); }
   return {given:g,family:f,first:g.split(' ')[0],fam1:f.split(' ')[0]||g.split(' ')[1]||''};
 }
+// Regla fija: primer nombre + primer apellido en todos lados.
 const fn=(st)=>nmParts(st).first;
-const ln=(st)=>{const n=nmParts(st);return (n.given.split(' ').slice(1).join(' ')+' '+n.family).trim()||n.family;};
-const shortName=(st)=>{const n=nmParts(st);return (n.first+' '+n.fam1).trim();};
+const ln=(st)=>nmParts(st).fam1;
+const shortName=(st)=>(nmParts(st).first+' '+nmParts(st).fam1).trim();
+const fullName=(st)=>{const n=nmParts(st);return (n.given+' '+n.family).trim()||n.name;};
+
+// Selector de fuente (solo prototipo)
+function setFont(f){
+  document.body.dataset.font=f;
+  document.querySelectorAll('#proto-bar button').forEach(b=>b.classList.toggle('on',b.dataset.font===f));
+  try{ localStorage.setItem('gep201_font',f); }catch(e){}
+}
 
 document.addEventListener('DOMContentLoaded',()=>{
+  let f='sans'; try{ f=localStorage.getItem('gep201_font')||'sans'; }catch(e){}
+  setFont(f);
   // Sesión y fecha: persistidas en el dispositivo (arreglo del bug: antes no se
   // podían editar en móvil y quedaba "Clase 3" fijo en el HTML).
   const sEl=document.getElementById('inp-sesion'), fEl=document.getElementById('inp-fecha');
@@ -837,8 +874,8 @@ function renderGrade(w){
         'Alumnos', S.mode===1?'Participación':(S.selectedInstrumento+' · dinámica'));
 
   const card=mkEl('div','active-card');
-  card.innerHTML='<div class="ac-name">'+nmParts(st).given+' '+nmParts(st).family+'</div>'+
-    '<div class="ac-meta">'+st.group+' · código '+st.code+'</div>'+
+  card.innerHTML='<div class="ac-name">'+shortName(st)+'</div>'+
+    '<div class="ac-meta">'+fullName(st)+' · '+st.group+'</div>'+
     (S.activeStudentOrigen==='sorteo'?'<span class="ac-badge">del sorteo</span>':'');
   w.appendChild(card);
 
