@@ -2,294 +2,399 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>GEP201 · Gestión de Evaluación</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=IBM+Plex+Mono:wght@300;400;500&family=Source+Serif+4:opsz,wght@8..60,300;400;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>GEP201 · Evaluación</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 :root{
-  --bg:#f5f2ec;--bg2:#edeae2;--surface:#fff;
-  --border:#d8d2c4;--border-dark:#b8b0a0;
-  --text:#1a1814;--text-mid:#4a4540;--text-muted:#8a8278;--text-dim:#b8b0a0;
-  --accent:#8b4513;--accent-light:#f0e8dc;--accent-mid:#c47840;
-  --g1:#2c5f8a;--g1-bg:#eaf0f7;--g2:#2d7a4f;--g2-bg:#eaf4ee;--g3:#7a3d6e;--g3-bg:#f4eaf2;
-  --ok:#2d6a4f;--ok-bg:#d8f3dc;--warn:#e76f00;--warn-bg:#fff0dc;--danger:#c1121f;--danger-bg:#ffe0e0;
-  --radius:4px;
-  --fs-title:16px;--fs-body:13px;--fs-label:11px;--fs-mono:10px;--fs-micro:9px;
-}
-html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--text);font-family:'Source Serif 4',serif;font-size:var(--fs-body);display:flex;flex-direction:column}
-
-/* HEADER */
-header{background:#1a1814;color:#f5f2ec;height:50px;padding:0 16px;display:flex;align-items:center;gap:12px;border-bottom:2px solid var(--accent);flex-shrink:0;z-index:100}
-.hdr-title{font-family:'Playfair Display',serif;font-size:var(--fs-title);font-weight:700;white-space:nowrap}
-.hdr-title span{color:var(--accent-mid)}
-.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.hdr-fields{display:flex;gap:6px;align-items:center}
-.hdr-field{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:#6a6460}
-.hdr-field input{background:#2a2620;border:1px solid #3a3630;color:#f5f2ec;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);padding:3px 6px;border-radius:var(--radius);outline:none}
-.hdr-field input[type=text]{width:110px}.hdr-field input[type=date]{width:105px}
-.sync-dot{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);padding:3px 8px;border-radius:20px;background:#2a2620;color:#5a5450;transition:all .3s;white-space:nowrap}
-.sync-dot.ok{color:#4a9a6a;background:#0a2a18}.sync-dot.syncing{color:#c47840;background:#2a2008}.sync-dot.error{color:#e05050;background:#2a0808}
-.sorteo-banner{display:flex;flex-direction:column;gap:6px;padding:8px 24px;background:#2a2008;border-bottom:2px solid var(--accent-mid)}
-.sorteo-banner-item{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#f0e0c0}
-.sorteo-banner-item-name{color:var(--accent-mid);font-size:13px;font-weight:600}
-.sorteo-banner-item-modo{color:#c4b8a0}
-.sorteo-banner-item .spacer{flex:1}
-.sorteo-banner-item button{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 12px;border-radius:3px;border:1px solid var(--accent-mid);background:var(--accent-mid);color:#1a1814;cursor:pointer}
-.sorteo-banner-x{background:transparent!important;color:#c4b8a0!important;border-color:#5a5450!important;padding:5px 10px!important}
-.hdr-mob-info{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:#6a6460;display:none}
-@media(max-width:639px){.hdr-fields{display:none}.hdr-mob-info{display:block}.hdr-title{font-size:14px}}
-
-/* MODE BAR */
-.mode-bar{background:#13110e;border-bottom:1px solid #2a2620;display:flex;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-.mode-bar::-webkit-scrollbar{display:none}
-.mode-tab{padding:10px 16px;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);letter-spacing:.1em;text-transform:uppercase;color:#5a5450;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.mode-tab:hover{color:#a89880}.mode-tab.active{color:var(--accent-mid);border-bottom-color:var(--accent-mid)}
-
-/* APP MAIN */
-.app-main{flex:1;overflow:hidden;position:relative;background:var(--surface)}
-
-/* DESKTOP LAYOUTS */
-.layout-3col{display:grid;grid-template-columns:230px 1fr 290px;height:100%;max-width:1200px;margin:0 auto;width:100%}
-.layout-2col{display:grid;grid-template-columns:230px 1fr;height:100%;max-width:900px;margin:0 auto;width:100%}
-.layout-3col-tf{display:grid;grid-template-columns:200px 1fr 340px;height:100%;max-width:1200px;margin:0 auto;width:100%}
-@media(min-width:640px) and (max-width:1023px){
-  .layout-3col,.layout-3col-tf{grid-template-columns:200px 1fr}
-  .hide-tablet{display:none}
+  --bg:#f3efe6; --bg2:#ece6d8; --surface:#ffffff; --surface2:#faf7f0;
+  --border:#e4dfcf; --border-strong:#cfc8b3;
+  --ink:#211e17; --ink-mid:#5f584a; --ink-dim:#928975;
+  --accent:#a0491d; --accent-soft:#f4e5d6; --on-accent:#fff;
+  --ok:#2f6b3f; --ok-soft:#e0f0e2; --warn:#b45309; --warn-soft:#fbe9d2;
+  --danger:#b3261e; --danger-soft:#fbe1df;
+  --g1:#2f5d86; --g1-soft:#e7eef6; --g2:#2f7048; --g2-soft:#e6f1e9; --g3:#7a3d6e; --g3-soft:#f3e9f1;
+  --r-sm:8px; --r-md:12px; --r-lg:18px;
+  --tap:48px;
+  --font-mono:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-name:'Playfair Display',Georgia,serif;
+  --shadow:0 1px 2px rgba(40,32,16,.05), 0 8px 24px -14px rgba(40,32,16,.22);
 }
 
-/* PANELS */
-.panel-left,.panel-right{background:var(--surface);overflow-y:auto;height:100%}
-.panel-left{border-right:1px solid var(--border)}
-.panel-right{border-left:1px solid var(--border);background:var(--surface)}
-.panel-center{background:var(--bg);overflow-y:auto;height:100%;padding:16px}
-.panel-title{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.25em;text-transform:uppercase;color:var(--text-muted);padding:10px 14px 8px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2}
+html{height:100%}
+body{
+  height:100dvh; min-height:100dvh;
+  background:var(--bg); color:var(--ink);
+  font-family:var(--font-mono); font-size:16px; line-height:1.5;
+  display:flex; flex-direction:column; overflow:hidden;
+  -webkit-text-size-adjust:100%;
+}
+button,input,textarea{font-family:inherit; font-size:inherit; color:inherit}
+button{-webkit-tap-highlight-color:transparent}
 
-/* MOBILE NAV */
-.mob-nav{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:10}
-.mob-back{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--accent-mid);cursor:pointer;white-space:nowrap}
-.mob-step-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mob-step-sub{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);white-space:nowrap;margin-left:auto}
+/* ══════════ HEADER ══════════ */
+header{
+  flex-shrink:0; background:var(--ink); color:#f3efe6;
+  padding:max(10px,env(safe-area-inset-top)) 14px 10px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  border-bottom:2px solid var(--accent); z-index:20;
+}
+.hdr-brand{font-family:var(--font-name); font-weight:700; font-size:15px; white-space:nowrap}
+.hdr-brand span{color:#e0a06f}
+.hdr-ctx{display:flex; gap:7px; margin-left:auto; align-items:center; flex-wrap:wrap}
+.ctx-chip{
+  display:flex; align-items:center; gap:6px; background:#302b22; border:1px solid #453f33;
+  border-radius:var(--r-sm); padding:0 4px 0 9px; height:34px;
+  font-size:12px; color:#cdc4b4; letter-spacing:.02em;
+}
+.ctx-chip label{color:#8c8474; font-size:10px; letter-spacing:.05em; text-transform:uppercase}
+.ctx-chip input{
+  background:transparent; border:none; outline:none; color:#f3efe6; font-weight:500;
+  height:32px; padding:0 4px; min-width:0;
+}
+.ctx-chip input#inp-sesion{width:88px}
+.ctx-chip input#inp-fecha{width:132px; color-scheme:dark}
+.sync-dot{
+  font-size:11px; padding:4px 9px; border-radius:20px; background:#302b22; color:#8c8474;
+  white-space:nowrap; transition:all .3s; letter-spacing:.03em;
+}
+.sync-dot.ok{color:#7bbf8e; background:#12331d} .sync-dot.syncing{color:#e0a06f; background:#3a2a10}
+.sync-dot.error{color:#e88; background:#3a1210}
+@media(max-width:560px){
+  header{padding-left:12px; padding-right:12px; gap:8px}
+  .hdr-brand{font-size:15px}
+  .hdr-ctx{gap:6px; width:100%; margin-left:0}
+  .ctx-chip{flex:1; min-width:0}
+  .ctx-chip label{display:none}
+  .ctx-chip input#inp-sesion{width:100%}
+  .ctx-chip input#inp-fecha{width:100%}
+  .sync-dot{position:absolute; top:max(10px,env(safe-area-inset-top)); right:12px; font-size:0; padding:0; width:12px; height:12px; border-radius:50%; background:transparent}
+  .sync-dot::before{content:'●'; font-size:13px}
+}
 
-/* MOBILE INSTRUMENT SELECTOR */
-.mob-instr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.mob-instr-btn{padding:14px 8px;border:2px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;text-align:center;transition:all .15s}
-.mob-instr-btn.active{border-color:var(--accent);background:var(--accent-light)}
-.mob-instr-code{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500;color:var(--text);display:block}
-.mob-instr-btn.active .mob-instr-code{color:var(--accent)}
-.mob-next-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:opacity .15s}
-.mob-next-btn:hover{opacity:.9}
-.mob-group-btn{display:block;width:100%;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;color:var(--text);cursor:pointer;text-align:left;margin-bottom:10px;transition:all .12s}
-.mob-group-btn:hover{border-color:var(--accent-mid);background:var(--accent-light)}
+/* ══════════ MODE BAR ══════════ */
+.modebar{
+  flex-shrink:0; display:flex; background:var(--surface2); border-bottom:1px solid var(--border);
+  z-index:15;
+}
+.mode-tab{
+  flex:1; min-height:48px; background:none; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:12.5px; font-weight:600; letter-spacing:.005em; line-height:1.2; color:var(--ink-dim);
+  border-bottom:2.5px solid transparent; padding:8px 6px; transition:color .15s,border-color .15s;
+}
+.mode-tab.active{color:var(--accent); border-bottom-color:var(--accent)}
 
-/* STUDENT ROWS */
-.group-block{border-bottom:1px solid var(--border)}
-.group-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;padding:8px 14px 4px;display:flex;align-items:center;gap:5px}
-.g1 .group-label{color:var(--g1)}.g2 .group-label{color:var(--g2)}.g3 .group-label{color:var(--g3)}
-.group-label::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.g1 .group-label::before{background:var(--g1)}.g2 .group-label::before{background:var(--g2)}.g3 .group-label::before{background:var(--g3)}
-.student-row{display:flex;align-items:center;width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;text-align:left;gap:8px;transition:background .1s}
-.student-row:hover{background:var(--bg)}.student-row.active{background:var(--accent-light)!important}.student-row.graded{opacity:.75}
-.s-indicator{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-dark);display:flex;align-items:center;justify-content:center;font-size:var(--fs-micro);flex-shrink:0;font-family:'IBM Plex Mono',monospace;transition:all .15s}
-.student-row.active .s-indicator{background:var(--accent);border-color:var(--accent);color:#fff}
-.student-row.graded .s-indicator{background:var(--ok);border-color:var(--ok);color:#fff}
-.s-name{flex:1;line-height:1.3}
-.s-name .s-firstname{font-family:"Playfair Display",serif;font-size:14px;font-weight:700;color:#1a1814;display:block}
-.s-name small{font-size:var(--fs-micro);color:#8a8278;display:block;margin-top:1px}
-.student-row.active .s-firstname{color:var(--accent)}
-.s-codigo{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-dim)}
-.s-count{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);padding:2px 6px;border-radius:10px;flex-shrink:0;margin-left:4px}
-.s-count.low{background:var(--warn-bg);color:var(--warn)}
-.s-count.ok{background:var(--ok-bg);color:var(--ok)}
+/* ══════════ SORTEO QUEUE ══════════ */
+#sorteo-queue{flex-shrink:0; background:var(--accent-soft); border-bottom:1px solid var(--border-strong); display:none}
+#sorteo-queue.show{display:block}
+.q-inner{max-width:760px; margin:0 auto; padding:10px 12px; display:flex; flex-direction:column; gap:8px}
+.q-title{font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); font-weight:600}
+.q-item{
+  display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border-strong);
+  border-radius:var(--r-md); padding:8px 8px 8px 12px;
+}
+.q-item .q-name{font-family:var(--font-name); font-weight:700; font-size:16px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.q-item .q-meta{font-size:11px; color:var(--ink-dim); white-space:nowrap}
+.q-item .q-go{
+  min-height:40px; padding:0 16px; background:var(--accent); color:var(--on-accent); border:none;
+  border-radius:var(--r-sm); font-size:12px; font-weight:600; letter-spacing:.04em; cursor:pointer; white-space:nowrap;
+}
+.q-item .q-x{
+  min-width:40px; min-height:40px; background:transparent; border:1px solid var(--border-strong);
+  border-radius:var(--r-sm); color:var(--ink-dim); cursor:pointer; font-size:15px;
+}
 
-/* ACTIVE BANNER */
-.active-banner{background:var(--accent-light);border:1px solid #d4a870;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.active-banner.empty{background:var(--bg2);border-color:var(--border)}
-.banner-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--accent)}
-.banner-name.ph{color:var(--text-muted);font-style:italic;font-weight:400;font-size:var(--fs-body)}
-.banner-sub{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted);margin-top:2px}
+/* ══════════ APP (scroll area) ══════════ */
+#app{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain}
+.wrap{max-width:760px; margin:0 auto; padding:16px 14px 28px}
+@media(min-width:1000px){ .wrap{max-width:860px} }
 
-/* QUESTION BLOCKS */
-.dim-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
-.dim-head{padding:9px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg2);border-bottom:1px solid var(--border);user-select:none}
-.dim-head:hover{background:var(--bg)}
-.dim-num{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);font-weight:500;flex-shrink:0}
-.dd .dim-num{background:#dceeff;color:#1a5080}.dj .dim-num{background:#dcf0e4;color:#1a5030}
-.dm .dim-num{background:#f0e4dc;color:#80300a}.dt .dim-num{background:#e4dcf0;color:#30086a}
-.dim-title{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;flex:1}
-.dim-used{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);background:var(--bg);padding:2px 6px;border-radius:10px}
-.dim-arrow{font-size:var(--fs-micro);color:var(--text-dim);transition:transform .2s}
-.dim-block.collapsed .dim-arrow{transform:rotate(-90deg)}.dim-block.collapsed .dim-body{display:none}
-.level-group{padding:4px 10px 6px}
-.level-hdr{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.15em;text-transform:uppercase;padding:6px 4px 4px;border-bottom:1px dashed var(--border);margin-bottom:4px;display:flex;align-items:center;gap:4px}
-.lh1{color:#2d6a4f}.lh2{color:#e76f00}.lh3{color:#4a4540}
-.lh-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
-.lh1 .lh-dot{background:#2d6a4f}.lh2 .lh-dot{background:#e76f00}.lh3 .lh-dot{background:#4a4540}
-.q-item{display:flex;align-items:flex-start;gap:7px;padding:7px 4px;border-radius:var(--radius);cursor:pointer;transition:background .1s}
-.q-item:hover{background:var(--bg)}.q-item.used{opacity:.35}.q-item.used .q-txt{text-decoration:line-through}
-.q-chk{width:15px;height:15px;border:1.5px solid var(--border-dark);border-radius:2px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:var(--fs-micro)}
-.q-item.used .q-chk{background:var(--text-muted);border-color:var(--text-muted);color:#fff}
-.q-txt{font-size:var(--fs-body);color:var(--text);line-height:1.5;flex:1}
+.crumb-row{display:flex; align-items:center; gap:10px; margin-bottom:14px; min-height:36px}
+.crumb-back{
+  display:inline-flex; align-items:center; gap:6px; min-height:38px; padding:0 12px 0 8px;
+  background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-sm);
+  font-size:12px; letter-spacing:.04em; color:var(--ink-mid); cursor:pointer; white-space:nowrap;
+}
+.crumb-back:hover{border-color:var(--accent); color:var(--accent)}
+.crumb-label{font-size:12px; letter-spacing:.02em; color:var(--ink-dim)}
 
-/* RIGHT PANEL */
-.r-section{padding:12px 14px;border-bottom:1px solid var(--border)}
-.r-title{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
-.instr-chips{display:flex;flex-wrap:wrap;gap:5px}
-.instr-chip{padding:5px 11px;border:1px solid var(--border);border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted);cursor:pointer;transition:all .12s;background:var(--bg)}
-.instr-chip:hover{border-color:var(--accent-mid);color:var(--accent)}.instr-chip.selected{background:var(--accent-light);border-color:var(--accent);color:var(--accent);font-weight:500}
+.screen-title{font-family:var(--font-name); font-weight:700; font-size:clamp(21px,5vw,27px); line-height:1.15; margin-bottom:6px}
+.screen-sub{font-size:13px; color:var(--ink-mid); margin-bottom:18px}
 
-/* NIVEL */
-.nivel-opt{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:4px;transition:all .12s}
-.nivel-opt:hover{border-color:var(--border-dark);background:var(--bg2)}
-.nivel-opt.sel.nv-full{background:var(--ok-bg);border-color:var(--ok)}.nivel-opt.sel.nv-partial{background:#fff3e0;border-color:#f0a030}
-.nivel-opt.sel.nv-poor{background:var(--warn-bg);border-color:var(--warn)}
-.nivel-opt.sel.nv-none{background:var(--danger-bg);border-color:var(--danger)}
-.nv-icon{font-size:12px;width:16px;text-align:center;flex-shrink:0}
-.nv-info{flex:1}.nv-name{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500}
-.nv-desc{font-size:var(--fs-micro);color:var(--text-muted);line-height:1.3;margin-top:1px}
-.nv-effect{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;flex-shrink:0}
-.nv-full .nv-effect{color:var(--ok)}.nv-partial .nv-effect{color:#8a6000}.nv-poor .nv-effect{color:var(--warn)}.nv-none .nv-effect{color:var(--danger)}
+/* ── student picker ── */
+.grp-block{margin-bottom:14px}
+.grp-head{
+  font-size:11px; letter-spacing:.09em; text-transform:uppercase; font-weight:600; padding:4px 2px 8px;
+  display:flex; align-items:center; gap:7px;
+}
+.grp-head::before{content:''; width:8px; height:8px; border-radius:50%}
+.grp-1 .grp-head{color:var(--g1)} .grp-1 .grp-head::before{background:var(--g1)}
+.grp-2 .grp-head{color:var(--g2)} .grp-2 .grp-head::before{background:var(--g2)}
+.grp-3 .grp-head{color:var(--g3)} .grp-3 .grp-head::before{background:var(--g3)}
+.stu-row{
+  display:flex; align-items:center; gap:12px; width:100%; min-height:var(--tap);
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:9px 12px; margin-bottom:7px; cursor:pointer; text-align:left; transition:border-color .12s, background .12s;
+}
+.stu-row:hover{border-color:var(--border-strong)}
+.stu-row:active{background:var(--surface2)}
+.stu-row.graded{opacity:.6}
+.stu-ind{
+  width:26px; height:26px; border-radius:50%; border:1.5px solid var(--border-strong);
+  display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; color:var(--ink-dim);
+}
+.stu-row.graded .stu-ind{background:var(--ok); border-color:var(--ok); color:#fff}
+.stu-name{flex:1; min-width:0}
+.stu-name b{font-family:var(--font-name); font-weight:700; font-size:16px; display:block; color:var(--ink)}
+.stu-name small{font-size:11px; color:var(--ink-dim); display:block; margin-top:1px}
+.stu-count{
+  font-size:12px; padding:3px 9px; border-radius:20px; flex-shrink:0; letter-spacing:.02em;
+}
+.stu-count.low{background:var(--warn-soft); color:var(--warn)}
+.stu-count.ok{background:var(--ok-soft); color:var(--ok)}
 
-/* MODE 2 ADJ */
-.adj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.adj-opt{padding:12px 6px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;text-align:center;transition:all .12s}
-.adj-opt:hover{border-color:var(--border-dark)}
-.adj-opt.sel-bonus{background:var(--ok-bg);border-color:var(--ok)}.adj-opt.sel-neutral{background:var(--bg2);border-color:var(--border-dark)}.adj-opt.sel-penalty{background:var(--warn-bg);border-color:var(--warn)}
-.adj-icon{font-size:17px;display:block;margin-bottom:4px}
-.adj-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;display:block}
-.adj-value{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);color:var(--text-muted);display:block;margin-top:2px}
-.adj-opt.sel-bonus .adj-value{color:var(--ok)}.adj-opt.sel-penalty .adj-value{color:var(--warn)}
+/* ── active student header ── */
+.active-card{
+  background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg);
+  padding:16px 16px 14px; margin-bottom:16px; box-shadow:var(--shadow);
+}
+.active-card .ac-name{font-family:var(--font-name); font-weight:700; font-size:clamp(22px,6vw,30px); line-height:1.1}
+.active-card .ac-meta{font-size:12px; color:var(--ink-dim); margin-top:4px; letter-spacing:.04em}
+.active-card .ac-badge{
+  display:inline-block; margin-top:8px; font-size:11px; letter-spacing:.02em; font-weight:600;
+  background:var(--accent-soft); color:var(--accent); padding:3px 9px; border-radius:6px;
+}
 
-/* BONUS */
-.bonus-row{display:flex;align-items:center;gap:7px;cursor:pointer}
-.bonus-row input[type=checkbox]{accent-color:var(--ok);width:13px;height:13px}
-.bonus-lbl{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted);cursor:pointer}
+/* ── section wrapper ── */
+.sec{margin-bottom:16px}
+.sec-label{font-size:13px; letter-spacing:.005em; color:var(--ink-mid); margin-bottom:9px; font-weight:600}
 
-/* AJUSTE BOX */
-.ajuste-box{background:#1a1814;border-radius:var(--radius);padding:11px 13px;display:flex;align-items:center;justify-content:space-between}
-.aj-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:#5a5450}
-.aj-calc{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:#4a4540;margin-top:2px}
-.aj-value{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--accent-mid);line-height:1}
+/* ── big choice buttons (participación) ── */
+.choice-grid{display:flex; flex-direction:column; gap:9px}
+@media(min-width:560px){ .choice-grid.c3{flex-direction:row} .choice-grid.c3 .choice{flex:1} }
+.choice{
+  display:flex; align-items:center; gap:13px; width:100%; min-height:64px;
+  background:var(--surface); border:2px solid var(--border); border-radius:var(--r-md);
+  padding:12px 15px; cursor:pointer; text-align:left; transition:all .12s;
+}
+.choice:active{transform:scale(.985)}
+.choice .ch-ic{font-size:22px; width:26px; text-align:center; flex-shrink:0}
+.choice .ch-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.choice .ch-name{font-family:var(--font-mono); font-weight:700; font-size:16px; line-height:1.25; letter-spacing:-.005em}
+.choice .ch-desc{font-size:12px; color:var(--ink-dim); line-height:1.35}
+.choice .ch-val{font-size:15px; font-weight:600; flex-shrink:0; color:var(--ink-dim)}
+.choice.sel-bonus{border-color:var(--ok); background:var(--ok-soft)}
+.choice.sel-bonus .ch-val{color:var(--ok)}
+.choice.sel-neutral{border-color:var(--border-strong); background:var(--surface2)}
+.choice.sel-penalty{border-color:var(--warn); background:var(--warn-soft)}
+.choice.sel-penalty .ch-val{color:var(--warn)}
+.choice.sel-full{border-color:var(--ok); background:var(--ok-soft)}
+.choice.sel-full .ch-val{color:var(--ok)}
+.choice.sel-partial{border-color:#d98a2b; background:#fbefdb}
+.choice.sel-poor{border-color:var(--warn); background:var(--warn-soft)}
+.choice.sel-poor .ch-val{color:var(--warn)}
+.choice.sel-none{border-color:var(--danger); background:var(--danger-soft)}
+.choice.sel-none .ch-val{color:var(--danger)}
 
-/* OBS + REG */
-.obs-area{width:100%;border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;font-family:'Source Serif 4',serif;font-size:var(--fs-body);color:var(--text);background:var(--bg);resize:vertical;min-height:52px;outline:none;line-height:1.5}
-.obs-area:focus{border-color:var(--accent-mid)}
-.btn-reg{width:100%;padding:12px;background:#1a1814;color:var(--accent-mid);border:none;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:var(--radius);transition:all .15s;margin-top:6px}
-.btn-reg:hover{background:#2a2420}.btn-reg:disabled{opacity:.35;cursor:not-allowed}
+/* ── instrument segmented ── */
+.seg{display:flex; gap:8px}
+.seg button{
+  flex:1; min-height:var(--tap); background:var(--surface); border:2px solid var(--border);
+  border-radius:var(--r-md); font-family:var(--font-mono); font-weight:700; font-size:16px; letter-spacing:.02em;
+  color:var(--ink-mid); cursor:pointer; transition:all .12s;
+}
+.seg button.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent)}
 
-/* HISTORY */
-.hist-item{padding:8px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
-.hi-adj{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;min-width:34px;text-align:center;flex-shrink:0;line-height:1;padding-top:2px}
-.hi-adj.pos{color:var(--ok)}.hi-adj.neg{color:var(--danger)}.hi-adj.neu{color:var(--text-muted)}
-.hi-info{flex:1}.hi-name{font-size:var(--fs-body);font-weight:600;color:var(--text)}
-.hi-meta{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);margin-top:2px}
-.hi-obs{font-size:var(--fs-mono);color:var(--text-muted);font-style:italic;margin-top:2px}
+/* ── bonus toggle ── */
+.bonus-toggle{
+  display:flex; align-items:center; gap:11px; min-height:var(--tap); padding:0 14px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); cursor:pointer;
+}
+.bonus-toggle .bt-box{
+  width:24px; height:24px; border-radius:6px; border:2px solid var(--border-strong);
+  display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; color:#fff;
+}
+.bonus-toggle.on .bt-box{background:var(--ok); border-color:var(--ok)}
+.bonus-toggle .bt-label{font-size:14px}
 
-/* MODE 3 — GROUP SELECT DESKTOP */
-.group-select-btn{display:block;width:calc(100% - 28px);margin:8px 14px;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;color:var(--text);cursor:pointer;text-align:left;transition:all .12s}
-.group-select-btn:hover{border-color:var(--accent-mid);background:var(--accent-light)}
-.group-select-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+/* ── question bank (reference) ── */
+.qbank details{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  margin-bottom:7px; overflow:hidden;
+}
+.qbank summary{
+  list-style:none; cursor:pointer; padding:11px 13px; display:flex; align-items:center; gap:9px;
+  min-height:var(--tap); font-family:var(--font-name); font-weight:700; font-size:15px;
+}
+.qbank summary::-webkit-details-marker{display:none}
+.qbank summary .q-num{
+  width:20px; height:20px; border-radius:50%; font-family:var(--font-mono); font-size:11px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.qbank .dd .q-num{background:var(--g1-soft); color:var(--g1)} .qbank .dj .q-num{background:var(--g2-soft); color:var(--g2)}
+.qbank .dm .q-num{background:var(--accent-soft); color:var(--accent)} .qbank .dt .q-num{background:var(--g3-soft); color:var(--g3)}
+.qbank summary .q-used{margin-left:auto; font-family:var(--font-mono); font-size:11px; color:var(--ink-dim); background:var(--bg2); padding:2px 7px; border-radius:10px; font-weight:400}
+.qbank summary .q-arrow{color:var(--ink-dim); font-size:11px; transition:transform .2s}
+.qbank details[open] summary .q-arrow{transform:rotate(90deg)}
+.q-body{padding:2px 13px 11px; border-top:1px solid var(--border)}
+.q-lvl{font-size:11px; letter-spacing:.005em; font-weight:600; color:var(--ink-dim); padding:9px 0 4px}
+.q-pick{
+  display:flex; gap:9px; padding:9px 4px; cursor:pointer; border-radius:var(--r-sm); align-items:flex-start;
+}
+.q-pick:active{background:var(--surface2)}
+.q-pick .q-chk{
+  width:19px; height:19px; border:1.5px solid var(--border-strong); border-radius:5px; flex-shrink:0;
+  margin-top:1px; display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;
+}
+.q-pick.used .q-chk{background:var(--ink-mid); border-color:var(--ink-mid)}
+.q-pick.used .q-txt{text-decoration:line-through; color:var(--ink-dim)}
+.q-txt{font-size:14px; line-height:1.45; flex:1}
 
-/* MODE 3 — ASSIGN SCREEN */
-.m3-section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.m3-section-title span:first-child{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--text)}
-.m3-progress{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted)}
-.m3-sub{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);margin-bottom:12px;line-height:1.5}
-.m3-assign-list{margin-bottom:14px}
-.m3-assign-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all .12s}
-.m3-assign-row:hover{border-color:var(--border-dark);background:var(--bg)}
-.m3-assign-row.assigned{border-color:var(--accent-mid);background:var(--accent-light)}
-.m3-stu-name{font-size:var(--fs-body);color:var(--text);flex:1}
-.m3-badge{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:500;padding:3px 8px;border-radius:12px;flex-shrink:0}
-.m3-badge.presenter{background:var(--g1-bg);color:var(--g1);border:1px solid var(--g1)}
-.m3-badge.responder{background:var(--g3-bg);color:var(--g3);border:1px solid var(--g3)}
-.m3-badge.empty{background:var(--bg2);color:var(--text-dim);border:1px solid var(--border)}
-.m3-confirm-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);font-weight:500;letter-spacing:.08em;text-transform:uppercase;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;margin-top:4px}
-.m3-confirm-btn:hover{opacity:.9}
-.m3-back-btn{padding:10px 16px;background:var(--bg2);color:var(--text-mid);border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);border-radius:var(--radius);cursor:pointer;transition:all .12s}
-.m3-back-btn:hover{border-color:var(--border-dark)}
-.m3-btn-row{display:flex;gap:8px;margin-top:12px}
-.m3-btn-row .m3-confirm-btn{flex:1;margin-top:0}
+/* ── note ── */
+.note-area{
+  width:100%; min-height:60px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-md); padding:11px 13px; font-size:15px; line-height:1.5; resize:vertical; outline:none;
+}
+.note-area:focus{border-color:var(--accent)}
 
-/* MODE 3 — CONFIRM SCREEN */
-.m3-confirm-list{margin-bottom:14px}
-.m3-confirm-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);margin-bottom:4px}
-.m3-confirm-row.presenter{background:var(--g1-bg);border:1px solid rgba(44,95,138,.2)}
-.m3-confirm-row.responder{background:var(--g3-bg);border:1px solid rgba(122,61,110,.2)}
-.m3-section-assign{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted);margin-left:auto;text-align:right;line-height:1.3}
-.m3-section-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--accent-mid);background:var(--accent-light);border:1px solid #d4a870;border-radius:var(--radius);padding:6px 10px;margin-bottom:12px}
+/* ── ajuste / nota readout ── */
+.readout{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:var(--ink); color:#f3efe6; border-radius:var(--r-md); padding:13px 16px; margin-bottom:16px;
+}
+.readout .ro-label{font-size:11px; letter-spacing:.04em; text-transform:uppercase; font-weight:600; color:#9c9484}
+.readout .ro-calc{font-size:12px; color:#b8ae9c; margin-top:3px}
+.readout .ro-value{font-family:var(--font-name); font-weight:700; font-size:30px; line-height:1; color:#e0a06f}
 
-/* MODE 3 — EVAL SCREEN */
-.m3-eval-header{display:flex;align-items:center;gap:10px;padding:10px 0;margin-bottom:10px;border-bottom:1px solid var(--border)}
-.m3-eval-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--text);flex:1}
-.m3-eval-counter{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);color:var(--text-muted)}
+/* ── rubric (TF) ── */
+.rub-crit{margin-bottom:14px}
+.rub-crit-hd{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px}
+.rub-crit-hd b{font-family:var(--font-mono); font-weight:600; font-size:13px}
+.rub-crit-hd span{font-size:11px; color:var(--ink-dim)}
+.rub-scale{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+.rub-btn{
+  min-height:62px; background:var(--surface); border:2px solid var(--border); border-radius:var(--r-sm);
+  cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:6px 3px;
+}
+.rub-btn .rb-n{font-family:var(--font-name); font-weight:700; font-size:19px; color:var(--ink-dim)}
+.rub-btn .rb-l{font-size:9.5px; line-height:1.1; text-align:center; color:var(--ink-dim)}
+.rub-btn.sel{border-color:var(--accent); background:var(--accent-soft)}
+.rub-btn.sel .rb-n, .rub-btn.sel .rb-l{color:var(--accent)}
 
-/* PROGRESS BAR */
-.m3-progress-bar{display:flex;gap:5px;padding:10px 0 14px;align-items:center}
-.m3-progress-bar-mob{display:flex;gap:5px;padding:8px 14px;background:var(--bg);border-bottom:1px solid var(--border)}
-.m3-prog-dot{width:28px;height:6px;border-radius:3px;background:var(--border);transition:all .2s;flex:1}
-.m3-prog-dot.done{background:var(--ok)}.m3-prog-dot.active{background:var(--accent-mid)}
+/* ── M3 assign / confirm / review rows ── */
+.m3-row{
+  display:flex; align-items:center; gap:12px; width:100%; min-height:var(--tap);
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--r-md);
+  padding:9px 13px; margin-bottom:7px; cursor:pointer; text-align:left;
+}
+.m3-row.assigned{border-color:var(--accent); background:var(--accent-soft)}
+.m3-row .m3-badge{
+  min-width:34px; height:26px; border-radius:13px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-mono); font-size:12px; font-weight:600; flex-shrink:0; border:1px solid var(--border-strong); color:var(--ink-dim);
+}
+.m3-row .m3-badge.p{background:var(--g1-soft); color:var(--g1); border-color:var(--g1)}
+.m3-row .m3-badge.r{background:var(--g3-soft); color:var(--g3); border-color:var(--g3)}
+.m3-row .m3-nm{flex:1; font-family:var(--font-name); font-weight:700; font-size:16px}
+.m3-row .m3-sec{font-size:11px; color:var(--ink-dim); text-align:right; max-width:130px; line-height:1.3}
+.m3-row .m3-nota{font-family:var(--font-name); font-weight:700; font-size:20px; color:var(--accent); margin-left:auto}
+.m3-row .m3-nota small{font-size:11px; color:var(--ink-dim); font-weight:400}
 
-/* RUBRIC */
-.rubric-section{background:var(--surface);padding:12px 14px;border-bottom:1px solid var(--border)}
-.rubric-criterion{margin-bottom:12px}
-.rubric-crit-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.rubric-crit-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-mono);font-weight:600;color:#1a1814}
-.rubric-crit-peso{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:var(--text-muted)}
-.rubric-scale{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.scale-btn{padding:9px 3px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;text-align:center;transition:all .12s}
-.scale-btn:hover{border-color:var(--border-dark);background:var(--bg2)}
-.scale-btn.sel{background:var(--accent-light);border-color:var(--accent)}
-.scale-num{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text-muted);display:block}
-.scale-btn.sel .scale-num{color:var(--accent)}
-.scale-lbl{font-size:var(--fs-micro);color:var(--text-muted);display:block;margin-top:2px;line-height:1.2}
-.nota-tf-box{background:#1a1814;border-radius:var(--radius);padding:11px 13px;display:flex;align-items:center;justify-content:space-between;margin-top:6px}
-.nota-tf-label{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);letter-spacing:.12em;text-transform:uppercase;color:#5a5450}
-.nota-tf-calc{font-family:'IBM Plex Mono',monospace;font-size:var(--fs-micro);color:#4a4540;margin-top:2px}
-.nota-tf-value{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--accent-mid);line-height:1}
+/* progress dots */
+.m3-prog{display:flex; gap:5px; margin-bottom:14px}
+.m3-prog i{flex:1; height:5px; border-radius:3px; background:var(--border)}
+.m3-prog i.done{background:var(--ok)} .m3-prog i.now{background:var(--accent)}
 
-/* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1814;color:#f5f2ec;font-family:'IBM Plex Mono',monospace;font-size:var(--fs-label);padding:9px 18px;border-radius:20px;border-left:3px solid var(--accent-mid);transition:transform .25s ease;z-index:999;white-space:nowrap}
-.toast.show{transform:translateX(-50%) translateY(0)}.toast.err{border-left-color:var(--danger)}
-::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--border-dark);border-radius:2px}
+.pill-info{
+  font-size:12px; background:var(--accent-soft); color:var(--accent); border:1px solid var(--border-strong);
+  border-radius:var(--r-sm); padding:9px 12px; margin-bottom:14px; line-height:1.4;
+}
 
-/* MODE 3 REVIEW */
-.m3-review-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;cursor:pointer;transition:all .12s}
-.m3-review-row:hover{border-color:var(--accent-mid);background:var(--accent-light)}
-.m3-review-nota{font-family:"Playfair Display",serif;font-size:20px;font-weight:700;color:var(--accent);margin-left:auto}
-.m3-review-nota small{font-family:"IBM Plex Mono",monospace;font-size:var(--fs-micro);color:var(--text-muted);font-weight:400;margin-left:2px}
-.m3-review-edit{font-size:14px;color:var(--text-muted);flex-shrink:0}
+/* ── history ── */
+.hist-toggle{
+  width:100%; min-height:44px; background:none; border:none; border-top:1px solid var(--border);
+  margin-top:8px; padding-top:12px; font-size:13px; letter-spacing:.005em; font-weight:600;
+  color:var(--ink-mid); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+}
+#hist-list{margin-top:6px}
+.hist-item{display:flex; gap:11px; padding:9px 2px; border-bottom:1px solid var(--border)}
+.hi-adj{font-family:var(--font-name); font-weight:700; font-size:17px; min-width:32px; text-align:center; flex-shrink:0}
+.hi-adj.pos{color:var(--ok)} .hi-adj.neg{color:var(--danger)} .hi-adj.neu{color:var(--ink-dim)}
+.hi-name{font-weight:500; font-size:14px}
+.hi-meta{font-size:11px; color:var(--ink-dim); margin-top:1px}
+.hi-obs{font-size:12px; color:var(--ink-mid); font-style:italic; margin-top:2px}
 
+.empty{text-align:center; color:var(--ink-dim); font-size:13px; padding:34px 10px; line-height:1.6}
+.loaderr{text-align:center; color:var(--danger); font-size:14px; padding:40px 16px; line-height:1.6}
+
+/* ══════════ ACTION BAR (sticky bottom) ══════════ */
+#action-bar{
+  flex-shrink:0; background:var(--surface); border-top:1px solid var(--border-strong);
+  padding:10px 14px max(12px,env(safe-area-inset-bottom));
+  display:none; z-index:18; box-shadow:0 -6px 20px -14px rgba(40,32,16,.3);
+}
+#action-bar.show{display:block}
+#action-bar .ab-inner{max-width:760px; margin:0 auto; display:flex; gap:9px; align-items:center}
+.btn-primary{
+  flex:1; min-height:52px; background:var(--accent); color:var(--on-accent); border:none;
+  border-radius:var(--r-md); font-size:14px; font-weight:600; letter-spacing:.05em; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-primary:disabled{opacity:.4; cursor:not-allowed}
+.btn-primary.wide{width:100%}
+.btn-ghost{
+  min-height:52px; padding:0 18px; background:var(--surface); color:var(--ink-mid);
+  border:1px solid var(--border-strong); border-radius:var(--r-md); font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.ab-hint{font-size:11px; color:var(--ink-dim); text-align:center; margin-top:6px; letter-spacing:.03em}
+
+/* ══════════ TOAST ══════════ */
+#toast{
+  position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(70px);
+  background:var(--ink); color:#f3efe6; font-size:13px; padding:11px 20px; border-radius:22px;
+  border-left:3px solid var(--accent); z-index:99; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis;
+  transition:transform .25s ease; opacity:0;
+}
+#toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+#toast.err{border-left-color:var(--danger)}
+
+#app::-webkit-scrollbar{width:5px} #app::-webkit-scrollbar-thumb{background:var(--border-strong); border-radius:3px}
 </style>
 </head>
 <body>
+
 <header>
-  <div>
-    <div class="hdr-title">GEP201 <span>· Evaluación</span></div>
-    <div class="hdr-mob-info" id="hdr-mob">Clase 3</div>
-  </div>
-  <div class="hdr-right">
-    <div class="hdr-fields">
-      <div class="hdr-field"><label>Sesión</label><input type="text" id="inp-sesion" value="Clase 3"></div>
-      <div class="hdr-field"><label>Fecha</label><input type="date" id="inp-fecha"></div>
-    </div>
+  <div class="hdr-brand">GEP201 <span>· Evaluación</span></div>
+  <div class="hdr-ctx">
+    <div class="ctx-chip"><label>Sesión</label><input type="text" id="inp-sesion" placeholder="Clase N" autocomplete="off"></div>
+    <div class="ctx-chip"><label>Fecha</label><input type="date" id="inp-fecha"></div>
     <div class="sync-dot ok" id="sync-dot">● Listo</div>
   </div>
 </header>
-<div id="sorteo-banner" class="sorteo-banner" style="display:none"></div>
-<div class="mode-bar">
-  <div class="mode-tab active" data-mode="1" onclick="setMode(1)">Modo 1 · Participación</div>
-  <div class="mode-tab" data-mode="2" onclick="setMode(2)">Modo 2 · RP</div>
-  <div class="mode-tab" data-mode="3" onclick="setMode(3)">Modo 3 · Sustentación TF</div>
-</div>
-<div class="app-main" id="app-main"></div>
-<div class="toast" id="toast"></div>
+
+<nav class="modebar" id="modebar">
+  <button class="mode-tab active" data-mode="1" onclick="setMode(1)">Participación</button>
+  <button class="mode-tab" data-mode="2" onclick="setMode(2)">Reporte parcial</button>
+  <button class="mode-tab" data-mode="3" onclick="setMode(3)">Trabajo final</button>
+</nav>
+
+<div id="sorteo-queue"><div class="q-inner" id="q-inner"></div></div>
+
+<main id="app"><div class="wrap" id="wrap"><div class="empty">Cargando lista de alumnos…</div></div></main>
+
+<div id="action-bar"><div class="ab-inner" id="ab-inner"></div><div class="ab-hint" id="ab-hint" style="display:none"></div></div>
+
+<div id="toast"></div>
+
 <script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   LÓGICA — copiada de index.html sin cambios funcionales.
+   Solo cambia la CAPA DE PRESENTACIÓN (render*, markup, CSS).
+   ═══════════════════════════════════════════════════════════════════════════ */
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
 
-// Se llena al cargar la página desde la pestaña "Nomina" del Sheet — ver cargarNomina().
-// Para actualizar la lista en un semestre futuro: editar solo esa pestaña, no este archivo.
 let STUDENTS=[];
 
 const QUESTIONS={
@@ -369,8 +474,6 @@ const RUBRIC_CRITERIA=[
 ];
 
 const INSTRUMENTOS_RP=['RP1','RP2','RP3'];
-// Participación ya no usa instrumento (CL/RP): el ajuste se acumula solo,
-// promediado a fin de semestre y aplicado al TF. Ver Ajuste_Individual_TF.
 
 const NIVELES=[
   {id:'full',icon:'✓✓',name:'Dominio completo',desc:'Preciso, cita fuentes, explica el proceso.',effect:'0 pts',delta:0,cls:'nv-full'},
@@ -379,7 +482,6 @@ const NIVELES=[
   {id:'none',icon:'⛔',name:'Sin dominio',desc:'No responde o respuesta nula. La nota de este RP para este alumno queda fija en 10, sin importar la nota grupal.',effect:'Nota = 10',delta:0,cls:'nv-none'},
 ];
 
-// Rúbrica de Participación: Destaca/Cumple/No cumple (± sobre el promedio acumulado del semestre)
 const ADJ_OPTS=[
   {id:'bonus',icon:'⭐',label:'Destaca',value:'+1',delta:1},
   {id:'neutral',icon:'○',label:'Cumple',value:'0',delta:0},
@@ -390,67 +492,73 @@ let S={
   mode:1,activeStudent:null,activeStudentOrigen:null,selectedInstrumento:'Participacion',
   selectedNivel:null,selectedAdj:null,bonusActive:false,
   usedQuestions:new Set(),sessionHistory:[],graded:{},
-  // Mode 1/2 mobile
   mobStep:0,
-  // Mode 3
-  m3step:0,            // 0=assign, 1=confirm, 2=evaluate
-  m3group:null,        // selected group name
-  m3order:[],          // ordered list of student codes (presenters first, then responders)
-  m3evals:{},          // code -> {rubric:{c1,c2,c3}, nivel, obs} accumulated
-  m3current:0,         // index into m3order currently evaluating
-  m3rubric:{c1:null,c2:null,c3:null},
-  m3nivel:null,
+  m3step:0, m3group:null, m3order:[], m3evals:{}, m3current:0,
+  m3rubric:{c1:null,c2:null,c3:null}, m3nivel:null,
+  histOpen:false,
 };
 
 const isMob=()=>window.innerWidth<640;
 const mkEl=(tag,cls)=>{const el=document.createElement(tag||'div');if(cls)el.className=cls;return el;};
-const fn=(st)=>st.name.split(' ')[0];
-const ln=(st)=>st.name.split(' ').slice(1).join(' ');
-const shortName=(st)=>fn(st)+' '+st.name.split(' ')[1];
+// nombre/apellidos con corte limpio si el backend los manda separados
+function nmParts(st){
+  let g=st.nombres||'', f=st.apellidos||'';
+  if(!g||!f){ const p=(st.name||'').split(' '); g=g||p[0]||''; f=f||p.slice(1).join(' '); }
+  return {given:g,family:f,first:g.split(' ')[0],fam1:f.split(' ')[0]||g.split(' ')[1]||''};
+}
+// Regla fija: primer nombre + primer apellido en todos lados.
+const fn=(st)=>nmParts(st).first;
+const ln=(st)=>nmParts(st).fam1;
+const shortName=(st)=>(nmParts(st).first+' '+nmParts(st).fam1).trim();
+const fullName=(st)=>{const n=nmParts(st);return (n.given+' '+n.family).trim()||n.name;};
 
 document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('inp-fecha').value=new Date().toISOString().split('T')[0];
-  document.getElementById('inp-sesion').addEventListener('input',e=>{
-    document.getElementById('hdr-mob').textContent=e.target.value;
-  });
+  // Sesión y fecha: persistidas en el dispositivo (arreglo del bug: antes no se
+  // podían editar en móvil y quedaba "Clase 3" fijo en el HTML).
+  const sEl=document.getElementById('inp-sesion'), fEl=document.getElementById('inp-fecha');
+  const today=new Date().toISOString().split('T')[0];
+  let savedS='', savedF='';
+  try{ savedS=localStorage.getItem('gep201_sesion')||''; savedF=localStorage.getItem('gep201_fecha')||''; }catch(e){}
+  sEl.value=savedS;
+  // fecha: mantener la guardada si es reciente (≤2 días), si no usar hoy
+  fEl.value=(savedF && daysBetween(savedF,today)<=2) ? savedF : today;
+  const persist=()=>{ try{ localStorage.setItem('gep201_sesion',sEl.value); localStorage.setItem('gep201_fecha',fEl.value); }catch(e){} };
+  sEl.addEventListener('change',persist); sEl.addEventListener('blur',persist);
+  fEl.addEventListener('change',persist);
   setMode(1);
   setInterval(consultarSorteo,4000);
   cargarNomina();
 });
+function daysBetween(a,b){ return Math.abs((new Date(b)-new Date(a))/86400000); }
 
-// ── NÓMINA (alumnos y grupos, desde la pestaña "Nomina" del Sheet) ────────
+// ── NÓMINA ──────────────────────────────────────────────────────────────────
 async function cargarNomina(){
   try{
     const res=await fetch(SCRIPT_URL+'?action=nomina');
     const data=await res.json();
     if(data.status!=='ok') throw new Error(data.msg||'respuesta inválida');
-    STUDENTS=data.alumnos.map(a=>({name:a.nombre,code:String(a.codigo),group:a.grupo}));
+    STUDENTS=data.alumnos.map(a=>({name:a.nombre,code:String(a.codigo),group:a.grupo,nombres:a.nombres||'',apellidos:a.apellidos||''}));
     render();
     cargarConteosParticipacion();
   }catch(e){
     console.error('No se pudo cargar la nómina',e);
-    const main=document.getElementById('app-main');
-    if(main) main.innerHTML='<div style="padding:40px;text-align:center;color:var(--danger);font-family:\'IBM Plex Mono\',monospace">No se pudo cargar la lista de alumnos. Revisa tu conexión e intenta recargar la página.</div>';
+    document.getElementById('wrap').innerHTML='<div class="loaderr">No se pudo cargar la lista de alumnos.<br>Revisa tu conexión e intenta recargar.</div>';
   }
 }
 
-// ── CONTEO DE PARTICIPACIÓN (sorteo + manual + voluntaria, todo cuenta igual) ──
-const META_PARTICIPACION=2; // meta mínima por alumno en el semestre
+const META_PARTICIPACION=2;
 let PART_CONTEOS={};
-
 async function cargarConteosParticipacion(){
   try{
     const res=await fetch(SCRIPT_URL+'?action=sorteo_conteos');
     const data=await res.json();
     if(data.status==='ok'){ PART_CONTEOS=data.conteos; render(); }
-  }catch(e){ /* silencioso: si falla, el marcador simplemente queda en 0 hasta la próxima consulta */ }
+  }catch(e){}
 }
 
-// ── SORTEO ENTRANTE (recibido desde sorteo_gep201.html vía el mismo backend) ──
-// Cola de pendientes: se van acumulando (no se reemplazan entre sí) y el
-// profesor decide a quién calificar primero desde la lista.
-let sorteosVistos=new Set(); // timestamps ya procesados, para no duplicar en la cola
-let colaSorteos=[];          // [{timestamp, codigo, alumno, grupo, modoDestino, sesion}, ...]
+// ── SORTEO ENTRANTE ─────────────────────────────────────────────────────────
+let sorteosVistos=new Set();
+let colaSorteos=[];
 let sorteoBaseInicializada=false;
 
 async function consultarSorteo(){
@@ -460,7 +568,6 @@ async function consultarSorteo(){
     if(data.status!=='ok') return;
     const sorteos=data.sorteos||[];
     if(!sorteoBaseInicializada){
-      // Primera consulta al abrir la página: no mostrar como "nuevos" sorteos de antes de abrirla
       sorteos.forEach(s=>sorteosVistos.add(String(s.timestamp)));
       sorteoBaseInicializada=true;
       return;
@@ -468,31 +575,28 @@ async function consultarSorteo(){
     let huboNuevos=false;
     sorteos.forEach(s=>{
       const key=String(s.timestamp);
-      if(!sorteosVistos.has(key)){
-        sorteosVistos.add(key);
-        colaSorteos.push(s);
-        huboNuevos=true;
-      }
+      if(!sorteosVistos.has(key)){ sorteosVistos.add(key); if(s.codigo) colaSorteos.push(s); huboNuevos=true; }
     });
     if(huboNuevos) renderColaSorteos();
-  }catch(e){ /* silencioso: si falla la consulta, simplemente no aparecen avisos nuevos */ }
+  }catch(e){}
 }
 
 function renderColaSorteos(){
-  const banner=document.getElementById('sorteo-banner');
-  if(!banner) return;
-  if(!colaSorteos.length){ banner.style.display='none'; banner.innerHTML=''; return; }
-  banner.style.display='flex';
-  banner.innerHTML=colaSorteos.map(s=>
-    '<div class="sorteo-banner-item">'
-    +'<span>🔔</span>'
-    +'<span class="sorteo-banner-item-name">'+s.alumno+'</span>'
-    +'<span class="sorteo-banner-item-modo">'+(s.grupo||'')+' · '+(s.modoDestino||'')+'</span>'
-    +'<span class="spacer"></span>'
-    +'<button onclick="aceptarSorteo(\''+s.codigo+'\')">Calificar →</button>'
-    +'<button class="sorteo-banner-x" onclick="descartarSorteo(\''+s.codigo+'\')">✕</button>'
-    +'</div>'
-  ).join('');
+  const box=document.getElementById('sorteo-queue');
+  const inner=document.getElementById('q-inner');
+  if(!colaSorteos.length){ box.classList.remove('show'); inner.innerHTML=''; return; }
+  box.classList.add('show');
+  inner.innerHTML='<div class="q-title">Del sorteo · '+colaSorteos.length+' pendiente'+(colaSorteos.length>1?'s':'')+'</div>'+
+    colaSorteos.map(s=>{
+      const st=STUDENTS.find(x=>x.code===String(s.codigo));
+      const nom=st?shortName(st):s.alumno;
+      return '<div class="q-item">'+
+        '<span class="q-name">'+nom+'</span>'+
+        '<span class="q-meta">'+(s.grupo||'')+'</span>'+
+        '<button class="q-go" onclick="aceptarSorteo(\''+s.codigo+'\')">Calificar</button>'+
+        '<button class="q-x" onclick="descartarSorteo(\''+s.codigo+'\')" aria-label="Descartar">✕</button>'+
+      '</div>';
+    }).join('');
 }
 
 function aceptarSorteo(codigo){
@@ -502,745 +606,31 @@ function aceptarSorteo(codigo){
   colaSorteos.splice(idx,1);
   const st=STUDENTS.find(s=>s.code===String(item.codigo));
   if(item.modoDestino==='Modo 1') setMode(1);
-  if(st){ S.activeStudent=st; S.activeStudentOrigen='sorteo'; }
+  else if(item.modoDestino==='Modo 2'){ setMode(2); S.mobStep=1; }
+  if(st){ S.activeStudent=st; S.activeStudentOrigen='sorteo'; S.mobStep=2; }
   renderColaSorteos();
   render();
 }
-
 function descartarSorteo(codigo){
   const idx=colaSorteos.findIndex(s=>String(s.codigo)===String(codigo));
   if(idx!==-1) colaSorteos.splice(idx,1);
   renderColaSorteos();
 }
 
-// ── MODE SWITCH ──────────────────────────────────────────────────
+// ── MODE SWITCH ─────────────────────────────────────────────────────────────
 function setMode(m){
   S.mode=m; S.activeStudent=null; S.activeStudentOrigen=null; S.selectedNivel=null; S.selectedAdj=null;
-  S.bonusActive=false; S.mobStep=0;
+  S.bonusActive=false; S.mobStep = (m===2) ? 0 : 1;
   S.m3step=0; S.m3group=null; S.m3order=[]; S.m3evals={}; S.m3current=0;
   S.m3rubric={c1:null,c2:null,c3:null}; S.m3nivel=null;
-  if(m===1) S.selectedInstrumento='Participacion'; // fijo: Participación ya no elige instrumento
+  if(m===1) S.selectedInstrumento='Participacion';
   else if(m===2) S.selectedInstrumento='RP1';
   else S.selectedInstrumento='TF';
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.mode)===m));
   render();
 }
 
-// ── RENDER ───────────────────────────────────────────────────────
-function render(){
-  const main=document.getElementById('app-main');
-  main.innerHTML=''; main.style.overflowY='auto'; main.style.height='100%';
-  if(isMob()) renderMobile(main);
-  else renderDesktop(main);
-}
-
-// ════════════════════════════════════════════════════════════════
-// DESKTOP
-// ════════════════════════════════════════════════════════════════
-function renderDesktop(main){
-  let wrap;
-  if(S.mode===2){ // RP: banco de preguntas por dimensión, layout de 3 columnas
-    wrap=mkEl('div','layout-3col'); wrap.style.height='100%';
-    wrap.appendChild(mkLeftPanel());
-    const center=mkEl('div','panel-center');
-    buildBanner(center); renderQuestions(center,S.selectedInstrumento);
-    wrap.appendChild(center);
-    wrap.appendChild(mkRightPanel());
-  } else if(S.mode===1){ // Participación: sin banco de preguntas, layout de 2 columnas
-    wrap=mkEl('div','layout-2col'); wrap.style.height='100%';
-    wrap.appendChild(mkLeftPanel());
-    wrap.appendChild(mkRightPanel());
-  } else {
-    wrap=mkEl('div','layout-3col-tf'); wrap.style.height='100%';
-    wrap.appendChild(mkLeftPanelM3());
-    const center=mkEl('div','panel-center');
-    renderDesktopM3Center(center);
-    wrap.appendChild(center);
-    wrap.appendChild(mkRightPanelTF());
-    main.appendChild(wrap);
-    updateNotaTF(); return;
-  }
-  main.appendChild(wrap);
-}
-
-function mkLeftPanel(){
-  const p=mkEl('div','panel-left');
-  p.innerHTML='<div class="panel-title">Alumnos</div>';
-  p.appendChild(mkStudentList('desk'));
-  return p;
-}
-
-function mkRightPanel(){
-  const p=mkEl('div','panel-right');
-  const wrap=mkEl('div'); wrap.style.cssText='height:100%;overflow-y:auto';
-  if(S.mode===1) buildBanner(wrap); // Participación: el nombre va arriba del panel derecho (no hay panel-center)
-  if(S.mode===2){ // RP: elegir a qué reporte (RP1/RP2/RP3) aplica esta dinámica
-    const rI=mkEl('div','r-section'); rI.innerHTML='<div class="r-title">Instrumento</div>';
-    const chips=mkEl('div','instr-chips'); chips.id='instr-chips';
-    const list=INSTRUMENTOS_RP;
-    list.forEach(id=>{
-      const c=mkEl('div','instr-chip'+(S.selectedInstrumento===id?' selected':''));
-      c.textContent=id;
-      c.addEventListener('click',()=>{
-        S.selectedInstrumento=id;
-        chips.querySelectorAll('.instr-chip').forEach((ch,i)=>ch.classList.toggle('selected',list[i]===id));
-        const cs=document.querySelector('.panel-center');if(cs){cs.innerHTML='';buildBanner(cs);renderQuestions(cs,id);}
-      });
-      chips.appendChild(c);
-    });
-    rI.appendChild(chips); wrap.appendChild(rI);
-  }
-  if(S.mode===1){
-    const rA=mkEl('div','r-section'); rA.innerHTML='<div class="r-title">Calificación de intervención</div>';
-    const grid=mkEl('div','adj-grid'); grid.id='adj-grid'; buildAdjButtons(grid);
-    rA.appendChild(grid); wrap.appendChild(rA);
-  }
-  if(S.mode===2){
-    const rN=mkEl('div','r-section'); rN.innerHTML='<div class="r-title">Desempeño oral</div>';
-    const nopts=mkEl('div'); nopts.id='nivel-opts'; buildNivelButtons(nopts);
-    rN.appendChild(nopts); wrap.appendChild(rN);
-    const rB=mkEl('div','r-section');
-    rB.innerHTML='<div class="r-title">Bonus</div><label class="bonus-row"><input type="checkbox" id="chk-bonus"><span class="bonus-lbl">Intervención destacada (+1)</span></label>';
-    rB.querySelector('#chk-bonus').addEventListener('change',e=>{S.bonusActive=e.target.checked;updateAjuste();});
-    wrap.appendChild(rB);
-  }
-  buildAjusteBox(wrap); buildObsReg(wrap,'registrar'); buildHistPanel(wrap);
-  p.appendChild(wrap); return p;
-}
-
-// ── Desktop Mode 3 ───────────────────────────────────────────────
-function mkLeftPanelM3(){
-  const p=mkEl('div','panel-left');
-  p.innerHTML='<div class="panel-title">Grupos</div>';
-  const groups=[...new Set(STUDENTS.map(s=>s.group))];
-  groups.forEach(group=>{
-    const btn=mkEl('button','group-select-btn'+(S.m3group===group?' active':''));
-    btn.textContent=group;
-    btn.addEventListener('click',()=>{
-      if(S.m3group!==group){S.m3group=group;S.m3order=[];S.m3evals={};S.m3current=0;S.m3step=0;}
-      render();
-    });
-    p.appendChild(btn);
-  });
-  return p;
-}
-
-function renderDesktopM3Center(container){
-  if(!S.m3group){
-    const msg=mkEl('div');
-    msg.style.cssText='color:var(--text-muted);font-family:"IBM Plex Mono",monospace;font-size:11px;padding:20px';
-    msg.textContent='Selecciona un grupo en el panel izquierdo';
-    container.appendChild(msg); return;
-  }
-  if(S.m3step===0) renderM3Assign(container);
-  else if(S.m3step===1) renderM3Confirm(container);
-  else if(S.m3step===2) renderM3EvalDesk(container);
-  else renderM3Review(container);
-}
-
-function mkRightPanelTF(){
-  const p=mkEl('div','panel-right');
-  const wrap=mkEl('div'); wrap.style.cssText='height:100%;overflow-y:auto';
-  const rI=mkEl('div','r-section');
-  rI.innerHTML='<div class="r-title">Instrumento</div><div class="instr-chips"><div class="instr-chip selected">TF</div></div>';
-  wrap.appendChild(rI);
-  // Questions reference
-  const rQ=mkEl('div','r-section'); rQ.innerHTML='<div class="r-title">Pautas de preguntas</div>';
-  renderQuestions(rQ,'TF'); wrap.appendChild(rQ);
-  buildHistPanel(wrap);
-  p.appendChild(wrap); return p;
-}
-
-// ════════════════════════════════════════════════════════════════
-// MODE 3 SHARED SCREENS
-// ════════════════════════════════════════════════════════════════
-
-// Screen A: assign order by tap — all N in order (P1,P2,P3,R1,R2,...)
-// N = tamaño del grupo. Siempre 3 presentadores fijos; el resto son respondedores
-// (grupos de 5 → 3P+2R, grupos de 6 → 3P+3R).
-function renderM3Assign(container){
-  const members=STUDENTS.filter(s=>s.group===S.m3group);
-  const needed=members.length;
-  const numResponders=needed-3;
-  const h=mkEl('div','m3-section-title');
-  h.innerHTML='<span>Asignar orden</span><span class="m3-progress">'+S.m3order.length+'/'+needed+' asignados</span>';
-  container.appendChild(h);
-  const sub=mkEl('div','m3-sub');
-  sub.textContent='Toca en el orden en que participarán: primero los 3 presentadores, luego los '+numResponders+' respondedores.';
-  container.appendChild(sub);
-  const list=mkEl('div','m3-assign-list');
-  members.forEach(st=>{
-    const idx=S.m3order.indexOf(st.code);
-    const assigned=idx!==-1;
-    const row=mkEl('div','m3-assign-row'+(assigned?' assigned':''));
-    let badge='';
-    if(idx!==-1){
-      const label=idx<3?'P'+(idx+1):'R'+(idx-2);
-      const cls=idx<3?'presenter':'responder';
-      badge='<span class="m3-badge '+cls+'">'+label+'</span>';
-    } else {
-      badge='<span class="m3-badge empty">—</span>';
-    }
-    row.innerHTML=badge+'<span class="m3-stu-name">'+shortName(st)+'</span>';
-    row.addEventListener('click',()=>{
-      const i=S.m3order.indexOf(st.code);
-      if(i!==-1) S.m3order.splice(i,1);
-      else if(S.m3order.length<needed) S.m3order.push(st.code);
-      render();
-    });
-    list.appendChild(row);
-  });
-  container.appendChild(list);
-  if(S.m3order.length===needed){
-    const btn=mkEl('button','m3-confirm-btn');
-    btn.textContent='Ver resumen y confirmar →';
-    btn.addEventListener('click',()=>{S.m3step=1;render();});
-    container.appendChild(btn);
-  }
-}
-
-// Screen B: confirm — all 5 in order
-function renderM3Confirm(container){
-  const h=mkEl('div','m3-section-title');
-  h.innerHTML='<span>Confirmación</span>';
-  container.appendChild(h);
-  const sub=mkEl('div','m3-sub');
-  sub.textContent='Verifica el orden antes de comenzar las evaluaciones.';
-  container.appendChild(sub);
-  const list=mkEl('div','m3-confirm-list');
-  S.m3order.forEach((code,i)=>{
-    const st=STUDENTS.find(s=>s.code===code);
-    const isP=i<3;
-    const label=isP?'P'+(i+1):'R'+(i-2);
-    const cls=isP?'presenter':'responder';
-    const sectionText=isP?TF_SECTIONS[i]:'Preguntas del profesor';
-    const row=mkEl('div','m3-confirm-row '+cls);
-    row.innerHTML='<span class="m3-badge '+cls+'">'+label+'</span><span class="m3-stu-name">'+shortName(st)+'</span><span class="m3-section-assign">'+sectionText+'</span>';
-    list.appendChild(row);
-  });
-  container.appendChild(list);
-  const btns=mkEl('div','m3-btn-row');
-  const back=mkEl('button','m3-back-btn'); back.textContent='← Corregir';
-  back.addEventListener('click',()=>{S.m3step=0;render();});
-  const go=mkEl('button','m3-confirm-btn'); go.textContent='Comenzar evaluaciones →';
-  go.addEventListener('click',()=>{S.m3current=0;S.m3evals={};S.m3step=2;render();});
-  btns.appendChild(back); btns.appendChild(go); container.appendChild(btns);
-}
-
-// Screen C: evaluate one by one, accumulate — all 5 use rubric
-function renderM3EvalDesk(container){
-  const allCodes=S.m3order;
-  const currentCode=allCodes[S.m3current];
-  const currentSt=STUDENTS.find(s=>s.code===currentCode);
-  const idx=S.m3current;
-  const isP=idx<3;
-  const label=isP?'P'+(idx+1):'R'+(idx-2);
-  const badgeCls=isP?'presenter':'responder';
-
-  // Progress bar
-  const prog=mkEl('div','m3-progress-bar');
-  allCodes.forEach((_,i)=>{
-    const dot=mkEl('div','m3-prog-dot'+(i<S.m3current?' done':i===S.m3current?' active':''));
-    prog.appendChild(dot);
-  });
-  container.appendChild(prog);
-
-  // Header
-  const h=mkEl('div','m3-eval-header');
-  h.innerHTML='<span class="m3-badge '+badgeCls+'">'+label+'</span><span class="m3-eval-name">'+shortName(currentSt)+'</span><span class="m3-eval-counter">'+(idx+1)+' / '+allCodes.length+'</span>';
-  container.appendChild(h);
-
-  if(isP){
-    const secLabel=mkEl('div','m3-section-label');
-    secLabel.textContent=TF_SECTIONS[idx]||'';
-    container.appendChild(secLabel);
-  }
-
-  // Load saved rubric
-  const saved=S.m3evals[currentCode]||{};
-  S.m3rubric=saved.rubric||{c1:null,c2:null,c3:null};
-
-  // Always rubric for all 5
-  buildRubricInto(container);
-  if(saved.rubric){
-    RUBRIC_CRITERIA.forEach(cr=>{
-      const block=document.getElementById('rubric-'+cr.id);
-      if(!block||!saved.rubric[cr.id]) return;
-      block.querySelectorAll('.scale-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===saved.rubric[cr.id]));
-    });
-    updateNotaTF();
-  }
-
-  // Obs
-  const rO=mkEl('div','r-section');
-  rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas...">'+(saved.obs||'')+'</textarea>';
-  container.appendChild(rO);
-
-  // Nav buttons
-  const btns=mkEl('div','m3-btn-row');
-  if(S.m3current>0){
-    const prev=mkEl('button','m3-back-btn'); prev.textContent='← Anterior';
-    prev.addEventListener('click',()=>{saveCurrentM3Eval();S.m3current--;render();});
-    btns.appendChild(prev);
-  }
-  const isLast=S.m3current===allCodes.length-1;
-  const next=mkEl('button','m3-confirm-btn');
-  next.textContent=isLast?'Revisar y enviar →':'Siguiente →';
-  next.addEventListener('click',()=>{
-    if(!validateM3Eval()) return;
-    saveCurrentM3Eval();
-    if(isLast){S.m3step=3;render();}
-    else{S.m3current++;render();}
-  });
-  btns.appendChild(next);
-  container.appendChild(btns);
-}
-
-// Screen D: review before submit
-function renderM3Review(container){
-  const h=mkEl('div','m3-section-title');
-  h.innerHTML='<span>Revisar antes de enviar</span>';
-  container.appendChild(h);
-  const sub=mkEl('div','m3-sub');
-  sub.textContent='Toca cualquier alumno para editar su evaluación.';
-  container.appendChild(sub);
-  const list=mkEl('div','m3-assign-list');
-  S.m3order.forEach((code,i)=>{
-    const st=STUDENTS.find(s=>s.code===code);
-    const isP=i<3;
-    const label=isP?'P'+(i+1):'R'+(i-2);
-    const badgeCls=isP?'presenter':'responder';
-    const ev=S.m3evals[code]||{};
-    const r=ev.rubric||{};
-    let notaStr='—';
-    if(r.c1&&r.c2&&r.c3){
-      const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5;
-      notaStr=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw));
-    }
-    const row=mkEl('div','m3-review-row');
-    row.innerHTML='<span class="m3-badge '+badgeCls+'">'+label+'</span><span class="m3-stu-name">'+shortName(st)+'</span><span class="m3-review-nota">'+notaStr+'<small>/ 20</small></span><span class="m3-review-edit">✎</span>';
-    row.addEventListener('click',()=>{S.m3current=i;S.m3step=2;render();});
-    list.appendChild(row);
-  });
-  container.appendChild(list);
-  const btns=mkEl('div','m3-btn-row');
-  const back=mkEl('button','m3-back-btn'); back.textContent='← Editar último';
-  back.addEventListener('click',()=>{S.m3current=S.m3order.length-1;S.m3step=2;render();});
-  const send=mkEl('button','m3-confirm-btn'); send.textContent='Enviar todo al Sheet ↗';
-  send.addEventListener('click',()=>submitAllM3());
-  btns.appendChild(back); btns.appendChild(send);
-  container.appendChild(btns);
-}
-
-function saveCurrentM3Eval(){
-  const code=S.m3order[S.m3current];
-  const obsEl=document.getElementById('inp-obs');
-  S.m3evals[code]={rubric:{...S.m3rubric},obs:obsEl?obsEl.value:''};
-  S.m3rubric={c1:null,c2:null,c3:null};
-}
-
-function validateM3Eval(){
-  if(!S.m3rubric.c1||!S.m3rubric.c2||!S.m3rubric.c3){
-    toast('Completa los 3 criterios de la rúbrica',true); return false;
-  }
-  return true;
-}
-
-async function submitAllM3(){
-  // Validar que todos los alumnos tengan rúbrica completa antes de enviar
-  const incompletos=[];
-  S.m3order.forEach((code,i)=>{
-    const ev=S.m3evals[code]||{};
-    const r=ev.rubric||{};
-    if(!r.c1||!r.c2||!r.c3){
-      const st=STUDENTS.find(s=>s.code===code);
-      const isP=i<3;
-      const label=isP?'P'+(i+1):'R'+(i-2);
-      incompletos.push(label+' '+shortName(st));
-    }
-  });
-  if(incompletos.length>0){
-    toast('Rúbrica incompleta: '+incompletos.join(', '),true);
-    return;
-  }
-  const fecha=document.getElementById('inp-fecha').value;
-  const sesion=document.getElementById('inp-sesion').value;
-  setSyncStatus('syncing');
-  let ok=true;
-  for(let i=0;i<S.m3order.length;i++){
-    const code=S.m3order[i];
-    const st=STUDENTS.find(s=>s.code===code);
-    const isP=i<3;
-    const ev=S.m3evals[code]||{};
-    const r=ev.rubric||{};
-    const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5;
-    const ajuste=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw));
-    const nivelStr='C1:'+r.c1+' C2:'+r.c2+' C3:'+r.c3;
-    const label=isP?'P'+(i+1):'R'+(i-2);
-    const payload={
-      action:'registrar_sesion',fecha,sesion,modo:'Modo 3',instrumento:'TF',
-      codigo:code,alumno:st.name,grupo:st.group,
-      rol:label,ajuste,nivel:nivelStr,observacion:ev.obs||''
-    };
-    try{
-      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      S.sessionHistory.push({...payload,displayAj:ajuste});
-    } catch(e){ok=false;}
-  }
-  setSyncStatus(ok?'ok':'error');
-  toast(ok?'✓ '+S.m3order.length+' calificaciones enviadas':'Error al enviar',!ok);
-  S.m3step=0; S.m3order=[]; S.m3evals={}; S.m3current=0; S.m3group=null;
-  render();
-}
-
-function getRole(code){
-  if(!S.m3order.length) return null;
-  const i=S.m3order.indexOf(code);
-  if(i===-1) return null;
-  return i<3?'presenter':'responder';
-}
-
-// ════════════════════════════════════════════════════════════════
-// MOBILE
-// ════════════════════════════════════════════════════════════════
-function renderMobile(main){
-  if(S.mode===3){renderMobile3(main);return;}
-  // Participación no elige instrumento: se salta directo a la lista de alumnos
-  if(S.mode===1&&S.mobStep===0) S.mobStep=1;
-
-  if(S.mobStep===0){
-    const wrap=mkEl('div'); wrap.style.cssText='padding:16px;padding-bottom:40px';
-    const h=mkEl('div'); h.style.cssText='font-family:"Playfair Display",serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px';
-    h.textContent='¿Qué estás evaluando?';
-    const sub=mkEl('div'); sub.style.cssText='font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--text-muted);margin-bottom:18px';
-    sub.textContent='Selecciona el reporte';
-    wrap.appendChild(h); wrap.appendChild(sub);
-    const instrList=INSTRUMENTOS_RP;
-    const grid=mkEl('div','mob-instr-grid');
-    instrList.forEach(id=>{
-      const btn=mkEl('div','mob-instr-btn'+(S.selectedInstrumento===id?' active':''));
-      const code=mkEl('span','mob-instr-code'); code.textContent=id;
-      btn.appendChild(code);
-      btn.addEventListener('click',()=>{
-        S.selectedInstrumento=id;
-        grid.querySelectorAll('.mob-instr-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-      });
-      grid.appendChild(btn);
-    });
-    wrap.appendChild(grid);
-    const next=mkEl('button','mob-next-btn');
-    next.textContent='Continuar →';
-    next.addEventListener('click',()=>{S.mobStep=1;render();});
-    wrap.appendChild(next);
-    main.appendChild(wrap);
-
-  } else if(S.mobStep===1){
-    const nav=buildMobNav('← '+S.selectedInstrumento,()=>{S.mobStep=0;render();},'Selecciona alumno');
-    main.appendChild(nav);
-    main.appendChild(mkStudentList('mob'));
-
-  } else {
-    const nav=buildMobNav('← Alumnos',()=>{S.activeStudent=null;S.mobStep=1;render();},
-      S.activeStudent?shortName(S.activeStudent):'—',
-      S.selectedInstrumento+(S.activeStudent?' · '+S.activeStudent.group:''));
-    main.appendChild(nav);
-    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
-    if(S.mode===2) renderQuestions(content,S.selectedInstrumento);
-    if(S.mode===2){
-      const rN=mkEl('div'); rN.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-      rN.innerHTML='<div class="r-title">Desempeño oral</div>';
-      const nopts=mkEl('div'); nopts.id='nivel-opts'; buildNivelButtons(nopts);
-      rN.appendChild(nopts); content.appendChild(rN);
-      const rB=mkEl('div'); rB.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-      rB.innerHTML='<div class="r-title">Bonus</div><label class="bonus-row"><input type="checkbox" id="chk-bonus"'+(S.bonusActive?' checked':'')+'><span class="bonus-lbl">Intervención destacada (+1)</span></label>';
-      rB.querySelector('#chk-bonus').addEventListener('change',e=>{S.bonusActive=e.target.checked;updateAjuste();});
-      content.appendChild(rB);
-    } else {
-      const rA=mkEl('div'); rA.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-      rA.innerHTML='<div class="r-title">Calificación de intervención</div>';
-      const grid=mkEl('div','adj-grid'); grid.id='adj-grid'; buildAdjButtons(grid);
-      rA.appendChild(grid); content.appendChild(rA);
-    }
-    const rAj=mkEl('div'); rAj.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-    rAj.innerHTML='<div class="r-title">Ajuste</div><div class="ajuste-box"><div><div class="aj-label">Puntos</div><div class="aj-calc" id="aj-calc">—</div></div><div class="aj-value" id="aj-value">—</div></div>';
-    content.appendChild(rAj);
-    buildObsRegInline(content,'registrar');
-    buildHistPanelInline(content);
-    main.appendChild(content);
-    updateAjuste(); renderHistory();
-  }
-}
-
-// ── Mobile Mode 3 ────────────────────────────────────────────────
-function renderMobile3(main){
-  // Step 0: pick group
-  if(!S.m3group){
-    const wrap=mkEl('div'); wrap.style.cssText='padding:16px;padding-bottom:40px';
-    const h=mkEl('div'); h.style.cssText='font-family:"Playfair Display",serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px';
-    h.textContent='Sustentación TF';
-    const sub=mkEl('div'); sub.style.cssText='font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--text-muted);margin-bottom:18px';
-    sub.textContent='Selecciona el grupo a evaluar';
-    wrap.appendChild(h); wrap.appendChild(sub);
-    const groups=[...new Set(STUDENTS.map(s=>s.group))];
-    groups.forEach(group=>{
-      const btn=mkEl('button','mob-group-btn'); btn.textContent=group;
-      btn.addEventListener('click',()=>{S.m3group=group;S.m3order=[];S.m3evals={};S.m3current=0;S.m3step=0;render();});
-      wrap.appendChild(btn);
-    });
-    main.appendChild(wrap); return;
-  }
-
-  if(S.m3step===0){
-    const nav=buildMobNav('← Grupos',()=>{S.m3group=null;render();},'Asignar orden',S.m3group);
-    main.appendChild(nav);
-    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
-    renderM3Assign(content);
-    main.appendChild(content);
-  } else if(S.m3step===1){
-    const nav=buildMobNav('← Asignación',()=>{S.m3step=0;render();},'Confirmar',S.m3group);
-    main.appendChild(nav);
-    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
-    renderM3Confirm(content);
-    main.appendChild(content);
-  } else if(S.m3step===3){
-    const nav=buildMobNav('← Editar último',()=>{S.m3current=S.m3order.length-1;S.m3step=2;render();},'Revisar',S.m3group);
-    main.appendChild(nav);
-    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
-    renderM3Review(content);
-    main.appendChild(content);
-  } else {
-    const currentCode=S.m3order[S.m3current];
-    const currentSt=STUDENTS.find(s=>s.code===currentCode);
-    const idx=S.m3current;
-    const isP=idx<3;
-    const label=isP?'P'+(idx+1):'R'+(idx-2);
-    const nav=buildMobNav(
-      '← '+(S.m3current>0?'Anterior':'Inicio'),
-      ()=>{if(S.m3current>0){saveCurrentM3Eval();S.m3current--;render();}else{S.m3step=2;S.m3current=0;render();}},
-      shortName(currentSt),
-      label+' · '+(S.m3current+1)+'/'+S.m3order.length
-    );
-    main.appendChild(nav);
-    // Progress dots
-    const prog=mkEl('div','m3-progress-bar-mob');
-    S.m3order.forEach((_,i)=>{
-      const dot=mkEl('div','m3-prog-dot'+(i<S.m3current?' done':i===S.m3current?' active':''));
-      prog.appendChild(dot);
-    });
-    main.appendChild(prog);
-    const content=mkEl('div'); content.style.cssText='padding:14px;padding-bottom:50px';
-    if(isP){
-      const secLabel=mkEl('div','m3-section-label'); secLabel.textContent=TF_SECTIONS[S.m3current]||'';
-      content.appendChild(secLabel);
-    }
-    const saved=S.m3evals[currentCode]||{};
-    if(saved.rubric) S.m3rubric={...saved.rubric};
-    buildRubricInto(content);
-    if(saved.rubric){
-      RUBRIC_CRITERIA.forEach(cr=>{
-        const block=document.getElementById('rubric-'+cr.id);
-        if(!block||!saved.rubric[cr.id]) return;
-        block.querySelectorAll('.scale-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===saved.rubric[cr.id]));
-      });
-      updateNotaTF();
-    }
-    const rO=mkEl('div'); rO.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-    const savedObs=(S.m3evals[currentCode]||{}).obs||'';
-    rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas...">'+savedObs+'</textarea>';
-    content.appendChild(rO);
-    const isLast=S.m3current===S.m3order.length-1;
-    const nextBtn=mkEl('button','m3-confirm-btn'); nextBtn.style.cssText='width:100%;margin-top:4px';
-    nextBtn.textContent=isLast?'Revisar y enviar →':'Siguiente alumno →';
-    nextBtn.addEventListener('click',()=>{
-      if(!validateM3Eval()) return;
-      saveCurrentM3Eval();
-      if(isLast){S.m3step=3;render();}
-      else{S.m3current++;render();}
-    });
-    content.appendChild(nextBtn);
-    buildHistPanelInline(content);
-    main.appendChild(content);
-    renderHistory();
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// SHARED BUILDERS
-// ════════════════════════════════════════════════════════════════
-function mkStudentList(context){
-  const frag=document.createDocumentFragment();
-  const groups=[...new Set(STUDENTS.map(s=>s.group))];
-  groups.forEach(group=>{
-    const members=STUDENTS.filter(s=>s.group===group);
-    const gCls=group==='GRUPO 1'?'g1':group==='GRUPO 2'?'g2':'g3';
-    const block=mkEl('div','group-block '+gCls);
-    block.innerHTML='<div class="group-label">'+group+'</div>';
-    members.forEach(st=>{
-      const isActive=S.activeStudent?.code===st.code;
-      const graded=S.sessionHistory.filter(h=>h.codigo===st.code&&h.modo!=='Modo 3').length>0;
-      let roleCls='',indTxt='';
-      if(isActive){roleCls='active';indTxt='→';}
-      else if(graded){roleCls='graded';indTxt='✓';}
-      const btn=mkEl('button','student-row '+roleCls);
-      btn.dataset.code=st.code;
-      const veces=PART_CONTEOS[st.code]||0;
-      const countCls=veces>=META_PARTICIPACION?'ok':'low';
-      btn.innerHTML='<div class="s-indicator">'+indTxt+'</div><div class="s-name">'+fn(st)+'<small>'+ln(st)+'</small></div><div class="s-codigo">'+st.code+'</div><div class="s-count '+countCls+'" title="Veces participado en el semestre">'+veces+'×</div>';
-      btn.addEventListener('click',()=>{
-        S.activeStudent=st;
-        S.activeStudentOrigen='manual';
-        if(context==='mob') S.mobStep=2;
-        render();
-      });
-      block.appendChild(btn);
-    });
-    frag.appendChild(block);
-  });
-  return frag;
-}
-
-function buildBanner(container){
-  const b=mkEl('div','active-banner'+(S.activeStudent?'':' empty')); b.id='active-banner';
-  b.innerHTML='<div style="font-size:16px">👤</div><div><div class="banner-name'+(S.activeStudent?'':' ph')+'" id="banner-name">'+(S.activeStudent?S.activeStudent.name:'— Selecciona un alumno —')+'</div><div class="banner-sub" id="banner-sub">'+(S.activeStudent?S.activeStudent.group+' · Código '+S.activeStudent.code:'')+'</div></div>';
-  container.appendChild(b);
-}
-
-function updateBanner(){
-  const bn=document.getElementById('banner-name');
-  const bs=document.getElementById('banner-sub');
-  const ab=document.getElementById('active-banner');
-  if(!bn||!S.activeStudent) return;
-  bn.textContent=S.activeStudent.name; bn.classList.remove('ph');
-  if(bs) bs.textContent=S.activeStudent.group+' · Código '+S.activeStudent.code;
-  if(ab) ab.classList.remove('empty');
-}
-
-function renderQuestions(container,instr){
-  const qBank=QUESTIONS[instr]; if(!qBank) return;
-  Object.entries(qBank).forEach(([key,dim])=>{
-    const allQs=Object.values(dim.levels).flat();
-    const usedCount=allQs.filter(q=>S.usedQuestions.has(q)).length;
-    const block=mkEl('div','dim-block '+dim.cls); block.id='dim-'+key;
-    block.innerHTML='<div class="dim-head" onclick="toggleDim(\''+key+'\')"><div class="dim-num">'+dim.num+'</div><div class="dim-title">'+dim.title+'</div><div class="dim-used" id="du-'+key+'">'+usedCount+'/'+allQs.length+'</div><div class="dim-arrow">▼</div></div><div class="dim-body" id="dimb-'+key+'"></div>';
-    const body=block.querySelector('#dimb-'+key);
-    const lvlL={1:'Nivel 1',2:'Nivel 2',3:'Nivel 3'};
-    const lvlC={1:'lh1',2:'lh2',3:'lh3'};
-    Object.entries(dim.levels).forEach(([lvl,qs])=>{
-      if(!qs.length) return;
-      const lg=mkEl('div','level-group');
-      lg.innerHTML='<div class="level-hdr '+lvlC[lvl]+'"><span class="lh-dot"></span>'+lvlL[lvl]+'</div>';
-      qs.forEach(q=>{
-        const used=S.usedQuestions.has(q);
-        const item=mkEl('div','q-item'+(used?' used':''));
-        item.innerHTML='<div class="q-chk">'+(used?'✓':'')+'</div><div class="q-txt">'+q+'</div>';
-        item.addEventListener('click',()=>{
-          if(S.usedQuestions.has(q)) S.usedQuestions.delete(q); else S.usedQuestions.add(q);
-          item.classList.toggle('used'); item.querySelector('.q-chk').textContent=S.usedQuestions.has(q)?'✓':'';
-          const du=document.getElementById('du-'+key);
-          if(du) du.textContent=allQs.filter(qq=>S.usedQuestions.has(qq)).length+'/'+allQs.length;
-        });
-        lg.appendChild(item);
-      });
-      body.appendChild(lg);
-    });
-    container.appendChild(block);
-  });
-}
-
-function buildRubricInto(container){
-  const rR=mkEl('div','rubric-section'); rR.innerHTML='<div class="r-title">Rúbrica · Sustentación TF</div>';
-  RUBRIC_CRITERIA.forEach(cr=>{
-    const block=mkEl('div','rubric-criterion'); block.id='rubric-'+cr.id;
-    const hdr=mkEl('div','rubric-crit-hdr');
-    hdr.innerHTML='<span class="rubric-crit-label">'+cr.label+'</span><span class="rubric-crit-peso">'+Math.round(cr.peso*100)+'%</span>';
-    const scale=mkEl('div','rubric-scale');
-    cr.levels.forEach((lbl,i)=>{
-      const val=i+1;
-      const btn=mkEl('div','scale-btn'+(S.m3rubric[cr.id]===val?' sel':''));
-      btn.innerHTML='<span class="scale-num">'+val+'</span><span class="scale-lbl">'+lbl+'</span>';
-      btn.addEventListener('click',()=>{
-        S.m3rubric[cr.id]=val;
-        scale.querySelectorAll('.scale-btn').forEach((b,j)=>b.classList.toggle('sel',j+1===val));
-        updateNotaTF();
-      });
-      scale.appendChild(btn);
-    });
-    block.appendChild(hdr); block.appendChild(scale); rR.appendChild(block);
-  });
-  const notaBox=mkEl('div','nota-tf-box'); notaBox.id='nota-tf-box';
-  notaBox.innerHTML='<div><div class="nota-tf-label">Nota (0–20)</div><div class="nota-tf-calc" id="nota-tf-calc">Completa los 3 criterios</div></div><div class="nota-tf-value" id="nota-tf-value">—</div>';
-  rR.appendChild(notaBox); container.appendChild(rR);
-}
-
-function buildNivelButtons(container){
-  NIVELES.forEach(n=>{
-    const btn=mkEl('div','nivel-opt '+n.cls+(S.selectedNivel===n.id?' sel':''));
-    btn.innerHTML='<div class="nv-icon">'+n.icon+'</div><div class="nv-info"><div class="nv-name">'+n.name+'</div><div class="nv-desc">'+n.desc+'</div></div><div class="nv-effect '+n.cls+'">'+n.effect+'</div>';
-    btn.addEventListener('click',()=>{
-      S.selectedNivel=n.id;
-      container.querySelectorAll('.nivel-opt').forEach((b,i)=>{b.className='nivel-opt '+NIVELES[i].cls+(S.selectedNivel===NIVELES[i].id?' sel':'');});
-      updateAjuste();
-    });
-    container.appendChild(btn);
-  });
-}
-
-function buildAdjButtons(container){
-  ADJ_OPTS.forEach(opt=>{
-    const btn=mkEl('div','adj-opt'+(S.selectedAdj===opt.id?' sel-'+opt.id:''));
-    btn.innerHTML='<span class="adj-icon">'+opt.icon+'</span><span class="adj-label">'+opt.label+'</span><span class="adj-value">'+opt.value+'</span>';
-    btn.addEventListener('click',()=>{
-      S.selectedAdj=opt.id;
-      container.querySelectorAll('.adj-opt').forEach((b,i)=>{b.className='adj-opt'+(S.selectedAdj===ADJ_OPTS[i].id?' sel-'+ADJ_OPTS[i].id:'');});
-      updateAjuste();
-    });
-    container.appendChild(btn);
-  });
-}
-
-function buildAjusteBox(container){
-  const rAj=mkEl('div','r-section');
-  rAj.innerHTML='<div class="r-title">Ajuste a registrar</div><div class="ajuste-box"><div><div class="aj-label">Puntos sobre nota grupal</div><div class="aj-calc" id="aj-calc">—</div></div><div class="aj-value" id="aj-value">—</div></div>';
-  container.appendChild(rAj);
-}
-
-function buildObsReg(container,fn){
-  const rO=mkEl('div','r-section');
-  rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas..."></textarea><button class="btn-reg" id="btn-reg" onclick="'+fn+'()">↗ Registrar en Google Sheets</button>';
-  container.appendChild(rO);
-}
-
-function buildObsRegInline(container,fn){
-  const rO=mkEl('div'); rO.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px';
-  rO.innerHTML='<div class="r-title">Observación</div><textarea class="obs-area" id="inp-obs" placeholder="Notas..."></textarea><button class="btn-reg" id="btn-reg" onclick="'+fn+'()" style="margin-top:6px">↗ Registrar en Google Sheets</button>';
-  container.appendChild(rO);
-}
-
-function buildHistPanel(container){
-  const rH=mkEl('div','r-section');
-  rH.innerHTML='<div class="r-title">Registros de esta sesión</div><div id="hist-list"><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div></div>';
-  container.appendChild(rH);
-}
-
-function buildHistPanelInline(container){
-  const rH=mkEl('div'); rH.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:10px';
-  rH.innerHTML='<div class="r-title">Registros de esta sesión</div><div id="hist-list"><div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div></div>';
-  container.appendChild(rH);
-}
-
-function buildMobNav(backLabel,backFn,title,sub){
-  const nav=mkEl('div','mob-nav');
-  if(backLabel&&backFn){
-    const back=mkEl('div','mob-back'); back.textContent='← '+backLabel.replace('← ','');
-    back.addEventListener('click',backFn); nav.appendChild(back);
-  }
-  const t=mkEl('div','mob-step-title'); t.textContent=title||''; nav.appendChild(t);
-  if(sub){const s=mkEl('div','mob-step-sub'); s.textContent=sub; nav.appendChild(s);}
-  return nav;
-}
-
-// ── CALC ─────────────────────────────────────────────────────────
+// ── CALC (verbatim) ─────────────────────────────────────────────────────────
 function calcAjuste(){
   if(S.mode===1){const adj=ADJ_OPTS.find(o=>o.id===S.selectedAdj);return adj?adj.delta:null;}
   const bonus=S.bonusActive?1:0;
@@ -1248,38 +638,43 @@ function calcAjuste(){
   if(!nivel) return bonus>0?bonus:null;
   return nivel.delta+bonus;
 }
-
 function updateAjuste(){
   const aj=calcAjuste();
   const valEl=document.getElementById('aj-value');
   const calcEl=document.getElementById('aj-calc');
   if(!valEl) return;
-  if(aj===null){valEl.textContent='—';if(calcEl)calcEl.textContent='—';return;}
-  valEl.textContent=(aj>=0?'+':'')+aj;
-  if(calcEl){
-    if(S.mode===1){const opt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);calcEl.textContent=opt?opt.label:'—';}
-    else{const parts=[];const n=NIVELES.find(n=>n.id===S.selectedNivel);if(n&&n.delta!==0)parts.push('nivel: '+n.delta);if(S.bonusActive)parts.push('+1 bonus');calcEl.textContent=parts.length?parts.join(', '):'sin cambio';}
+  if(aj===null){valEl.textContent='—';if(calcEl)calcEl.textContent='—';}
+  else{
+    valEl.textContent=(aj>=0?'+':'')+aj;
+    if(calcEl){
+      if(S.mode===1){const opt=ADJ_OPTS.find(o=>o.id===S.selectedAdj);calcEl.textContent=opt?opt.label:'—';}
+      else{const parts=[];const n=NIVELES.find(n=>n.id===S.selectedNivel);if(n&&n.delta!==0)parts.push('nivel: '+n.delta);if(S.bonusActive)parts.push('+1 bonus');calcEl.textContent=parts.length?parts.join(', '):'sin cambio';}
+    }
   }
+  refreshActionBar();
 }
-
 function updateNotaTF(){
   const valEl=document.getElementById('nota-tf-value');
   const calcEl=document.getElementById('nota-tf-calc');
-  if(!valEl) return;
-  const c1=S.m3rubric.c1,c2=S.m3rubric.c2,c3=S.m3rubric.c3;
-  if(!c1||!c2||!c3){valEl.textContent='—';if(calcEl)calcEl.textContent='Completa los 3 criterios';return;}
-  const raw=(c1*0.5+c2*0.3+c3*0.2)*5;
-  const nota=raw%1>=0.5?Math.ceil(raw):Math.floor(raw);
-  valEl.textContent=nota;
-  if(calcEl)calcEl.textContent='('+c1+'x50%+'+c2+'x30%+'+c3+'x20%)x5 = '+nota;
+  if(valEl){
+    const c1=S.m3rubric.c1,c2=S.m3rubric.c2,c3=S.m3rubric.c3;
+    if(!c1||!c2||!c3){valEl.textContent='—';if(calcEl)calcEl.textContent='Completa los 3 criterios';}
+    else{
+      const raw=(c1*0.5+c2*0.3+c3*0.2)*5;
+      const nota=raw%1>=0.5?Math.ceil(raw):Math.floor(raw);
+      valEl.textContent=nota;
+      if(calcEl)calcEl.textContent='('+c1+'×50% + '+c2+'×30% + '+c3+'×20%) × 5 = '+nota;
+    }
+  }
+  refreshActionBar();
 }
 
-// ── REGISTER (Modo 1 & 2) ────────────────────────────────────────
+// ── REGISTER Modo 1 & 2 (verbatim salvo el retorno a la lista) ───────────────
 async function registrar(){
   if(!S.activeStudent){toast('Selecciona un alumno primero',true);return;}
   if(!S.selectedInstrumento){toast('Selecciona el instrumento',true);return;}
-  if(S.mode===1&&S.selectedAdj===null){toast('Selecciona la calificación de la intervención',true);return;}
-  if(S.mode===2&&!S.selectedNivel&&!S.bonusActive){toast('Selecciona el nivel de desempeño',true);return;}
+  if(S.mode===1&&S.selectedAdj===null){toast('Elige la calificación de la intervención',true);return;}
+  if(S.mode===2&&!S.selectedNivel&&!S.bonusActive){toast('Elige el nivel de desempeño',true);return;}
   const aj=calcAjuste(); if(aj===null){toast('Selecciona una opción',true);return;}
   const ajStr=String(aj);
   const nivel=NIVELES.find(n=>n.id===S.selectedNivel);
@@ -1292,56 +687,435 @@ async function registrar(){
   try{
     await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     S.sessionHistory.push({...payload,displayAj:ajStr});
+    S.graded[S.activeStudent.code]=true;
     setSyncStatus('ok');
-    toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+ajStr);
+    toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+(aj>=0?'+':'')+aj);
     S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false;
-    // Evita recalificar por error: avanza solo al siguiente de la cola del sorteo,
-    // o sale a pantalla neutra si no queda nadie pendiente.
-    if(colaSorteos.length){
-      aceptarSorteo(colaSorteos[0].codigo);
-    } else {
-      S.activeStudent=null;
-      if(isMob()) S.mobStep=1;
-      render();
-    }
+    if(colaSorteos.length){ aceptarSorteo(colaSorteos[0].codigo); }
+    else { S.activeStudent=null; S.mobStep=1; render(); }
   }catch(err){setSyncStatus('error');toast('Error al conectar',true);}
   finally{const b=document.getElementById('btn-reg');if(b)b.disabled=false;}
 }
 
-// ── HISTORY ──────────────────────────────────────────────────────
-function renderHistory(){
-  const container=document.getElementById('hist-list'); if(!container) return;
-  const items=S.sessionHistory;
-  if(!items.length){
-    container.innerHTML='<div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--text-dim);text-align:center;padding:8px 0">Sin registros aún</div>';
-    return;
+// ── MODO 3 (verbatim) ───────────────────────────────────────────────────────
+function saveCurrentM3Eval(){
+  const code=S.m3order[S.m3current];
+  const obsEl=document.getElementById('inp-obs');
+  S.m3evals[code]={rubric:{...S.m3rubric},obs:obsEl?obsEl.value:''};
+  S.m3rubric={c1:null,c2:null,c3:null};
+}
+function validateM3Eval(){
+  if(!S.m3rubric.c1||!S.m3rubric.c2||!S.m3rubric.c3){
+    toast('Completa los 3 criterios de la rúbrica',true); return false;
   }
-  container.innerHTML='';
-  [...items].reverse().forEach(r=>{
-    const isM3=r.modo==='Modo 3';
-    const num=parseFloat(r.displayAj);
-    const cls=isM3?'neu':num>0?'pos':num<0?'neg':'neu';
-    const adjTxt=isM3?r.displayAj:((num>=0?'+':'')+num);
-    const item=mkEl('div','hist-item');
-    item.innerHTML='<div class="hi-adj '+cls+'">'+adjTxt+'</div><div class="hi-info"><div class="hi-name">'+r.alumno.split(' ')[0]+' '+r.alumno.split(' ')[1]+'</div><div class="hi-meta">'+r.instrumento+' · '+(isM3?'Nota TF · '+r.nivel:r.nivel)+'</div>'+(r.observacion?'<div class="hi-obs">'+r.observacion+'</div>':'')+'</div>';
-    container.appendChild(item);
+  return true;
+}
+async function submitAllM3(){
+  const incompletos=[];
+  S.m3order.forEach((code,i)=>{
+    const ev=S.m3evals[code]||{}; const r=ev.rubric||{};
+    if(!r.c1||!r.c2||!r.c3){
+      const st=STUDENTS.find(s=>s.code===code);
+      const label=i<3?'P'+(i+1):'R'+(i-2);
+      incompletos.push(label+' '+shortName(st));
+    }
   });
+  if(incompletos.length>0){ toast('Rúbrica incompleta: '+incompletos.join(', '),true); return; }
+  const fecha=document.getElementById('inp-fecha').value;
+  const sesion=document.getElementById('inp-sesion').value;
+  setSyncStatus('syncing');
+  let ok=true;
+  for(let i=0;i<S.m3order.length;i++){
+    const code=S.m3order[i];
+    const st=STUDENTS.find(s=>s.code===code);
+    const isP=i<3;
+    const ev=S.m3evals[code]||{}; const r=ev.rubric||{};
+    const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5;
+    const ajuste=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw));
+    const nivelStr='C1:'+r.c1+' C2:'+r.c2+' C3:'+r.c3;
+    const label=isP?'P'+(i+1):'R'+(i-2);
+    const payload={action:'registrar_sesion',fecha,sesion,modo:'Modo 3',instrumento:'TF',codigo:code,alumno:st.name,grupo:st.group,rol:label,ajuste,nivel:nivelStr,observacion:ev.obs||''};
+    try{
+      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      S.sessionHistory.push({...payload,displayAj:ajuste});
+    }catch(e){ok=false;}
+  }
+  setSyncStatus(ok?'ok':'error');
+  toast(ok?'✓ '+S.m3order.length+' calificaciones enviadas':'Error al enviar',!ok);
+  S.m3step=0; S.m3order=[]; S.m3evals={}; S.m3current=0; S.m3group=null;
+  render();
 }
 
-// ── HELPERS ──────────────────────────────────────────────────────
-function toggleDim(key){document.getElementById('dim-'+key)?.classList.toggle('collapsed');}
+// ── STATUS / TOAST (verbatim) ───────────────────────────────────────────────
 function setSyncStatus(status){
   const el=document.getElementById('sync-dot'); if(!el) return;
-  const map={syncing:['syncing','● Sincronizando...'],ok:['ok','● Guardado'],error:['error','● Error']};
+  const map={syncing:['syncing','● Sincronizando…'],ok:['ok','● Guardado'],error:['error','● Error']};
   el.className='sync-dot '+map[status][0]; el.textContent=map[status][1];
   if(status==='ok') setTimeout(()=>{el.className='sync-dot ok';el.textContent='● Conectado';},2500);
 }
 function toast(msg,isErr=false){
   const t=document.getElementById('toast'); t.textContent=msg;
-  t.className='toast'+(isErr?' err':'')+' show';
-  setTimeout(()=>t.classList.remove('show'),3000);
+  t.className=(isErr?'err ':'')+'show';
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),3000);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   CAPA DE PRESENTACIÓN — nueva. Un solo flujo por pasos, responsivo por CSS.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const wrap=()=>document.getElementById('wrap');
+const groupCls=g=>g==='GRUPO 1'?'grp-1':g==='GRUPO 2'?'grp-2':'grp-3';
+const grpNames=()=>[...new Set(STUDENTS.map(s=>s.group))];
+
+function render(){
+  if(!STUDENTS.length){ return; }
+  const w=wrap(); w.innerHTML='';
+  if(S.mode===3) renderM3(w);
+  else if(S.mode===2 && S.mobStep===0) renderInstr(w);
+  else if(!S.activeStudent) renderStudentList(w);
+  else renderGrade(w);
+  refreshActionBar();
+}
+
+/* ── crumb helper — solo se dibuja si hay botón de volver o etiqueta de contexto.
+   En las pantallas de nivel superior la pestaña ya dice dónde estás. ── */
+function crumb(w, backFn, backLabel, label){
+  if(!backFn && !label) return;
+  const row=mkEl('div','crumb-row');
+  if(backFn){
+    const b=mkEl('button','crumb-back'); b.innerHTML='← '+backLabel;
+    b.onclick=backFn; row.appendChild(b);
+  }
+  if(label){ const l=mkEl('div','crumb-label'); l.textContent=label; row.appendChild(l); }
+  w.appendChild(row);
+}
+
+/* ── MODO 2: elegir instrumento ── */
+function renderInstr(w){
+  const t=mkEl('div','screen-title'); t.textContent='¿Qué reporte evalúas?'; w.appendChild(t);
+  const s=mkEl('div','screen-sub'); s.textContent='La dinámica de preguntas aplica a este RP.'; w.appendChild(s);
+  const seg=mkEl('div','seg');
+  INSTRUMENTOS_RP.forEach(id=>{
+    const b=mkEl('button',S.selectedInstrumento===id?'on':'');
+    b.textContent=id;
+    b.onclick=()=>{ S.selectedInstrumento=id; S.mobStep=1; render(); };
+    seg.appendChild(b);
+  });
+  w.appendChild(seg);
+}
+
+/* ── lista de alumnos ── */
+function renderStudentList(w){
+  if(S.mode===2) crumb(w, ()=>{S.mobStep=0;render();}, S.selectedInstrumento, null);
+  const t=mkEl('div','screen-title');
+  t.textContent = S.mode===1 ? '¿A quién calificas?' : 'Elige quién sustenta';
+  w.appendChild(t);
+  const s=mkEl('div','screen-sub');
+  s.textContent = S.mode===1 ? 'Toca un alumno para registrar su participación.' : 'Toca el alumno de la dinámica.';
+  w.appendChild(s);
+
+  grpNames().forEach(g=>{
+    const block=mkEl('div','grp-block '+groupCls(g));
+    const gh=mkEl('div','grp-head'); gh.textContent=g; block.appendChild(gh);
+    STUDENTS.filter(x=>x.group===g).forEach(st=>{
+      const graded=!!S.graded[st.code];
+      const row=mkEl('button','stu-row'+(graded?' graded':''));
+      const veces=PART_CONTEOS[st.code]||0;
+      const cc = veces>=META_PARTICIPACION ? 'ok' : 'low';
+      const countHtml = S.mode===1 ? '<span class="stu-count '+cc+'">'+veces+'×</span>' : '';
+      row.innerHTML='<span class="stu-ind">'+(graded?'✓':'')+'</span>'+
+        '<span class="stu-name"><b>'+fn(st)+'</b><small>'+ln(st)+'</small></span>'+countHtml;
+      row.onclick=()=>{ S.activeStudent=st; S.activeStudentOrigen='manual'; S.mobStep=2; render(); };
+      block.appendChild(row);
+    });
+    w.appendChild(block);
+  });
+}
+
+/* ── pantalla de calificación (Modo 1 y 2) ── */
+function renderGrade(w){
+  const st=S.activeStudent;
+  crumb(w, ()=>{ S.activeStudent=null; S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false; S.mobStep=1; render(); },
+        'Alumnos', S.mode===1?null:(S.selectedInstrumento+' · dinámica'));
+
+  const card=mkEl('div','active-card');
+  card.innerHTML='<div class="ac-name">'+shortName(st)+'</div>'+
+    '<div class="ac-meta">'+fullName(st)+' · '+st.group+'</div>'+
+    (S.activeStudentOrigen==='sorteo'?'<span class="ac-badge">del sorteo</span>':'');
+  w.appendChild(card);
+
+  if(S.mode===1){
+    const sec=mkEl('div','sec');
+    sec.innerHTML='<div class="sec-label">Calificación de la intervención</div>';
+    const grid=mkEl('div','choice-grid c3');
+    ADJ_OPTS.forEach(o=>{
+      const b=mkEl('button','choice'+(S.selectedAdj===o.id?' sel-'+o.id:''));
+      b.innerHTML='<span class="ch-ic">'+o.icon+'</span><span class="ch-body"><span class="ch-name">'+o.label+'</span></span><span class="ch-val">'+o.value+'</span>';
+      b.onclick=()=>{ S.selectedAdj=o.id; render(); };
+      grid.appendChild(b);
+    });
+    sec.appendChild(grid); w.appendChild(sec);
+  } else {
+    // RP: banco de preguntas (referencia) + niveles
+    const qs=mkEl('div','sec');
+    qs.innerHTML='<div class="sec-label">Guía de preguntas · '+S.selectedInstrumento+'</div>';
+    const bank=mkEl('div','qbank'); renderQuestions(bank,S.selectedInstrumento);
+    qs.appendChild(bank); w.appendChild(qs);
+
+    const nv=mkEl('div','sec');
+    nv.innerHTML='<div class="sec-label">Desempeño oral</div>';
+    const grid=mkEl('div','choice-grid');
+    NIVELES.forEach(n=>{
+      const b=mkEl('button','choice'+(S.selectedNivel===n.id?' sel-'+n.id:''));
+      b.innerHTML='<span class="ch-ic">'+n.icon+'</span><span class="ch-body"><span class="ch-name">'+n.name+'</span><span class="ch-desc">'+n.desc+'</span></span><span class="ch-val">'+n.effect+'</span>';
+      b.onclick=()=>{ S.selectedNivel=n.id; render(); };
+      grid.appendChild(b);
+    });
+    nv.appendChild(grid); w.appendChild(nv);
+
+    const bs=mkEl('div','sec');
+    bs.innerHTML='<div class="sec-label">Bonus</div>';
+    const bt=mkEl('button','bonus-toggle'+(S.bonusActive?' on':''));
+    bt.innerHTML='<span class="bt-box">'+(S.bonusActive?'✓':'')+'</span><span class="bt-label">Intervención destacada (+1)</span>';
+    bt.onclick=()=>{ S.bonusActive=!S.bonusActive; render(); };
+    bs.appendChild(bt); w.appendChild(bs);
+  }
+
+  // readout
+  const ro=mkEl('div','readout');
+  ro.innerHTML='<div><div class="ro-label">Ajuste a registrar</div><div class="ro-calc" id="aj-calc">—</div></div><div class="ro-value" id="aj-value">—</div>';
+  w.appendChild(ro);
+
+  // nota
+  const ns=mkEl('div','sec');
+  ns.innerHTML='<div class="sec-label">Observación <span style="color:var(--ink-dim);text-transform:none;letter-spacing:0">(opcional)</span></div>';
+  const ta=mkEl('textarea','note-area'); ta.id='inp-obs'; ta.placeholder='Notas para ti…';
+  ns.appendChild(ta); w.appendChild(ns);
+
+  buildHistory(w);
+  updateAjuste();
+}
+
+/* ── banco de preguntas (referencia, colapsable con <details>) ── */
+function renderQuestions(container,instr){
+  const qBank=QUESTIONS[instr]; if(!qBank) return;
+  Object.entries(qBank).forEach(([key,dim])=>{
+    const allQs=Object.values(dim.levels).flat();
+    const used=()=>allQs.filter(q=>S.usedQuestions.has(q)).length;
+    const d=mkEl('details',dim.cls);
+    const sum=mkEl('summary');
+    sum.innerHTML='<span class="q-num">'+dim.num+'</span>'+dim.title+
+      '<span class="q-used" id="qu-'+key+'">'+used()+'/'+allQs.length+'</span><span class="q-arrow">▸</span>';
+    d.appendChild(sum);
+    const body=mkEl('div','q-body');
+    Object.entries(dim.levels).forEach(([lvl,qs])=>{
+      if(!qs.length) return;
+      const lh=mkEl('div','q-lvl'); lh.textContent='Nivel '+lvl; body.appendChild(lh);
+      qs.forEach(q=>{
+        const item=mkEl('div','q-pick'+(S.usedQuestions.has(q)?' used':''));
+        item.innerHTML='<span class="q-chk">'+(S.usedQuestions.has(q)?'✓':'')+'</span><span class="q-txt">'+q+'</span>';
+        item.onclick=(e)=>{
+          e.stopPropagation();
+          if(S.usedQuestions.has(q)) S.usedQuestions.delete(q); else S.usedQuestions.add(q);
+          item.classList.toggle('used'); item.querySelector('.q-chk').textContent=S.usedQuestions.has(q)?'✓':'';
+          const qu=document.getElementById('qu-'+key); if(qu) qu.textContent=used()+'/'+allQs.length;
+        };
+        body.appendChild(item);
+      });
+    });
+    d.appendChild(body);
+    container.appendChild(d);
+  });
+}
+
+/* ── historial (colapsable) ── */
+function buildHistory(w){
+  const tog=mkEl('button','hist-toggle');
+  tog.innerHTML=(S.histOpen?'▾':'▸')+' Registros de esta sesión ('+S.sessionHistory.length+')';
+  const list=mkEl('div'); list.id='hist-list'; list.style.display=S.histOpen?'block':'none';
+  tog.onclick=()=>{ S.histOpen=!S.histOpen; tog.innerHTML=(S.histOpen?'▾':'▸')+' Registros de esta sesión ('+S.sessionHistory.length+')'; list.style.display=S.histOpen?'block':'none'; renderHistory(); };
+  w.appendChild(tog); w.appendChild(list);
+  if(S.histOpen) renderHistory();
+}
+function renderHistory(){
+  const c=document.getElementById('hist-list'); if(!c) return;
+  if(!S.sessionHistory.length){ c.innerHTML='<div class="empty" style="padding:18px">Sin registros aún</div>'; return; }
+  c.innerHTML='';
+  [...S.sessionHistory].reverse().forEach(r=>{
+    const isM3=r.modo==='Modo 3';
+    const num=parseFloat(r.displayAj);
+    const cls=isM3?'neu':num>0?'pos':num<0?'neg':'neu';
+    const adjTxt=isM3?r.displayAj:((num>=0?'+':'')+num);
+    const it=mkEl('div','hist-item');
+    it.innerHTML='<div class="hi-adj '+cls+'">'+adjTxt+'</div><div><div class="hi-name">'+r.alumno.split(' ').slice(0,2).join(' ')+'</div><div class="hi-meta">'+r.instrumento+' · '+(isM3?'Nota TF · '+r.nivel:r.nivel)+'</div>'+(r.observacion?'<div class="hi-obs">'+r.observacion+'</div>':'')+'</div>';
+    c.appendChild(it);
+  });
+}
+
+/* ═══════════ MODO 3 · SUSTENTACIÓN TF ═══════════ */
+function renderM3(w){
+  if(!S.m3group){ renderM3Group(w); return; }
+  if(S.m3step===0) renderM3Assign(w);
+  else if(S.m3step===1) renderM3Confirm(w);
+  else if(S.m3step===2) renderM3Eval(w);
+  else renderM3Review(w);
+}
+function renderM3Group(w){
+  const t=mkEl('div','screen-title'); t.textContent='¿Qué grupo sustenta?'; w.appendChild(t);
+  const s=mkEl('div','screen-sub'); s.textContent='Luego asignas el orden de presentación.'; w.appendChild(s);
+  grpNames().forEach(g=>{
+    const n=STUDENTS.filter(x=>x.group===g).length;
+    const b=mkEl('button','stu-row');
+    b.innerHTML='<span class="stu-name"><b>'+g+'</b><small>'+n+' integrantes</small></span>';
+    b.onclick=()=>{ S.m3group=g; S.m3order=[]; S.m3evals={}; S.m3current=0; S.m3step=0; render(); };
+    w.appendChild(b);
+  });
+}
+function renderM3Assign(w){
+  crumb(w, ()=>{S.m3group=null;render();}, 'Grupos', S.m3group+' · orden');
+  const members=STUDENTS.filter(s=>s.group===S.m3group);
+  const needed=members.length, nR=needed-3;
+  const t=mkEl('div','screen-title'); t.textContent='Asignar orden'; w.appendChild(t);
+  const s=mkEl('div','screen-sub');
+  s.textContent='Toca en orden: primero los 3 presentadores (P1–P3), luego los '+nR+' respondedores (R1–R'+nR+').';
+  w.appendChild(s);
+  members.forEach(st=>{
+    const idx=S.m3order.indexOf(st.code);
+    const row=mkEl('button','m3-row'+(idx!==-1?' assigned':''));
+    let badge='<span class="m3-badge">—</span>';
+    if(idx!==-1){ const lbl=idx<3?'P'+(idx+1):'R'+(idx-2); badge='<span class="m3-badge '+(idx<3?'p':'r')+'">'+lbl+'</span>'; }
+    row.innerHTML=badge+'<span class="m3-nm">'+shortName(st)+'</span>';
+    row.onclick=()=>{
+      const i=S.m3order.indexOf(st.code);
+      if(i!==-1) S.m3order.splice(i,1);
+      else if(S.m3order.length<needed) S.m3order.push(st.code);
+      render();
+    };
+    w.appendChild(row);
+  });
+}
+function renderM3Confirm(w){
+  crumb(w, ()=>{S.m3step=0;render();}, 'Corregir', S.m3group+' · confirmar');
+  const t=mkEl('div','screen-title'); t.textContent='Revisa el orden'; w.appendChild(t);
+  const s=mkEl('div','screen-sub'); s.textContent='Cada presentador va con su sección del trabajo.'; w.appendChild(s);
+  S.m3order.forEach((code,i)=>{
+    const st=STUDENTS.find(x=>x.code===code);
+    const isP=i<3; const lbl=isP?'P'+(i+1):'R'+(i-2);
+    const row=mkEl('div','m3-row');
+    row.innerHTML='<span class="m3-badge '+(isP?'p':'r')+'">'+lbl+'</span><span class="m3-nm">'+shortName(st)+'</span>'+
+      '<span class="m3-sec">'+(isP?TF_SECTIONS[i]:'Preguntas del profesor')+'</span>';
+    w.appendChild(row);
+  });
+}
+function renderM3Eval(w){
+  const allCodes=S.m3order;
+  const code=allCodes[S.m3current];
+  const st=STUDENTS.find(x=>x.code===code);
+  const idx=S.m3current, isP=idx<3, lbl=isP?'P'+(idx+1):'R'+(idx-2);
+
+  crumb(w, ()=>{ if(S.m3current>0){saveCurrentM3Eval();S.m3current--;render();} else {S.m3step=1;render();} },
+        S.m3current>0?'Anterior':'Orden', S.m3group+' · '+(idx+1)+'/'+allCodes.length);
+
+  const prog=mkEl('div','m3-prog');
+  allCodes.forEach((_,i)=>{ const d=mkEl('i',i<S.m3current?'done':i===S.m3current?'now':''); prog.appendChild(d); });
+  w.appendChild(prog);
+
+  const card=mkEl('div','active-card');
+  card.innerHTML='<div class="ac-name">'+shortName(st)+'</div><div class="ac-meta">'+lbl+' · '+(isP?TF_SECTIONS[idx]:'Respondedor')+'</div>';
+  w.appendChild(card);
+
+  const saved=S.m3evals[code]||{};
+  S.m3rubric=saved.rubric?{...saved.rubric}:{c1:null,c2:null,c3:null};
+
+  RUBRIC_CRITERIA.forEach(cr=>{
+    const block=mkEl('div','rub-crit');
+    block.innerHTML='<div class="rub-crit-hd"><b>'+cr.label+'</b><span>'+Math.round(cr.peso*100)+'%</span></div>';
+    const scale=mkEl('div','rub-scale');
+    cr.levels.forEach((l,i)=>{
+      const val=i+1;
+      const b=mkEl('button','rub-btn'+(S.m3rubric[cr.id]===val?' sel':''));
+      b.innerHTML='<span class="rb-n">'+val+'</span><span class="rb-l">'+l+'</span>';
+      b.onclick=()=>{ S.m3rubric[cr.id]=val; scale.querySelectorAll('.rub-btn').forEach((x,j)=>x.classList.toggle('sel',j+1===val)); updateNotaTF(); };
+      scale.appendChild(b);
+    });
+    block.appendChild(scale); w.appendChild(block);
+  });
+
+  const ro=mkEl('div','readout');
+  ro.innerHTML='<div><div class="ro-label">Nota de sustentación (0–20)</div><div class="ro-calc" id="nota-tf-calc">Completa los 3 criterios</div></div><div class="ro-value" id="nota-tf-value">—</div>';
+  w.appendChild(ro);
+
+  const ns=mkEl('div','sec');
+  ns.innerHTML='<div class="sec-label">Observación</div>';
+  const ta=mkEl('textarea','note-area'); ta.id='inp-obs'; ta.placeholder='Notas…'; ta.value=saved.obs||'';
+  ns.appendChild(ta); w.appendChild(ns);
+  updateNotaTF();
+}
+function renderM3Review(w){
+  crumb(w, ()=>{ S.m3current=S.m3order.length-1; S.m3step=2; render(); }, 'Editar', S.m3group+' · revisar');
+  const t=mkEl('div','screen-title'); t.textContent='Revisar y enviar'; w.appendChild(t);
+  const s=mkEl('div','screen-sub'); s.textContent='Toca a un alumno para corregir su nota.'; w.appendChild(s);
+  S.m3order.forEach((code,i)=>{
+    const st=STUDENTS.find(x=>x.code===code);
+    const isP=i<3; const lbl=isP?'P'+(i+1):'R'+(i-2);
+    const ev=S.m3evals[code]||{}; const r=ev.rubric||{};
+    let nota='—';
+    if(r.c1&&r.c2&&r.c3){ const raw=(r.c1*0.5+r.c2*0.3+r.c3*0.2)*5; nota=String(raw%1>=0.5?Math.ceil(raw):Math.floor(raw)); }
+    const row=mkEl('button','m3-row');
+    row.innerHTML='<span class="m3-badge '+(isP?'p':'r')+'">'+lbl+'</span><span class="m3-nm">'+shortName(st)+'</span>'+
+      '<span class="m3-nota">'+nota+'<small> / 20</small></span>';
+    row.onclick=()=>{ S.m3current=i; S.m3step=2; render(); };
+    w.appendChild(row);
+  });
+}
+
+/* ═══════════ BARRA DE ACCIÓN (sticky, safe-area) ═══════════ */
+function refreshActionBar(){
+  const bar=document.getElementById('action-bar');
+  const inner=document.getElementById('ab-inner');
+  const hint=document.getElementById('ab-hint');
+  let html='', hintTxt='', show=true;
+
+  if(S.mode===3){
+    if(!S.m3group){ show=false; }
+    else if(S.m3step===0){
+      const needed=STUDENTS.filter(s=>s.group===S.m3group).length;
+      const ready=S.m3order.length===needed;
+      html='<button class="btn-primary wide" '+(ready?'':'disabled')+' onclick="S.m3step=1;render()">Ver resumen ('+S.m3order.length+'/'+needed+') →</button>';
+    }
+    else if(S.m3step===1){
+      html='<button class="btn-ghost" onclick="S.m3step=0;render()">Corregir</button>'+
+           '<button class="btn-primary" onclick="S.m3current=0;S.m3evals={};S.m3step=2;render()">Comenzar evaluación →</button>';
+    }
+    else if(S.m3step===2){
+      const isLast=S.m3current===S.m3order.length-1;
+      html='<button class="btn-primary wide" onclick="m3Next()">'+(isLast?'Revisar y enviar →':'Siguiente alumno →')+'</button>';
+    }
+    else if(S.m3step===3){
+      html='<button class="btn-primary wide" onclick="submitAllM3()">↗ Enviar todo al Sheet</button>';
+    }
+  }
+  else if(S.mode===2 && S.mobStep===0){ show=false; }
+  else if(!S.activeStudent){ show=false; }
+  else {
+    const aj=calcAjuste();
+    const ready = aj!==null;
+    html='<button class="btn-primary wide" id="btn-reg" '+(ready?'':'disabled')+' onclick="registrar()">↗ Registrar</button>';
+    if(!ready) hintTxt = S.mode===1 ? 'Elige Destaca / Cumple / No cumple' : 'Elige un nivel de desempeño';
+  }
+
+  if(!show){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  inner.innerHTML=html;
+  if(hintTxt){ hint.style.display='block'; hint.textContent=hintTxt; } else { hint.style.display='none'; }
+}
+function m3Next(){
+  if(!validateM3Eval()) return;
+  saveCurrentM3Eval();
+  if(S.m3current===S.m3order.length-1){ S.m3step=3; render(); }
+  else { S.m3current++; render(); }
+}
+
+window.addEventListener('resize',()=>{ /* layout es CSS; nada que re-renderizar */ });
 </script>
 </body>
 </html>
