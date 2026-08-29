@@ -52,7 +52,7 @@ header{
   border-radius:var(--r-sm); padding:0 4px 0 9px; height:34px;
   font-size:12px; color:#cdc4b4; letter-spacing:.02em;
 }
-.ctx-chip label{color:#8c8474; font-size:10px; letter-spacing:.12em; text-transform:uppercase}
+.ctx-chip label{color:#8c8474; font-size:10px; letter-spacing:.05em; text-transform:uppercase}
 .ctx-chip input{
   background:transparent; border:none; outline:none; color:#f3efe6; font-weight:500;
   height:32px; padding:0 4px; min-width:0;
@@ -108,7 +108,7 @@ header{
 #sorteo-queue{flex-shrink:0; background:var(--accent-soft); border-bottom:1px solid var(--border-strong); display:none}
 #sorteo-queue.show{display:block}
 .q-inner{max-width:760px; margin:0 auto; padding:10px 12px; display:flex; flex-direction:column; gap:8px}
-.q-title{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600}
+.q-title{font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); font-weight:600}
 .q-item{
   display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border-strong);
   border-radius:var(--r-md); padding:8px 8px 8px 12px;
@@ -136,7 +136,7 @@ header{
   font-size:12px; letter-spacing:.04em; color:var(--ink-mid); cursor:pointer; white-space:nowrap;
 }
 .crumb-back:hover{border-color:var(--accent); color:var(--accent)}
-.crumb-label{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-dim)}
+.crumb-label{font-size:12px; letter-spacing:.02em; color:var(--ink-dim)}
 
 .screen-title{font-family:var(--font-name); font-weight:700; font-size:clamp(21px,5vw,27px); line-height:1.15; margin-bottom:6px}
 .screen-sub{font-size:13px; color:var(--ink-mid); margin-bottom:18px}
@@ -144,7 +144,7 @@ header{
 /* ── student picker ── */
 .grp-block{margin-bottom:14px}
 .grp-head{
-  font-size:11px; letter-spacing:.18em; text-transform:uppercase; padding:4px 2px 8px;
+  font-size:11px; letter-spacing:.09em; text-transform:uppercase; font-weight:600; padding:4px 2px 8px;
   display:flex; align-items:center; gap:7px;
 }
 .grp-head::before{content:''; width:8px; height:8px; border-radius:50%}
@@ -181,13 +181,13 @@ header{
 .active-card .ac-name{font-family:var(--font-name); font-weight:700; font-size:clamp(22px,6vw,30px); line-height:1.1}
 .active-card .ac-meta{font-size:12px; color:var(--ink-dim); margin-top:4px; letter-spacing:.04em}
 .active-card .ac-badge{
-  display:inline-block; margin-top:8px; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  display:inline-block; margin-top:8px; font-size:11px; letter-spacing:.02em; font-weight:600;
   background:var(--accent-soft); color:var(--accent); padding:3px 9px; border-radius:6px;
 }
 
 /* ── section wrapper ── */
 .sec{margin-bottom:16px}
-.sec-label{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:9px; font-weight:600}
+.sec-label{font-size:13px; letter-spacing:.005em; color:var(--ink-mid); margin-bottom:9px; font-weight:600}
 
 /* ── big choice buttons (participación) ── */
 .choice-grid{display:flex; flex-direction:column; gap:9px}
@@ -257,7 +257,7 @@ header{
 .qbank summary .q-arrow{color:var(--ink-dim); font-size:11px; transition:transform .2s}
 .qbank details[open] summary .q-arrow{transform:rotate(90deg)}
 .q-body{padding:2px 13px 11px; border-top:1px solid var(--border)}
-.q-lvl{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim); padding:9px 0 4px}
+.q-lvl{font-size:11px; letter-spacing:.005em; font-weight:600; color:var(--ink-dim); padding:9px 0 4px}
 .q-pick{
   display:flex; gap:9px; padding:9px 4px; cursor:pointer; border-radius:var(--r-sm); align-items:flex-start;
 }
@@ -282,7 +282,7 @@ header{
   display:flex; align-items:center; justify-content:space-between; gap:12px;
   background:var(--ink); color:#f3efe6; border-radius:var(--r-md); padding:13px 16px; margin-bottom:16px;
 }
-.readout .ro-label{font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:#8c8474}
+.readout .ro-label{font-size:11px; letter-spacing:.04em; text-transform:uppercase; font-weight:600; color:#9c9484}
 .readout .ro-calc{font-size:12px; color:#b8ae9c; margin-top:3px}
 .readout .ro-value{font-family:var(--font-name); font-weight:700; font-size:30px; line-height:1; color:#e0a06f}
 
@@ -332,8 +332,8 @@ header{
 /* ── history ── */
 .hist-toggle{
   width:100%; min-height:44px; background:none; border:none; border-top:1px solid var(--border);
-  margin-top:8px; padding-top:12px; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--ink-dim); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  margin-top:8px; padding-top:12px; font-size:13px; letter-spacing:.005em; font-weight:600;
+  color:var(--ink-mid); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
 }
 #hist-list{margin-top:6px}
 .hist-item{display:flex; gap:11px; padding:9px 2px; border-bottom:1px solid var(--border)}
