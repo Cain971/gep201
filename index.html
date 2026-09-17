@@ -528,6 +528,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   setMode(1);
   setInterval(consultarSorteo,4000);
   cargarNomina();
+  cargarPendientes();
+  actualizarSyncDot();
+  procesarPendientes();
+  setInterval(procesarPendientes,15000);
+  window.addEventListener('online',procesarPendientes);
 });
 function daysBetween(a,b){ return Math.abs((new Date(b)-new Date(a))/86400000); }
 
@@ -669,8 +674,10 @@ function updateNotaTF(){
   refreshActionBar();
 }
 
-// ── REGISTER Modo 1 & 2 (verbatim salvo el retorno a la lista) ───────────────
-async function registrar(){
+// ── REGISTER Modo 1 & 2 — optimista: se guarda localmente y avanza de inmediato;
+// el envío real al backend ocurre en background vía la cola de pendientes
+// (ver COLA DE ENVÍO más abajo), resistente a mala señal. ───────────────────
+function registrar(){
   if(!S.activeStudent){toast('Selecciona un alumno primero',true);return;}
   if(!S.selectedInstrumento){toast('Selecciona el instrumento',true);return;}
   if(S.mode===1&&S.selectedAdj===null){toast('Elige la calificación de la intervención',true);return;}
@@ -682,19 +689,13 @@ async function registrar(){
   const obsEl=document.getElementById('inp-obs');
   const rol=S.mode===1?('participacion-'+(S.activeStudentOrigen||'manual')):'dinamica';
   const payload={action:'registrar_sesion',fecha:document.getElementById('inp-fecha').value,sesion:document.getElementById('inp-sesion').value,modo:'Modo '+S.mode,instrumento:S.selectedInstrumento,codigo:S.activeStudent.code,alumno:S.activeStudent.name,grupo:S.activeStudent.group,rol,ajuste:ajStr,nivel:nivel?nivel.name:(adjOpt?adjOpt.label:'—'),observacion:obsEl?obsEl.value:''};
-  setSyncStatus('syncing');
-  const btnReg=document.getElementById('btn-reg'); if(btnReg) btnReg.disabled=true;
-  try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    S.sessionHistory.push({...payload,displayAj:ajStr});
-    S.graded[S.activeStudent.code]=true;
-    setSyncStatus('ok');
-    toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+(aj>=0?'+':'')+aj);
-    S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false;
-    if(colaSorteos.length){ aceptarSorteo(colaSorteos[0].codigo); }
-    else { S.activeStudent=null; S.mobStep=1; render(); }
-  }catch(err){setSyncStatus('error');toast('Error al conectar',true);}
-  finally{const b=document.getElementById('btn-reg');if(b)b.disabled=false;}
+  S.sessionHistory.push({...payload,displayAj:ajStr});
+  S.graded[S.activeStudent.code]=true;
+  toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+(aj>=0?'+':'')+aj);
+  encolarRegistro(payload);
+  S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false;
+  if(colaSorteos.length){ aceptarSorteo(colaSorteos[0].codigo); }
+  else { S.activeStudent=null; S.mobStep=1; render(); }
 }
 
 // ── MODO 3 (verbatim) ───────────────────────────────────────────────────────
@@ -710,7 +711,7 @@ function validateM3Eval(){
   }
   return true;
 }
-async function submitAllM3(){
+function submitAllM3(){
   const incompletos=[];
   S.m3order.forEach((code,i)=>{
     const ev=S.m3evals[code]||{}; const r=ev.rubric||{};
@@ -723,10 +724,7 @@ async function submitAllM3(){
   if(incompletos.length>0){ toast('Rúbrica incompleta: '+incompletos.join(', '),true); return; }
   const fecha=document.getElementById('inp-fecha').value;
   const sesion=document.getElementById('inp-sesion').value;
-  setSyncStatus('syncing');
-  let ok=true;
-  for(let i=0;i<S.m3order.length;i++){
-    const code=S.m3order[i];
+  S.m3order.forEach((code,i)=>{
     const st=STUDENTS.find(s=>s.code===code);
     const isP=i<3;
     const ev=S.m3evals[code]||{}; const r=ev.rubric||{};
@@ -735,24 +733,84 @@ async function submitAllM3(){
     const nivelStr='C1:'+r.c1+' C2:'+r.c2+' C3:'+r.c3;
     const label=isP?'P'+(i+1):'R'+(i-2);
     const payload={action:'registrar_sesion',fecha,sesion,modo:'Modo 3',instrumento:'TF',codigo:code,alumno:st.name,grupo:st.group,rol:label,ajuste,nivel:nivelStr,observacion:ev.obs||''};
-    try{
-      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-      S.sessionHistory.push({...payload,displayAj:ajuste});
-    }catch(e){ok=false;}
-  }
-  setSyncStatus(ok?'ok':'error');
-  toast(ok?'✓ '+S.m3order.length+' calificaciones enviadas':'Error al enviar',!ok);
+    S.sessionHistory.push({...payload,displayAj:ajuste});
+    encolarRegistro(payload);
+  });
+  toast('✓ '+S.m3order.length+' calificaciones en cola de envío');
   S.m3step=0; S.m3order=[]; S.m3evals={}; S.m3current=0; S.m3group=null;
   render();
 }
 
-// ── STATUS / TOAST (verbatim) ───────────────────────────────────────────────
-function setSyncStatus(status){
-  const el=document.getElementById('sync-dot'); if(!el) return;
-  const map={syncing:['syncing','● Sincronizando…'],ok:['ok','● Guardado'],error:['error','● Error']};
-  el.className='sync-dot '+map[status][0]; el.textContent=map[status][1];
-  if(status==='ok') setTimeout(()=>{el.className='sync-dot ok';el.textContent='● Conectado';},2500);
+// ── COLA DE ENVÍO ────────────────────────────────────────────────────────────
+// Registrar ya no espera al backend: el registro se guarda en el equipo
+// (localStorage) de inmediato y se reintenta en segundo plano hasta que el
+// backend lo confirma. Así una clase entera sobrevive a mala señal, a que se
+// cierre la pestaña, o a que el celular se quede sin batería a medio enviar —
+// nada se pierde, solo queda pendiente hasta que vuelva la conexión.
+const PENDIENTES_KEY='gep201_pendientes_registro';
+let PENDIENTES=[];
+let enviandoPendientes=false;
+let ultimaLatenciaMs=null;
+
+function cargarPendientes(){
+  try{ PENDIENTES=JSON.parse(localStorage.getItem(PENDIENTES_KEY)||'[]'); }catch(e){ PENDIENTES=[]; }
 }
+function guardarPendientes(){
+  try{ localStorage.setItem(PENDIENTES_KEY,JSON.stringify(PENDIENTES)); }catch(e){}
+}
+function encolarRegistro(payload){
+  payload._id=Date.now()+'_'+Math.random().toString(36).slice(2);
+  payload._queuedAt=Date.now();
+  PENDIENTES.push(payload);
+  guardarPendientes();
+  actualizarSyncDot();
+  procesarPendientes();
+}
+async function enviarUno(item){
+  const ctrl=new AbortController();
+  const to=setTimeout(()=>ctrl.abort(),10000);
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(item),signal:ctrl.signal});
+    return true;
+  }catch(e){ return false; }
+  finally{ clearTimeout(to); }
+}
+async function procesarPendientes(){
+  if(enviandoPendientes||!PENDIENTES.length) return;
+  enviandoPendientes=true;
+  actualizarSyncDot();
+  while(PENDIENTES.length){
+    const item=PENDIENTES[0];
+    const ok=await enviarUno(item);
+    if(!ok) break;
+    ultimaLatenciaMs=Date.now()-item._queuedAt;
+    console.log('[GEP201] registrado tras '+(ultimaLatenciaMs/1000).toFixed(1)+'s · '+(item.alumno||'')+' · '+(item.instrumento||''));
+    PENDIENTES.shift();
+    guardarPendientes();
+    actualizarSyncDot();
+  }
+  enviandoPendientes=false;
+  actualizarSyncDot();
+}
+function actualizarSyncDot(){
+  const el=document.getElementById('sync-dot'); if(!el) return;
+  const n=PENDIENTES.length;
+  if(n===0){
+    el.className='sync-dot ok';
+    el.textContent = ultimaLatenciaMs!=null ? '● Guardado ('+(ultimaLatenciaMs/1000).toFixed(1)+'s)' : '● Listo';
+    return;
+  }
+  const esperando=Date.now()-PENDIENTES[0]._queuedAt;
+  if(esperando>60000){
+    el.className='sync-dot error';
+    el.textContent='● '+n+' pendiente'+(n>1?'s':'')+' · sin señal';
+  } else {
+    el.className='sync-dot syncing';
+    el.textContent='● '+n+' pendiente'+(n>1?'s':'');
+  }
+}
+
+// ── TOAST (verbatim) ─────────────────────────────────────────────────────────
 function toast(msg,isErr=false){
   const t=document.getElementById('toast'); t.textContent=msg;
   t.className=(isErr?'err ':'')+'show';
