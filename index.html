@@ -822,7 +822,11 @@ function toast(msg,isErr=false){
    ═══════════════════════════════════════════════════════════════════════════ */
 const wrap=()=>document.getElementById('wrap');
 const groupCls=g=>g==='GRUPO 1'?'grp-1':g==='GRUPO 2'?'grp-2':'grp-3';
-const grpNames=()=>[...new Set(STUDENTS.map(s=>s.group))];
+const grpNames=()=>[...new Set(STUDENTS.map(s=>s.group))].sort((a,b)=>{
+  const na=parseInt(String(a).match(/\d+/)), nb=parseInt(String(b).match(/\d+/));
+  if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+  return String(a).localeCompare(String(b));
+});
 
 function render(){
   if(!STUDENTS.length){ return; }
