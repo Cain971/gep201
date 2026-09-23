@@ -11,7 +11,7 @@
 :root{
   --bg:#f3efe6; --bg2:#ece6d8; --surface:#ffffff; --surface2:#faf7f0;
   --border:#e4dfcf; --border-strong:#cfc8b3;
-  --ink:#211e17; --ink-mid:#5f584a; --ink-dim:#928975;
+  --ink:#211e17; --ink-mid:#5f584a; --ink-dim:#6f6655;   /* dim: 3.0:1 → 4.9:1 sobre el fondo */
   --accent:#a0491d; --accent-soft:#f4e5d6; --on-accent:#fff;
   --ok:#2f6b3f; --ok-soft:#e0f0e2; --warn:#b45309; --warn-soft:#fbe9d2;
   --danger:#b3261e; --danger-soft:#fbe1df;
@@ -47,13 +47,13 @@ header{
 .hdr-ctx{display:flex; gap:7px; margin-left:auto; align-items:center; flex-wrap:wrap}
 .ctx-chip{
   display:flex; align-items:center; gap:6px; background:#302b22; border:1px solid #453f33;
-  border-radius:var(--r-sm); padding:0 4px 0 9px; height:34px;
+  border-radius:var(--r-sm); padding:5px 8px 5px 12px; height:42px;
   font-size:12px; color:#cdc4b4; letter-spacing:.02em;
 }
 .ctx-chip label{color:#8c8474; font-size:10px; letter-spacing:.05em; text-transform:uppercase}
 .ctx-chip input{
   background:transparent; border:none; outline:none; color:#f3efe6; font-weight:500;
-  height:32px; padding:0 4px; min-width:0; font-size:16px; /* ≥16px: iOS no hace zoom al tocar */
+  height:30px; padding:0 4px; min-width:0; font-size:16px; /* ≥16px: iOS no hace zoom al tocar */
 }
 .ctx-chip input#inp-sesion{width:88px}
 .ctx-chip input#inp-fecha{width:132px; color-scheme:dark}
@@ -333,6 +333,14 @@ body:not(.ab-on) #sorteo-queue .q-inner{padding-bottom:max(10px,env(safe-area-in
 .hi-meta{font-size:11px; color:var(--ink-dim); margin-top:1px}
 .hi-obs{font-size:12px; color:var(--ink-mid); font-style:italic; margin-top:2px}
 
+/* Cambio de pantalla (no al elegir opciones): entrada corta, ease-out fuerte, solo transform/opacity */
+.wrap.enter{animation:w-in .18s cubic-bezier(0.23,1,0.32,1)}
+@keyframes w-in{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+/* Confirmación: la fila recién calificada destella en verde y se apaga */
+.stu-row.just{animation:just 1.1s ease-out}
+@keyframes just{from{background:var(--ok-soft); border-color:var(--ok)} to{background:var(--surface); border-color:var(--border)}}
+@media (prefers-reduced-motion:reduce){ .wrap.enter{animation:none} }
+
 .empty{text-align:center; color:var(--ink-dim); font-size:13px; padding:34px 10px; line-height:1.6}
 .loaderr{text-align:center; color:var(--danger); font-size:14px; padding:40px 16px; line-height:1.6}
 
@@ -361,12 +369,12 @@ body:not(.ab-on) #sorteo-queue .q-inner{padding-bottom:max(10px,env(safe-area-in
 #toast{
   position:fixed; left:50%; bottom:calc(84px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(70px);
   background:var(--ink); color:#f3efe6; font-size:13px; padding:11px 20px; border-radius:22px;
-  border-left:3px solid var(--accent); z-index:99; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis;
+  z-index:99; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis;
   transition:transform .25s cubic-bezier(0.23,1,0.32,1), opacity .2s ease; opacity:0;
   pointer-events:none;   /* invisible o no, nunca debe comerse un toque (estaba encima de "Registrar") */
 }
 #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
-#toast.err{border-left-color:var(--danger)}
+#toast.err{background:var(--danger)}
 
 #app::-webkit-scrollbar{width:5px} #app::-webkit-scrollbar-thumb{background:var(--border-strong); border-radius:3px}
 </style>
@@ -731,6 +739,7 @@ function registrar(){
   toast('✓ '+fn(S.activeStudent)+' · '+S.selectedInstrumento+' · '+(aj>=0?'+':'')+aj);
   GEP.encolar(payload);
   guardarLocal();
+  S.justGraded=S.activeStudent.code;
   S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false; S.obsDraft={code:null,text:''};
   if(colaSorteos.length){ aceptarSorteo(colaSorteos[0].codigo); }
   else { S.activeStudent=null; S.mobStep=1; render(); }
@@ -821,9 +830,15 @@ const grpNames=()=>[...new Set(STUDENTS.map(s=>s.group))].sort((a,b)=>{
   return String(a).localeCompare(String(b));
 });
 
+// Clave de "pantalla": si cambia, la vista entra con transición; elegir una
+// opción dentro de la misma pantalla no anima nada (se usa decenas de veces).
+let ultimaPantalla='';
+const pantalla=()=>[S.mode,S.mobStep,S.activeStudent&&S.activeStudent.code,S.m3group,S.m3step,S.m3current].join('|');
 function render(){
   if(!STUDENTS.length){ return; }
   const w=wrap(); w.innerHTML='';
+  const p=pantalla();
+  if(p!==ultimaPantalla){ w.classList.remove('enter'); void w.offsetWidth; w.classList.add('enter'); ultimaPantalla=p; }
   if(S.mode===3) renderM3(w);
   else if(S.mode===2 && S.mobStep===0) renderInstr(w);
   else if(!S.activeStudent) renderStudentList(w);
@@ -873,7 +888,7 @@ function renderStudentList(w){
     const gh=mkEl('div','grp-head'); gh.textContent=g; block.appendChild(gh);
     STUDENTS.filter(x=>x.group===g).forEach(st=>{
       const graded=!!S.graded[st.code];
-      const row=mkEl('button','stu-row'+(graded?' graded':''));
+      const row=mkEl('button','stu-row'+(graded?' graded':'')+(S.justGraded===st.code?' just':''));
       const veces=PART_CONTEOS[st.code]||0;
       const cc = veces>=META_PARTICIPACION ? 'ok' : 'low';
       const countHtml = S.mode===1 ? '<span class="stu-count '+cc+'">'+veces+'×</span>' : '';
@@ -884,6 +899,7 @@ function renderStudentList(w){
     });
     w.appendChild(block);
   });
+  S.justGraded=null;
 }
 
 /* ── pantalla de calificación (Modo 1 y 2) ── */
