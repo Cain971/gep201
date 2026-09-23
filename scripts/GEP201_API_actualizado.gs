@@ -1,11 +1,65 @@
 const SHEET_ID = '1XGk13XxKvQJzPZFI7iV1LtBFMURh6HZV1O024r_zwAA'; // GEP201_2026-2_Notas (antes apuntaba a 2026-1)
 
+// ── CLAVE DE ACCESO ──────────────────────────────────────────────────────
+// Los HTML son públicos (GitHub Pages), así que el backend exige una clave.
+// Vive en Propiedades del script (API_TOKEN), nunca en el código ni en el repo.
+// Si API_TOKEN no está configurada, el backend acepta todo (modo transición:
+// permite desplegar esta versión antes de que los HTML nuevos estén en línea).
+// Para crearla: ejecutar generarToken() una vez y copiar la clave del registro.
+function autorizado_(token) {
+  const t = PropertiesService.getScriptProperties().getProperty('API_TOKEN');
+  return !t || String(token || '') === t;
+}
+function generarToken() {
+  const t = Utilities.getUuid().replace(/-/g, '').slice(0, 10);
+  PropertiesService.getScriptProperties().setProperty('API_TOKEN', t);
+  Logger.log('Clave del curso: ' + t + '  (guárdala en tu gestor de contraseñas)');
+}
+function quitarToken() {
+  PropertiesService.getScriptProperties().deleteProperty('API_TOKEN');
+  Logger.log('API_TOKEN eliminada: el backend vuelve a aceptar llamadas sin clave.');
+}
+
+function json_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── IDEMPOTENCIA ─────────────────────────────────────────────────────────
+// Cada POST trae un _id único generado en el dispositivo. Si la respuesta se
+// pierde (mala señal, timeout) el HTML reintenta; aquí se reconoce el _id y
+// no se vuelve a escribir la fila ni a sumar el conteo. Pestaña técnica
+// "Registro_Ids" (se crea sola la primera vez); no la usa ninguna fórmula.
+function hojaIds_(ss) {
+  let sh = ss.getSheetByName('Registro_Ids');
+  if (!sh) {
+    sh = ss.insertSheet('Registro_Ids');
+    sh.getRange(1, 1, 1, 3).setValues([['_id', 'Acción', 'Recibido']]).setFontWeight('bold');
+    sh.hideSheet();
+  }
+  return sh;
+}
+function yaProcesado_(sh, id) {
+  if (!id || sh.getLastRow() < 2) return false;
+  return !!sh.getRange(2, 1, sh.getLastRow() - 1, 1)
+    .createTextFinder(String(id)).matchEntireCell(true).findNext();
+}
+
 // ── HTML DE EVALUACIÓN → REGISTRO_SESIONES ────────────────────────────────
 function doPost(e) {
+  let lock;
   try {
     const data = JSON.parse(e.postData.contents);
+    if (!autorizado_(data.token)) return json_({status:'unauthorized'});
+
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const action = data.action;
+
+    // Un envío a la vez: evita que dos reintentos simultáneos pasen el chequeo de _id.
+    lock = LockService.getScriptLock();
+    lock.waitLock(25000);
+
+    const shIds = hojaIds_(ss);
+    if (yaProcesado_(shIds, data._id)) return json_({status:'duplicate'});
 
     if (action === 'registrar_sesion') {
       const sh = ss.getSheetByName('Registro_Sesiones');
@@ -23,32 +77,29 @@ function doPost(e) {
         incrementarConteoParticipacion(ss, data.codigo);
       }
 
-      return ContentService.createTextOutput(
-        JSON.stringify({status:'ok'})
-      ).setMimeType(ContentService.MimeType.JSON);
+      if (data._id) shIds.appendRow([data._id, action, new Date()]);
+      return json_({status:'ok'});
     }
 
     // ── SORTEO → SOLO REGISTRA EL SORTEO (para el traspaso a evaluación) ───
     // Llamado por sorteo_gep201.html cada vez que sale un nombre. El conteo
     // de participación NO se toca aquí — se actualiza cuando se califica.
+    // Columna G = _id: index.html lo usa para no mostrar dos veces el mismo sorteo.
     if (action === 'sorteo_registrar') {
       const shEstado = ss.getSheetByName('Sorteo_Estado');
       shEstado.appendRow([
-        new Date(), data.codigo, data.alumno, data.grupo, data.modoDestino || '', data.sesion || ''
+        new Date(), data.codigo, data.alumno, data.grupo, data.modoDestino || '', data.sesion || '', data._id || ''
       ]);
-      return ContentService.createTextOutput(
-        JSON.stringify({status:'ok'})
-      ).setMimeType(ContentService.MimeType.JSON);
+      if (data._id) shIds.appendRow([data._id, action, new Date()]);
+      return json_({status:'ok'});
     }
 
-    return ContentService.createTextOutput(
-      JSON.stringify({status:'error', msg:'accion no reconocida'})
-    ).setMimeType(ContentService.MimeType.JSON);
+    return json_({status:'error', msg:'accion no reconocida'});
 
   } catch(err) {
-    return ContentService.createTextOutput(
-      JSON.stringify({status:'error', msg: err.toString()})
-    ).setMimeType(ContentService.MimeType.JSON);
+    return json_({status:'error', msg: err.toString()});
+  } finally {
+    if (lock) lock.releaseLock();
   }
 }
 
@@ -78,6 +129,7 @@ function incrementarConteoParticipacion(ss, codigo) {
 // ── LECTURAS (GET) — usadas por sorteo_gep201.html e index.html ───────────
 function doGet(e) {
   try {
+    if (!autorizado_(e.parameter.token)) return json_({status:'unauthorized'});
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const action = e.parameter.action;
 
@@ -115,9 +167,10 @@ function doGet(e) {
       }
       const N = 20;
       const desde = Math.max(2, last - N + 1);
-      const filas = sh.getRange(desde, 1, last - desde + 1, 6).getValues();
+      const nCols = Math.min(7, sh.getMaxColumns());
+      const filas = sh.getRange(desde, 1, last - desde + 1, nCols).getValues();
       const sorteos = filas.map(function(row) {
-        return { timestamp: row[0], codigo: row[1], alumno: row[2], grupo: row[3], modoDestino: row[4], sesion: row[5] };
+        return { id: row[6] || '', timestamp: row[0], codigo: row[1], alumno: row[2], grupo: row[3], modoDestino: row[4], sesion: row[5] };
       });
       return ContentService.createTextOutput(JSON.stringify({status:'ok', sorteos: sorteos}))
         .setMimeType(ContentService.MimeType.JSON);

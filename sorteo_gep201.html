@@ -87,6 +87,7 @@ h1 .mark{color:var(--accent)}
   background:var(--bg2); color:var(--text); font-size:20px; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center; transition:border-color .15s}
 .stepper button:hover{border-color:var(--accent)}
+.stepper button:disabled{opacity:.3; cursor:not-allowed}
 .stepper .val{font-weight:600; font-size:26px; color:var(--accent); min-width:34px; text-align:center}
 .controls-row .btn{margin-left:auto}
 
@@ -236,6 +237,7 @@ h1 .mark{color:var(--accent)}
 .load-err{padding:40px; text-align:center; color:var(--danger); font-size:13px; line-height:1.6}
 .flash{position:fixed; inset:0; background:var(--accent); opacity:0; pointer-events:none; z-index:80; transition:opacity .09s}
 .flash.on{opacity:.05}
+#sync{margin-left:10px}
 footer{margin-top:54px; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--text-dim); text-align:center; position:relative; z-index:1}
 </style>
@@ -258,17 +260,34 @@ footer{margin-top:54px; font-size:9.5px; letter-spacing:.16em; text-transform:up
 
 <div class="wrap" id="app"><div class="ph" style="padding:40px;text-align:center">Cargando lista de alumnos…</div></div>
 
-<footer>GEP201 · FGAD · PUCP</footer>
+<footer>GEP201 · FGAD · PUCP<span id="sync"></span></footer>
 
+<script src="gep201-api.js?v=2"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   BACKEND — mismo Apps Script que usa index.html (proyecto GEP201_API)
+   BACKEND — la conexión (clave, lecturas, cola de envío con reintento) vive
+   en gep201-api.js, compartido con index.html.
    ═══════════════════════════════════════════════════════════════════════ */
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
 
-// Clases que quedan en el semestre (incluida hoy). Actualizar cada semana.
-// Solo afecta la urgencia de la ponderación en Participación.
-const CLASES_RESTANTES = 12;
+// Clases que quedan en el semestre (incluida hoy): se calculan solas contando
+// los miércoles hasta ULTIMA_CLASE. Solo afecta la urgencia de la ponderación
+// en Participación. Semestre 2026-2: semana 1 = 17-ago, finales en semana 16
+// → última clase regular = miércoles de semana 15. Confirmar con el calendario
+// FGAD y agregar a SIN_CLASE cualquier miércoles sin clase (feriado, parciales).
+const ULTIMA_CLASE = '2026-11-25';
+const SIN_CLASE = [];          // ej. ['2026-10-14']
+function clasesRestantes(){
+  const fin = new Date(ULTIMA_CLASE + 'T12:00:00');
+  const d = new Date(GEP.hoyLocal() + 'T12:00:00');
+  let n = 0;
+  for (; d <= fin; d.setDate(d.getDate() + 1)){
+    if (d.getDay() !== 3) continue;
+    const iso = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    if (!SIN_CLASE.includes(iso)) n++;
+  }
+  return Math.max(1, n);
+}
+const CLASES_RESTANTES = clasesRestantes();
 const META_SORTEOS = 2;   // veces que debería tocarle a cada alumno en el semestre (solo Participación)
 
 // Fecha de la bajada. Deja null para que sea automática; o pon 'DD de mes de YYYY'.
@@ -283,7 +302,11 @@ let ALL = [];          // lista plana de todos los alumnos
 let GCLS = {};         // "GRUPO 1" -> "g1"  (asignado por orden de aparición)
 let GNUM = {};         // "GRUPO 1" -> "01"
 let CONTEOS = {};      // code -> veces participado en el semestre (desde el backend)
-const salidoHoy = new Set();  // codes ya sorteados en esta sesión de clase
+// Códigos ya sorteados hoy. Se guardan en el equipo: si se recarga la página a
+// mitad de clase, quien ya salió no vuelve a ser favorito del sorteo.
+const SALIDOS_KEY = 'gep201_sorteo_salidos';
+const salidoHoy = (()=>{ const g = GEP.store.get(SALIDOS_KEY, null); return new Set(g && g.fecha === GEP.hoyLocal() ? g.codes : []); })();
+const guardarSalidos = () => GEP.store.set(SALIDOS_KEY, { fecha: GEP.hoyLocal(), codes: [...salidoHoy] });
 
 const SECCIONES_TF = ["Sección 1 · Diagnóstico","Sección 2 · Modelos MC/ME","Sección 3 · Teoría de Cambio"];
 
@@ -295,15 +318,7 @@ function flash(){ const f=document.getElementById('flash'); f.classList.add('on'
 
 // Descompone el nombre. Preferir las columnas Nombres/Apellidos de la hoja
 // (corte limpio); si no llegan, partir el nombre completo por el primer espacio.
-function nm(st){
-  let given, family;
-  if (st.nombres && st.apellidos){ given = st.nombres; family = st.apellidos; }
-  else { const p = String(st.name||'').split(' '); given = p[0]||''; family = p.slice(1).join(' '); }
-  const first = given.split(' ')[0];                          // primer nombre
-  const fam1  = family.split(' ')[0] || given.split(' ')[1] || '';  // primer apellido
-  const short = (first + ' ' + fam1).trim();                  // "Primer nombre Primer apellido"
-  return { given, family, first, fam1, short };
-}
+const nm = st => GEP.nombre(st);   // {given, family, first, fam1, short}
 const shortUp = st => nm(st).short.toUpperCase();
 
 (function setFecha(){
@@ -319,17 +334,9 @@ const shortUp = st => nm(st).short.toUpperCase();
    ═══════════════════════════════════════════════════════════════════════ */
 async function cargarNomina(){
   try{
-    const res = await fetch(SCRIPT_URL + '?action=nomina');
-    const data = await res.json();
-    if (data.status !== 'ok') throw new Error(data.msg || 'respuesta inválida');
+    const alumnos = await GEP.conClave(GEP.cargarNomina);
     GRUPOS = {};
-    data.alumnos.forEach(a=>{
-      const g = String(a.grupo).trim();
-      (GRUPOS[g] = GRUPOS[g] || []).push({
-        code: String(a.codigo), name: a.nombre,
-        nombres: a.nombres || '', apellidos: a.apellidos || '', group: g
-      });
-    });
+    alumnos.forEach(a => (GRUPOS[a.group] = GRUPOS[a.group] || []).push(a));
     ALL = Object.values(GRUPOS).flat();
     // Color y número por el dígito de "GRUPO N" (GRUPO 1 = azul, 2 = verde, 3 = morado);
     // si el nombre no trae número, se asigna por orden de aparición.
@@ -348,11 +355,8 @@ async function cargarNomina(){
   }
 }
 async function cargarConteos(){
-  try{
-    const res = await fetch(SCRIPT_URL + '?action=sorteo_conteos');
-    const data = await res.json();
-    if (data.status === 'ok'){ CONTEOS = data.conteos || {}; render(); }
-  }catch(e){ /* silencioso: si falla, los contadores quedan en 0 hasta la próxima consulta */ }
+  try{ CONTEOS = await GEP.cargarConteos(); render(); }
+  catch(e){ /* silencioso: si falla, los contadores quedan en 0 hasta la próxima consulta */ }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -376,7 +380,8 @@ function pesoRP(code){ return salidoHoy.has(code) ? 0.05 : 1; }
 
 function pickWeighted(pool, k, pesoFn){
   const rem = [...pool], out = [];
-  for (let i=0; i<Math.min(k, rem.length); i++){
+  const n = Math.min(k, rem.length);   // fijo: antes se recalculaba al achicarse rem y nunca pasaba de la mitad del grupo
+  for (let i=0; i<n; i++){
     const w = rem.map(x => Math.max(0.02, pesoFn ? pesoFn(x.code) : 1));
     const tot = w.reduce((a,b)=>a+b,0);
     let r = Math.random()*tot, idx = 0;
@@ -394,12 +399,22 @@ function pickWeighted(pool, k, pesoFn){
    Trabajo Final NO registra nada: es solo visual/proyectado.
    ═══════════════════════════════════════════════════════════════════════ */
 function registrarSorteo(st, grupo, modoDestino){
-  salidoHoy.add(st.code);
+  salidoHoy.add(st.code); guardarSalidos();
   CONTEOS[st.code] = (CONTEOS[st.code] || 0) + 1;
-  const payload = { action:'sorteo_registrar', codigo:st.code, alumno:st.name, grupo, modoDestino };
-  fetch(SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
-    .catch(e => console.warn('No se pudo registrar el sorteo en el backend', e));
+  // A la cola compartida: se reintenta hasta que el Sheet lo confirme.
+  GEP.encolar({ action:'sorteo_registrar', codigo:st.code, alumno:st.name, grupo, modoDestino });
 }
+
+// Indicador discreto en el pie (lo ve el docente, no distrae al aula).
+let pidiendoClave = false;
+GEP.onSync(s => {
+  const el = document.getElementById('sync'); if (!el) return;
+  if (s.sinClave && !pidiendoClave){
+    pidiendoClave = true;
+    GEP.pedirClave('Para enviar los sorteos pendientes, ingresa la clave.').then(()=>{ pidiendoClave = false; });
+  }
+  el.textContent = s.pendientes ? '· ' + s.pendientes + ' sin enviar' + (s.error ? ' (error del Sheet)' : '') : '';
+});
 
 /* ═══════════════════════════════════════════════════════════════════════
    ESTADO Y RENDER
@@ -420,7 +435,7 @@ function render(){
 }
 function lock(v){
   S.busy = v;
-  document.querySelectorAll('#mode-nav button,.btn,.subtab,.tf-gbtn').forEach(b=>b.disabled=v);
+  document.querySelectorAll('#mode-nav button,.btn,.subtab,.tf-gbtn,.stepper button').forEach(b=>b.disabled=v);
 }
 
 /* ───────────────────────── PARTICIPACIÓN ───────────────────────── */
@@ -444,6 +459,7 @@ function renderPart(){
   drawSlots(S.nPart, null); drawRoster([]);
 }
 window.bumpPart = (d)=>{
+  if (S.busy) return;
   const maxN = Math.min(4, ALL.length);
   S.nPart = Math.max(1, Math.min(maxN, S.nPart + d));
   document.getElementById('v-np').textContent = S.nPart;
@@ -471,25 +487,26 @@ function drawRoster(pickedCodes){
 }
 async function sortearPart(){
   if (S.busy) return; lock(true);
-  const term = document.getElementById('term');
-  const picked = pickWeighted(ALL, S.nPart, pesoParticipacion);
-  drawSlots(S.nPart, null);
-  const slots = [...document.querySelectorAll('#slots .slot')];
-  slots.forEach(s=>s.classList.add('spin'));
-  term.textContent = '» sorteando…';
-  const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.slot-text').textContent = shortUp(rnd(ALL)); }), 70);
-  await sleep(1500); clearInterval(sp);
-  for (let i=0;i<slots.length;i++){
-    await sleep(360);
-    slots[i].classList.remove('spin'); slots[i].classList.add('locked');
-    slots[i].querySelector('.slot-text').textContent = shortUp(picked[i]);
-    registrarSorteo(picked[i], picked[i].group, 'Modo 1');
-    const n = nm(picked[i]);
-    term.textContent = '» seleccionado · ' + n.given + ' ' + n.family;
-    flash(); await sleep(160);
-  }
-  drawRoster(picked.map(p=>p.code));
-  lock(false);
+  try{
+    const term = document.getElementById('term');
+    const picked = pickWeighted(ALL, S.nPart, pesoParticipacion);
+    drawSlots(S.nPart, null);
+    const slots = [...document.querySelectorAll('#slots .slot')];
+    slots.forEach(s=>s.classList.add('spin'));
+    term.textContent = '» sorteando…';
+    const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.slot-text').textContent = shortUp(rnd(ALL)); }), 70);
+    await sleep(1500); clearInterval(sp);
+    for (let i=0;i<slots.length;i++){
+      await sleep(360);
+      slots[i].classList.remove('spin'); slots[i].classList.add('locked');
+      slots[i].querySelector('.slot-text').textContent = shortUp(picked[i]);
+      registrarSorteo(picked[i], picked[i].group, 'Modo 1');
+      const n = nm(picked[i]);
+      term.textContent = '» seleccionado · ' + n.given + ' ' + n.family;
+      flash(); await sleep(160);
+    }
+    drawRoster(picked.map(p=>p.code));
+  } finally { lock(false); }
 }
 
 /* ───────────────────────── REPORTES PARCIALES ───────────────────────── */
@@ -509,6 +526,7 @@ function renderRP(){
   drawGroups();
 }
 window.bumpRP = (d)=>{
+  if (S.busy) return;
   const minGrp = Math.min(...Object.values(GRUPOS).map(g=>g.length));
   S.nRP = Math.max(1, Math.min(minGrp, S.nRP + d));
   S.rpPicks = {};
@@ -523,7 +541,7 @@ function drawGroups(){
     const resSlots = pk
       ? pk.map(p=>`<div class="gres-slot locked"><span class="gres-first">${nm(p).first}</span><span class="gres-last">${nm(p).fam1}</span></div>`).join('')
       : `<div class="gres-empty">— sin sorteo aún —</div>`;
-    const rows = ns.map(st=>`<div class="mrow ${selCodes.includes(st.code)?'sel':''}"><span class="mdot"></span>${nm(st).short}<span class="mn">${CONTEOS[st.code]||0}</span></div>`).join('');
+    const rows = ns.map(st=>`<div class="mrow ${selCodes.includes(st.code)?'sel':''}" data-code="${st.code}"><span class="mdot"></span>${nm(st).short}<span class="mn">${CONTEOS[st.code]||0}</span></div>`).join('');
     return `<div class="gcard ${cls}" id="gc-${cls}">
       <div class="gcard-head">
         <div class="gtag">Grupo ${GNUM[g]}</div><div class="gname">${g}</div>
@@ -541,8 +559,9 @@ function drawGroups(){
 window.sortearRPTodos = ()=>window.sortearRP(Object.keys(GRUPOS));
 window.sortearRP = async (groups)=>{
   if (S.busy) return; lock(true);
-  for (let i=0;i<groups.length;i++){ if (i) await sleep(340); await animRP(groups[i], groups.length>1 ? 1100 : 1500); }
-  lock(false);
+  try{
+    for (let i=0;i<groups.length;i++){ if (i) await sleep(340); await animRP(groups[i], groups.length>1 ? 1100 : 1500); }
+  } finally { lock(false); }
 };
 async function animRP(g, dur){
   const cls = GCLS[g], ns = GRUPOS[g], maxq = Math.min(S.nRP, ns.length);
@@ -566,10 +585,8 @@ async function animRP(g, dur){
   S.rpPicks[g] = picked;
   picked.forEach(p=>registrarSorteo(p, g, 'Modo 2'));
   const card = document.getElementById('gc-'+cls);
-  const shorts = picked.map(p=>nm(p).short);
-  card.querySelectorAll('.mrow').forEach(r=>{
-    r.classList.toggle('sel', shorts.some(s=>r.textContent.trim().startsWith(s)));
-  });
+  const codes = picked.map(p=>p.code);
+  card.querySelectorAll('.mrow').forEach(r=>r.classList.toggle('sel', codes.includes(r.dataset.code)));
 }
 
 /* ───────────────────────── TRABAJO FINAL ───────────────────────── */
@@ -600,19 +617,20 @@ function renderTFOrden(){
 }
 async function sortearOrden(){
   if (S.busy) return; lock(true);
-  const gs = Object.keys(GRUPOS), orden = shuffle(gs);
-  const slots = gs.map((_,i)=>document.getElementById('os-'+i));
-  slots.forEach(s=>s.className='orden-slot spin');
-  const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.slot-text').textContent = rnd(gs); }), 70);
-  await sleep(1600); clearInterval(sp);
-  for (let i=0;i<slots.length;i++){
-    await sleep(380);
-    slots[i].className = 'orden-slot locked ' + GCLS[orden[i]];
-    slots[i].querySelector('.slot-text').textContent = orden[i];
-    flash(); await sleep(180);
-  }
-  S.tfOrden = orden;
-  lock(false);
+  try{
+    const gs = Object.keys(GRUPOS), orden = shuffle(gs);
+    const slots = gs.map((_,i)=>document.getElementById('os-'+i));
+    slots.forEach(s=>s.className='orden-slot spin');
+    const sp = setInterval(()=>slots.forEach(s=>{ if (s.classList.contains('spin')) s.querySelector('.slot-text').textContent = rnd(gs); }), 70);
+    await sleep(1600); clearInterval(sp);
+    for (let i=0;i<slots.length;i++){
+      await sleep(380);
+      slots[i].className = 'orden-slot locked ' + GCLS[orden[i]];
+      slots[i].querySelector('.slot-text').textContent = orden[i];
+      flash(); await sleep(180);
+    }
+    S.tfOrden = orden;
+  } finally { lock(false); }
 }
 
 function renderTFRoles(){
@@ -643,22 +661,23 @@ function rolesShell(g){
 }
 async function sortearRoles(g){
   if (S.busy) return; lock(true);
-  const ns = GRUPOS[g], nResp = Math.max(0, ns.length - 3);
-  const ord = shuffle(ns), pres = ord.slice(0,3), resp = ord.slice(3);
-  const rows = [
-    ...[0,1,2].map(i=>({ el:document.getElementById('pr-'+i), st:pres[i] })),
-    ...Array.from({length:nResp},(_,i)=>({ el:document.getElementById('rr-'+i), st:resp[i] })),
-  ].filter(r=>r.el && r.st);
-  rows.forEach(r=>r.el.classList.add('spin'));
-  const sp = setInterval(()=>rows.forEach(r=>{ if (r.el.classList.contains('spin')) r.el.querySelector('.role-name').textContent = shortUp(rnd(ns)); }), 70);
-  await sleep(1500); clearInterval(sp);
-  for (let i=0;i<rows.length;i++){
-    await sleep(300);
-    rows[i].el.classList.remove('spin'); rows[i].el.classList.add('locked');
-    rows[i].el.querySelector('.role-name').textContent = shortUp(rows[i].st);
-    flash(); await sleep(150);
-  }
-  lock(false);
+  try{
+    const ns = GRUPOS[g], nResp = Math.max(0, ns.length - 3);
+    const ord = shuffle(ns), pres = ord.slice(0,3), resp = ord.slice(3);
+    const rows = [
+      ...[0,1,2].map(i=>({ el:document.getElementById('pr-'+i), st:pres[i] })),
+      ...Array.from({length:nResp},(_,i)=>({ el:document.getElementById('rr-'+i), st:resp[i] })),
+    ].filter(r=>r.el && r.st);
+    rows.forEach(r=>r.el.classList.add('spin'));
+    const sp = setInterval(()=>rows.forEach(r=>{ if (r.el.classList.contains('spin')) r.el.querySelector('.role-name').textContent = shortUp(rnd(ns)); }), 70);
+    await sleep(1500); clearInterval(sp);
+    for (let i=0;i<rows.length;i++){
+      await sleep(300);
+      rows[i].el.classList.remove('spin'); rows[i].el.classList.add('locked');
+      rows[i].el.querySelector('.role-name').textContent = shortUp(rows[i].st);
+      flash(); await sleep(150);
+    }
+  } finally { lock(false); }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
