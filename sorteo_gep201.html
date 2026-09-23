@@ -351,7 +351,7 @@ async function cargarNomina(){
   }catch(e){
     console.error('No se pudo cargar la nómina', e);
     document.getElementById('app').innerHTML =
-      '<div class="load-err">No se pudo cargar la lista de alumnos.<br>Revisa tu conexión e intenta recargar la página.</div>';
+      '<div class="load-err">No se pudo cargar la lista de alumnos.<br><small>Causa: ' + GEP.describirError(e) + '</small><br><button class="btn" style="margin-top:18px" onclick="this.disabled=true;cargarNomina()">Reintentar</button></div>';
   }
 }
 async function cargarConteos(){

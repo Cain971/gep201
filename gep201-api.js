@@ -18,7 +18,7 @@
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSur7nSfzlTjhTF286vnu34wrY5-U1sYkgztpGRk0i8o9Mh9yGNCrjgqH5_p9qqOwMWA/exec';
   const TOKEN_KEY = 'gep201_token';
   const PENDIENTES_KEY = 'gep201_pendientes_registro';   // misma llave que la versión anterior: no se pierde lo ya encolado
-  const TIMEOUT_MS = 20000;   // Apps Script puede tardar en "despertar"; reintentar ya es seguro (idempotente)
+  const TIMEOUT_MS = 30000;   // Apps Script puede tardar en "despertar"; reintentar ya es seguro (idempotente)
 
   /* ── almacenamiento local (tolerante a modo privado / bloqueos) ── */
   const store = {
@@ -46,12 +46,12 @@
   /* ── lecturas ── */
   // Un reintento automático: justo después de un despliegue (o si Apps Script
   // "duerme"), la primera respuesta a veces llega como página de error de Google.
-  async function get(action, intentos = 2) {
+  async function get(action, intentos = 3) {
     const url = SCRIPT_URL + '?action=' + encodeURIComponent(action) + '&token=' + encodeURIComponent(getToken());
     let data;
     try { data = await (await withTimeout(url, {})).json(); }
     catch (e) {
-      if (intentos > 1) { await new Promise(r => setTimeout(r, 1500)); return get(action, intentos - 1); }
+      if (intentos > 1) { await new Promise(r => setTimeout(r, intentos === 3 ? 1500 : 3000)); return get(action, intentos - 1); }
       throw e;
     }
     if (data.status === 'unauthorized') { clearToken(); throw new AuthError(); }
@@ -212,9 +212,17 @@
     }
   }
 
+  function describirError(e) {
+    if (!e) return 'desconocido';
+    if (e.name === 'AbortError') return 'el servidor tardó demasiado (señal lenta)';
+    if (e instanceof SyntaxError) return 'Google respondió con una página de error en vez de datos';
+    if (e instanceof TypeError) return 'sin conexión con el servidor';
+    return e.message || String(e);
+  }
+
   global.GEP = {
     SCRIPT_URL, store, get, post, cargarNomina, cargarConteos, sorteosRecientes,
     nombre, hoyLocal, nuevoId, encolar, procesar, onSync, syncState,
-    pedirClave, conClave, AuthError, getToken, clearToken,
+    pedirClave, conClave, AuthError, getToken, clearToken, describirError,
   };
 })(window);

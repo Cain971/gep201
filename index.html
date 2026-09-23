@@ -539,17 +539,21 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 function daysBetween(a,b){ return Math.abs((new Date(b)-new Date(a))/86400000); }
 
+let arrancado=false;
+function reintentarCarga(btn){ btn.disabled=true; btn.textContent='Cargando…'; arrancar(); }
 async function arrancar(){
   try{
     STUDENTS=await GEP.conClave(GEP.cargarNomina);
   }catch(e){
     console.error('No se pudo cargar la nómina',e);
-    document.getElementById('wrap').innerHTML='<div class="loaderr">No se pudo cargar la lista de alumnos.<br>Revisa tu conexión e intenta recargar.</div>';
+    document.getElementById('wrap').innerHTML='<div class="loaderr">No se pudo cargar la lista de alumnos.<br><small>Causa: '+GEP.describirError(e)+'</small><br><button class="btn-primary" style="margin:18px auto 0;max-width:220px" onclick="reintentarCarga(this)">Reintentar</button></div>';
     return;
   }
   render(); renderColaSorteos();
   cargarConteosParticipacion();
   consultarSorteo();
+  if(arrancado) return;   // tras un "Reintentar", no duplicar los temporizadores
+  arrancado=true;
   setInterval(consultarSorteo,4000);
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) consultarSorteo(); });
 }
