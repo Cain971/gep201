@@ -2,25 +2,19 @@ function agregarPestanasSorteo() {
   var SHEET_ID = '1XGk13XxKvQJzPZFI7iV1LtBFMURh6HZV1O024r_zwAA';
   var ss = SpreadsheetApp.openById(SHEET_ID);
 
-  var ROSTER = [
-    ['20214097','Becerra Sulluchuco, Milene Yadira','GRUPO 1'],
-    ['20224841','Bueno Hurtado, Sebastian Fabio','GRUPO 1'],
-    ['20216217','Gonzales Benites, Ariana Rosario','GRUPO 1'],
-    ['20211479','Rosales Aguilar, Luciana Concepcion','GRUPO 1'],
-    ['20226646','Villanueva Alvarez, Daria Luciana','GRUPO 1'],
-    ['20160993','Baca Montes, Valeria Carolina','GRUPO 2'],
-    ['20191529','Calderon Sipan, Eduardo Franco','GRUPO 2'],
-    ['20191026','Cardenas Torres, Carla Mayerling','GRUPO 2'],
-    ['20213311','Moreau Tejada, Alejandra Lily','GRUPO 2'],
-    ['20241271','Ocampo Huayllas, Pablo Jesus','GRUPO 2'],
-    ['20163080','Valverde Cipriano, Joseph Jack','GRUPO 2'],
-    ['20213680','Campos Vasquez, Patricia Nubia','GRUPO 3'],
-    ['20210437','Grimaldo Vicente, Steve','GRUPO 3'],
-    ['20205930','Huasasquiche Uculmana, Maria Fernanda','GRUPO 3'],
-    ['20221937','Ordonez Acevedo, Cesar Andre','GRUPO 3'],
-    ['20200613','Pacheco Flores, Barbara Nicole','GRUPO 3'],
-    ['20220858','Villar Razzeto, Maricielo','GRUPO 3']
-  ];
+  // Nómina leída de la pestaña Nomina (CSV de PAIDEIA). Nunca escribir datos
+  // de alumnos en este archivo: el repo es público.
+  // Formato: [código, 'Apellidos, Nombres', 'GRUPO N'], ordenado por grupo y nombre
+  // (el mismo orden y formato que usan los Forms de coevaluación).
+  var ROSTER = (function() {
+    function pc(x) {
+      return String(x).toLowerCase().replace(/(^|\s)([a-zñáéíóúü])/g, function(m, a, b) { return a + b.toUpperCase(); });
+    }
+    return ss.getSheetByName('Nomina').getDataRange().getValues().slice(1)
+      .filter(function(r) { return r[2]; })
+      .map(function(r) { return [String(r[2]), pc(r[1]) + ', ' + pc(r[0]), String(r[4]).trim()]; })
+      .sort(function(a, b) { return a[2] !== b[2] ? (a[2] < b[2] ? -1 : 1) : (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0); });
+  })();
 
   function newSheet(name) {
     var existing = ss.getSheetByName(name);
