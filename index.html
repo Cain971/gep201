@@ -727,36 +727,40 @@ async function consultarSorteo(){
 function renderColaSorteos(){
   const box=document.getElementById('sorteo-queue');
   const inner=document.getElementById('q-inner');
-  if(!colaSorteos.length){ box.classList.remove('show'); inner.innerHTML=''; guardarColaSorteos(); return; }
+  // El sorteado que estás calificando sigue en la cola (no se pierde si vuelves
+  // atrás sin registrar); solo se oculta mientras su pantalla está abierta.
+  if(S.sorteoEnCurso && !(S.activeStudent && S.activeStudentOrigen==='sorteo')) S.sorteoEnCurso=null;
+  const visibles=colaSorteos.filter(s=>claveSorteo(s)!==S.sorteoEnCurso);
+  if(!visibles.length){ box.classList.remove('show'); inner.innerHTML=''; guardarColaSorteos(); return; }
   box.classList.add('show');
-  inner.innerHTML='<div class="q-title">Del sorteo · '+colaSorteos.length+' pendiente'+(colaSorteos.length>1?'s':'')+'</div>'+
-    colaSorteos.map(s=>{
+  inner.innerHTML='<div class="q-title">Del sorteo · '+visibles.length+' pendiente'+(visibles.length>1?'s':'')+'</div>'+
+    visibles.map(s=>{
       const st=STUDENTS.find(x=>x.code===String(s.codigo));
       const nom=st?shortName(st):s.alumno;
       return '<div class="q-item">'+
         '<span class="q-name">'+nom+'</span>'+
         '<span class="q-meta">'+(s.grupo||'')+'</span>'+
-        '<button class="q-go" onclick="aceptarSorteo(\''+s.codigo+'\')">Calificar</button>'+
-        '<button class="q-x" onclick="descartarSorteo(\''+s.codigo+'\')" aria-label="Descartar">✕</button>'+
+        '<button class="q-go" onclick="aceptarSorteo(\''+claveSorteo(s)+'\')">Calificar</button>'+
+        '<button class="q-x" onclick="descartarSorteo(\''+claveSorteo(s)+'\')" aria-label="Descartar">✕</button>'+
       '</div>';
     }).join('');
   guardarColaSorteos();
 }
 
-function aceptarSorteo(codigo){
-  const idx=colaSorteos.findIndex(s=>String(s.codigo)===String(codigo));
-  if(idx===-1) return;
-  const item=colaSorteos[idx];
-  colaSorteos.splice(idx,1);
+// Abrir a un sorteado NO lo saca de la cola: sale recién al registrar su nota.
+// Si vuelves atrás sin calificar, reaparece en la cola.
+function aceptarSorteo(clave){
+  const item=colaSorteos.find(s=>claveSorteo(s)===String(clave));
+  if(!item) return;
   const st=STUDENTS.find(s=>s.code===String(item.codigo));
   if(item.modoDestino==='Modo 1') setMode(1);
   else if(item.modoDestino==='Modo 2'){ setMode(2); S.mobStep=1; }
-  if(st){ S.activeStudent=st; S.activeStudentOrigen='sorteo'; S.mobStep=2; }
+  if(st){ S.activeStudent=st; S.activeStudentOrigen='sorteo'; S.mobStep=2; S.sorteoEnCurso=claveSorteo(item); }
   renderColaSorteos();
   render();
 }
-function descartarSorteo(codigo){
-  const idx=colaSorteos.findIndex(s=>String(s.codigo)===String(codigo));
+function descartarSorteo(clave){
+  const idx=colaSorteos.findIndex(s=>claveSorteo(s)===String(clave));
   if(idx!==-1) colaSorteos.splice(idx,1);
   renderColaSorteos();
 }
@@ -771,6 +775,7 @@ function setMode(m){
   else if(m===2) S.selectedInstrumento='RP1';
   else S.selectedInstrumento='TF';
   document.querySelectorAll('.mode-tab').forEach(t=>t.classList.toggle('active',parseInt(t.dataset.mode)===m));
+  S.sorteoEnCurso=null; if(typeof renderColaSorteos==='function' && STUDENTS.length) renderColaSorteos();
   render();
 }
 
@@ -836,7 +841,8 @@ function registrar(){
   guardarLocal();
   S.justGraded=S.activeStudent.code;
   S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false; S.obsDraft={code:null,text:''};
-  if(colaSorteos.length){ aceptarSorteo(colaSorteos[0].codigo); }
+  if(S.sorteoEnCurso){ colaSorteos=colaSorteos.filter(s=>claveSorteo(s)!==S.sorteoEnCurso); S.sorteoEnCurso=null; }   // recién ahora sale de la cola
+  if(colaSorteos.length){ aceptarSorteo(claveSorteo(colaSorteos[0])); }
   else { S.activeStudent=null; S.mobStep=1; render(); }
 }
 
@@ -1004,7 +1010,7 @@ function renderStudentList(w){
 /* ── pantalla de calificación (Modo 1 y 2) ── */
 function renderGrade(w){
   const st=S.activeStudent;
-  crumb(w, ()=>{ S.activeStudent=null; S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false; S.mobStep=1; render(); },
+  crumb(w, ()=>{ S.activeStudent=null; S.sorteoEnCurso=null; S.selectedNivel=null; S.selectedAdj=null; S.bonusActive=false; S.mobStep=1; renderColaSorteos(); render(); },
         'Alumnos', S.mode===1?null:(S.selectedInstrumento+' · dinámica'));
 
   const card=mkEl('div','active-card');
