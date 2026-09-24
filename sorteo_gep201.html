@@ -55,6 +55,12 @@ button{font:inherit; color:inherit; cursor:pointer}
 .snd{width:44px; height:44px; border-radius:6px; border:1px solid #363636; background:var(--flap); color:var(--char); display:flex; align-items:center; justify-content:center}
 .snd svg{width:22px; height:22px}
 .snd.off{color:var(--mute)}
+/* Modo ensayo: gira y suena igual, pero no registra nada. Se nota a la vista. */
+.ens{height:44px; padding:0 14px; border-radius:6px; border:1px dashed #4a4a4a; background:transparent; color:var(--dim); font:600 13px var(--mono); letter-spacing:.12em}
+.ens.on{border-color:var(--amber); color:var(--amber); background:rgba(242,182,50,.08)}
+body.ensayo .board, body.ensayo .gcard{border:1px dashed var(--amber)}
+.ens-aviso{display:none; font:700 13px var(--mono); letter-spacing:.2em; color:#1a1405; background:var(--amber); padding:4px 10px; border-radius:4px; margin-left:12px; vertical-align:middle}
+body.ensayo .ens-aviso{display:inline-block}
 
 /* ── tablero ── */
 .board{background:var(--panel); border:1px solid var(--edge); border-radius:12px; padding:16px 20px 20px}
@@ -115,7 +121,7 @@ button{font:inherit; color:inherit; cursor:pointer}
 <body>
 <div class="wrap">
   <div class="top">
-    <div><div class="kick" id="kick">GEP201 · PARTICIPACIÓN</div><div class="title" id="title">Próximo en responder</div></div>
+    <div><div class="kick"><span id="kick">GEP201 · PARTICIPACIÓN</span><span class="ens-aviso">ENSAYO · NO SE REGISTRA</span></div><div class="title" id="title">Próximo en responder</div></div>
     <div class="clock"><small id="fecha"></small><span id="hora"></span></div>
   </div>
   <div class="bar">
@@ -125,6 +131,7 @@ button{font:inherit; color:inherit; cursor:pointer}
       <button data-m="tf">TRABAJO FINAL</button>
     </nav>
     <div id="ctls"></div>
+    <button class="ens" id="ens" title="Ensayo: sortea sin registrar nada en el Sheet" aria-pressed="false">ENSAYO</button>
     <button class="snd" id="snd" title="Sonido del tablero" aria-label="Sonido del tablero"></button>
   </div>
   <div id="app"><div class="ph">Cargando lista de alumnos…</div></div>
@@ -402,7 +409,21 @@ function pickWeighted(pool, k, pesoFn){
    para que la ponderación no vuelva a subir a quien ya salió en esta clase.
    Trabajo Final NO registra nada: es solo visual/proyectado.
    ═══════════════════════════════════════════════════════════════════════ */
+/* MODO ENSAYO — para probar antes de clase: el tablero gira y suena igual,
+   pero no envía nada al Sheet, no llega al iPhone y no marca a nadie como
+   "ya salió hoy". Siempre arranca APAGADO al abrir la página (a propósito:
+   así nunca queda encendido por olvido en plena clase). */
+let ENSAYO = false;
+document.getElementById('ens').addEventListener('click', () => {
+  if (S.busy) return;
+  ENSAYO = !ENSAYO;
+  const b = document.getElementById('ens');
+  b.classList.toggle('on', ENSAYO); b.setAttribute('aria-pressed', String(ENSAYO));
+  document.body.classList.toggle('ensayo', ENSAYO);
+});
+
 function registrarSorteo(st, grupo, modoDestino){
+  if (ENSAYO) return;   // ensayo: nada al Sheet, nada a la cola del iPhone, nadie "ya salió"
   salidoHoy.add(st.code); guardarSalidos();
   CONTEOS[st.code] = (CONTEOS[st.code] || 0) + 1;
   // A la cola compartida: se reintenta hasta que el Sheet lo confirme.
@@ -445,7 +466,7 @@ function render(){
 function refrescarListas(){ if (S.mode === 'part') drawRoster(S.partPicks ? S.partPicks.map(p=>p.code) : []); else if (S.mode === 'rp') drawGroups(); }
 function lock(v){
   S.busy = v;
-  document.querySelectorAll('#mode-nav button,.btn,.tfp button,.stepper button').forEach(b=>b.disabled=v);
+  document.querySelectorAll('#mode-nav button,.btn,.tfp button,.stepper button,#ens').forEach(b=>b.disabled=v);
 }
 function stepperHTML(label, id, val, fn){
   return `<div class="ctl"><label>${label}</label><div class="stepper"><button onclick="${fn}(-1)" aria-label="menos">−</button><span class="val" id="${id}">${val}</span><button onclick="${fn}(1)" aria-label="más">+</button></div></div>`;

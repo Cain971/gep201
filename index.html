@@ -457,6 +457,9 @@ header{background:var(--bg); color:var(--ink); border-bottom:1px solid var(--rul
 .btn-ghost{background:transparent; border:1px solid var(--rule); font-family:var(--font-code)}
 #sorteo-queue{background:var(--bg2); border-top:1px solid var(--rule)}
 .q-title{font-family:var(--font-code); color:var(--accent)}
+.q-head{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.q-clear{min-height:36px; padding:0 12px; white-space:nowrap; background:transparent; border:1px solid var(--rule); font:500 12px var(--font-code); color:var(--ink-mid); cursor:pointer}
+.q-clear.armed{background:var(--danger); border-color:var(--danger); color:#fff}
 .q-item{background:var(--bg); border:1px solid var(--rule)}
 .q-item .q-name{font-weight:700}
 .q-item .q-meta{font-family:var(--font-code)}
@@ -733,7 +736,8 @@ function renderColaSorteos(){
   const visibles=colaSorteos.filter(s=>claveSorteo(s)!==S.sorteoEnCurso);
   if(!visibles.length){ box.classList.remove('show'); inner.innerHTML=''; guardarColaSorteos(); return; }
   box.classList.add('show');
-  inner.innerHTML='<div class="q-title">Del sorteo · '+visibles.length+' pendiente'+(visibles.length>1?'s':'')+'</div>'+
+  inner.innerHTML='<div class="q-head"><div class="q-title">Del sorteo · '+visibles.length+' pendiente'+(visibles.length>1?'s':'')+'</div>'+
+    (visibles.length>1?'<button class="q-clear" id="q-clear" onclick="vaciarCola(this)">Vaciar cola</button>':'')+'</div>'+
     visibles.map(s=>{
       const st=STUDENTS.find(x=>x.code===String(s.codigo));
       const nom=st?shortName(st):s.alumno;
@@ -758,6 +762,21 @@ function aceptarSorteo(clave){
   if(st){ S.activeStudent=st; S.activeStudentOrigen='sorteo'; S.mobStep=2; S.sorteoEnCurso=claveSorteo(item); }
   renderColaSorteos();
   render();
+}
+/* Vaciar cola: dos toques (el primero arma, el segundo confirma dentro de 3 s),
+   para no borrar la cola por un roce. No toca al sorteado que estás calificando. */
+function vaciarCola(btn){
+  if(!btn.classList.contains('armed')){
+    btn.classList.add('armed'); btn.textContent='¿Vaciar todo?';
+    clearTimeout(vaciarCola._t);
+    vaciarCola._t=setTimeout(()=>{ btn.classList.remove('armed'); btn.textContent='Vaciar cola'; },3000);
+    return;
+  }
+  clearTimeout(vaciarCola._t);
+  const n=colaSorteos.filter(s=>claveSorteo(s)!==S.sorteoEnCurso).length;
+  colaSorteos=colaSorteos.filter(s=>claveSorteo(s)===S.sorteoEnCurso);
+  renderColaSorteos();
+  toast('Cola vaciada · '+n+' pendiente'+(n!==1?'s':'')+' descartado'+(n!==1?'s':''));
 }
 function descartarSorteo(clave){
   const idx=colaSorteos.findIndex(s=>claveSorteo(s)===String(clave));
