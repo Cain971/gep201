@@ -216,16 +216,27 @@ function doGet(e) {
 
 const COEVAL_Q1_TITULO = '¿Cuál es tu nombre?';
 
-// código → nombre "Apellidos, Nombres" + grupo, leído de la pestaña Nomina.
+// Clave de comparación de nombres: sin tildes/ñ, minúsculas, espacios simples.
+// ("Nuñez Diaz, Ana" y "Nunez Díaz, Ana" → misma clave.)
+function coevalClave_(s) {
+  return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// clave → nombre EXACTO de Ajustes_Coeval (col. B) + grupo (col. C).
+// Se lee de Ajustes_Coeval y no de Nomina porque es la hoja que busca con
+// AVERAGEIFS: así el nombre escrito siempre coincide con el que se busca,
+// aunque Nomina se edite después de generar los Forms (p. ej. nombre
+// preferido para el sorteo) o difiera en tildes.
 function coevalRoster_(ss) {
-  const values = ss.getSheetByName('Nomina').getDataRange().getValues();
-  const porNombre = {};
-  for (let i = 1; i < values.length; i++) {
-    if (!values[i][2]) continue;
-    const nombre = properCase(values[i][1]) + ', ' + properCase(values[i][0]);
-    porNombre[nombre] = { nombre: nombre, grupo: String(values[i][4]).trim() };
+  const values = ss.getSheetByName('Ajustes_Coeval').getDataRange().getValues();
+  const porClave = {};
+  for (let i = 2; i < values.length; i++) {   // filas 1-2: título y encabezados
+    const nombre = String(values[i][1]).trim();
+    if (!nombre) continue;
+    porClave[coevalClave_(nombre)] = { nombre: nombre, grupo: String(values[i][2]).trim() };
   }
-  return porNombre;
+  return porClave;
 }
 
 // Deriva el instrumento del título del Form.
@@ -261,18 +272,20 @@ function onFormSubmit(e) {
       }
     }
     const sep = q1.indexOf(': ');
-    const evaluador = sep >= 0 ? q1.slice(sep + 2).trim() : q1;
-    const grupo = (roster[evaluador] && roster[evaluador].grupo) ||
-                  (sep >= 0 ? q1.slice(0, sep).trim() : '');
-    if (!evaluador) { Logger.log('Coeval: Q1 vacía o no encontrada'); return; }
+    const evaluadorForm = sep >= 0 ? q1.slice(sep + 2).trim() : q1;
+    if (!evaluadorForm) { Logger.log('Coeval: Q1 vacía o no encontrada'); return; }
+    const ev = roster[coevalClave_(evaluadorForm)];
+    const evaluador = ev ? ev.nombre : evaluadorForm;
+    const grupo = (ev && ev.grupo) || (sep >= 0 ? q1.slice(0, sep).trim() : '');
 
     const filas = [];
     for (let i = 0; i < respuestas.length; i++) {
       const titulo = String(respuestas[i].getItem().getTitle()).trim();
-      if (!roster[titulo]) continue;                 // no es casilla de puntaje
+      const evaluado = roster[coevalClave_(titulo)];
+      if (!evaluado) continue;                       // no es casilla de puntaje
       const puntaje = parseFloat(String(respuestas[i].getResponse()).trim());
       if (isNaN(puntaje)) continue;
-      filas.push([timestamp, instrumento, evaluador, grupo, titulo, puntaje]);
+      filas.push([timestamp, instrumento, evaluador, grupo, evaluado.nombre, puntaje]);
     }
 
     if (filas.length) {

@@ -52,7 +52,7 @@ function coevalPortada_(label) {
     'Reglas importantes:',
     '• Asigna un puntaje distinto a cada compañero — no se permiten puntajes repetidos.',
     '• Evalúa solo a tus compañeros, no a ti mismo.',
-    '• Tienes 48 horas desde la fecha de entrega para completar este formulario.',
+    '• El plazo para completar este formulario se indica en el correo del profesor.',
     '• No completar el formulario en el plazo establecido tendrá consecuencias en tu propia calificación individual.',
   ].join('\n');
 }
@@ -61,10 +61,11 @@ function coevalPortada_(label) {
 const COEVAL_GUIA_SECCION = [
   'Asigna un puntaje de 0 a 100 a cada compañero según su contribución real. Usa un puntaje DISTINTO para cada persona.',
   '',
-  '80–100 · Contribución excepcional — lideró el trabajo, entregó a tiempo, mejoró la calidad del resultado grupal',
-  '60–79 · Contribución sólida — cumplió su parte con calidad y dentro de los plazos',
-  '40–59 · Contribución irregular — cumplió parcialmente o con retrasos que afectaron al grupo',
-  '0–39 · Contribución mínima o ausente — no cumplió con su parte o su aporte fue marginal',
+  // Una línea por franja (≤ 45 caracteres: cabe sin partirse también en celular).
+  '80–100 · Excepcional: lideró y aportó calidad',
+  '60–79 · Sólida: cumplió bien y a tiempo',
+  '40–59 · Irregular: cumplió a medias o tarde',
+  '0–39 · Mínima: no cumplió o aportó poco',
 ].join('\n');
 
 const COEVAL_DECLARACION_HELP =
@@ -209,6 +210,99 @@ function construirFormsCoevaluacion() {
     (faltan ? ('>>> Faltan ' + faltan + ' Form(s). Vuelve a ejecutar construirFormsCoevaluacion().')
             : '>>> LISTO: los 4 Forms existen y tienen trigger onFormSubmit.')
   );
+}
+
+
+/**
+ * Verificación de SOLO LECTURA (no escribe nada): para cada uno de los 4 Forms,
+ * comprueba que cada nombre (opciones de Q1 y títulos de casilla) encuentre su
+ * fila en Ajustes_Coeval con la misma lógica que usa onFormSubmit, que el grupo
+ * coincida, y que el Form tenga su trigger. Correr antes de abrir cada coevaluación.
+ */
+function coevalVerificarForms() {
+  const roster = coevalRoster_(SpreadsheetApp.openById(SHEET_ID));
+  const folder = DriveApp.getFolderById(COEVAL_FOLDER_ID);
+  const triggers = ScriptApp.getProjectTriggers()
+    .filter(function (t) { return t.getHandlerFunction() === 'onFormSubmit'; })
+    .map(function (t) { return t.getTriggerSourceId(); });
+  const out = ['Filas en Ajustes_Coeval: ' + Object.keys(roster).length];
+
+  COEVAL_INSTRUMENTOS.forEach(function (instr) {
+    const file = coevalBuscarForm_(folder, instr);
+    if (!file) { out.push(instr.tag + ': FORM NO ENCONTRADO'); return; }
+    const form = FormApp.openById(file.getId());
+    const problemas = [];
+    let casillas = 0;
+    form.getItems().forEach(function (it) {
+      const titulo = String(it.getTitle()).trim();
+      if (titulo === COEVAL_Q1_TITULO) {
+        it.asListItem().getChoices().forEach(function (c) {
+          const v = c.getValue(), sep = v.indexOf(': ');
+          const r = roster[coevalClave_(v.slice(sep + 2))];
+          if (!r) problemas.push('Q1 sin fila: "' + v + '"');
+          else if (r.grupo !== v.slice(0, sep)) problemas.push('Q1 grupo distinto: "' + v + '" vs ' + r.grupo);
+        });
+      } else if (it.getType() === FormApp.ItemType.TEXT) {
+        casillas++;
+        if (!roster[coevalClave_(titulo)]) problemas.push('casilla sin fila: "' + titulo + '"');
+      }
+    });
+    out.push(instr.tag + ': ' + casillas + ' casillas · trigger ' +
+      (triggers.indexOf(file.getId()) >= 0 ? 'OK' : 'FALTA') +
+      ' · acepta respuestas: ' + (form.isAcceptingResponses() ? 'sí' : 'NO') +
+      ' · respuestas: ' + form.getResponses().length +
+      (problemas.length ? '\n   ✗ ' + problemas.join('\n   ✗ ') : ' · nombres OK'));
+  });
+  Logger.log(out.join('\n'));
+}
+
+
+/**
+ * Reaplica la portada (coevalPortada_) a los 4 Forms y deja aceptando
+ * respuestas SOLO a los instrumentos de COEVAL_ABIERTOS. No toca preguntas,
+ * secciones ni respuestas. Editar COEVAL_ABIERTOS y volver a ejecutar al abrir
+ * la coevaluación siguiente.
+ */
+const COEVAL_ABIERTOS = ['RP1'];
+
+function coevalAplicarPortadaYEstado() {
+  const folder = DriveApp.getFolderById(COEVAL_FOLDER_ID);
+  const out = [];
+  COEVAL_INSTRUMENTOS.forEach(function (instr) {
+    const file = coevalBuscarForm_(folder, instr);
+    if (!file) { out.push(instr.tag + ': FORM NO ENCONTRADO'); return; }
+    const form = FormApp.openById(file.getId());
+    form.setDescription(coevalPortada_(instr.label));
+    const abierto = COEVAL_ABIERTOS.indexOf(instr.tag) >= 0;
+    form.setAcceptingResponses(abierto);
+    // Mensaje de Form cerrado: Forms lo rechaza a veces ("Invalid data updating
+    // form"); es cosmético, así que no debe cortar la corrida.
+    if (!abierto) try { form.setCustomClosedFormMessage(
+      'Esta coevaluación no está abierta. El profesor avisará por correo cuándo completarla.'); } catch (x) {}
+    out.push(instr.tag + ': portada actualizada · ' + (abierto ? 'ABIERTO' : 'cerrado'));
+  });
+  Logger.log(out.join('\n'));
+}
+
+
+/**
+ * Reaplica la guía de puntajes (COEVAL_GUIA_SECCION) a todas las secciones de
+ * los Forms de COEVAL_GUIA_EN. Solo cambia el texto de ayuda de cada sección.
+ */
+const COEVAL_GUIA_EN = ['RP1', 'RP2', 'RP3', 'TF'];
+
+function coevalAplicarGuia() {
+  const folder = DriveApp.getFolderById(COEVAL_FOLDER_ID);
+  const out = [];
+  COEVAL_GUIA_EN.forEach(function (tag) {
+    const instr = COEVAL_INSTRUMENTOS.filter(function (x) { return x.tag === tag; })[0];
+    const file = instr && coevalBuscarForm_(folder, instr);
+    if (!file) { out.push(tag + ': FORM NO ENCONTRADO'); return; }
+    const secciones = FormApp.openById(file.getId()).getItems(FormApp.ItemType.PAGE_BREAK);
+    secciones.forEach(function (it) { it.asPageBreakItem().setHelpText(COEVAL_GUIA_SECCION); });
+    out.push(tag + ': guía actualizada en ' + secciones.length + ' secciones');
+  });
+  Logger.log(out.join('\n'));
 }
 
 
