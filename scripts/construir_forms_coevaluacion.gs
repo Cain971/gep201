@@ -24,8 +24,8 @@
  * y de onFormSubmit() en el mismo proyecto.
  */
 
-// Subcarpeta "GEP201 2026-2" en Drive (dentro de la carpeta personal "GEP201").
-// En un semestre nuevo: crear "GEP201 20XX-Y" y poner aquí su id.
+// Subcarpeta "2026-2" en Drive (0. Proyectos Claude Code/activos/docencia/gep201/; antes "GEP201 2026-2"). Se ubica por ID, no por nombre.
+// En un semestre nuevo: crear "20XX-Y" junto a ella y poner aquí su id.
 const COEVAL_FOLDER_ID = '1Ba5nB9av4-jJ8kMbUTaoDl1uT2jVdm0X';
 
 const COEVAL_INSTRUMENTOS = [
